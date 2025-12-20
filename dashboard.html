@@ -24,45 +24,44 @@ body{
   color:var(--text);
   font-family:Inter,Arial,sans-serif;
 }
-
-/* HEADER */
 header{
-  padding:20px 32px;
+  padding:18px 32px;
   display:flex;
   justify-content:space-between;
   align-items:center;
+  background:#000;
 }
-header h1{
-  margin:0;
-  color:var(--accent);
-  font-size:22px;
-}
+header h1{color:var(--accent);margin:0}
 
-/* GRID */
 main{
-  padding:0 32px 32px;
+  padding:24px 32px;
   display:grid;
   gap:20px;
 }
-.cards{
+
+/* KPIs */
+.kpis{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
   gap:16px;
 }
-.card{
-  background:linear-gradient(180deg,#141a2e,#0b1020);
+.kpi{
+  background:var(--panel);
   padding:18px;
   border-radius:14px;
 }
-.card h3{
-  margin:0;
-  font-size:13px;
-  color:var(--muted);
+.kpi span{color:var(--muted);font-size:13px}
+.kpi strong{font-size:30px}
+
+/* PANELS */
+.panel{
+  background:var(--panel);
+  padding:18px;
+  border-radius:14px;
 }
-.card strong{
-  display:block;
-  margin-top:8px;
-  font-size:28px;
+.panel h2{
+  margin:0 0 12px;
+  font-size:16px;
 }
 
 /* TABLE */
@@ -71,32 +70,19 @@ table{
   border-collapse:collapse;
 }
 th,td{
-  padding:12px;
-  border-bottom:1px solid #1f2937;
-  text-align:left;
-  font-size:13px;
-}
-th{color:var(--muted)}
-
-/* SEARCH */
-.search{
-  margin-bottom:10px;
-}
-.search input{
-  width:320px;
   padding:10px;
-  border-radius:8px;
-  border:none;
-  background:#111;
-  color:#fff;
+  text-align:left;
+  border-bottom:1px solid #1f243d;
 }
+th{color:var(--muted);font-weight:500}
 
-/* CHART */
-canvas{
-  background:#0b1020;
-  border-radius:14px;
-  padding:12px;
+/* GRID */
+.grid{
+  display:grid;
+  grid-template-columns:2fr 1fr;
+  gap:20px;
 }
+canvas{height:260px!important}
 </style>
 </head>
 
@@ -104,149 +90,164 @@ canvas{
 
 <header>
   <h1>📊 Dashboard • SESSÃO 99</h1>
+  <span id="status">🟢 Online</span>
 </header>
 
 <main>
 
   <!-- KPIs -->
-  <div class="cards">
-    <div class="card"><h3>👥 Assistindo agora</h3><strong id="k_online">0</strong></div>
-    <div class="card"><h3>▶ Plays hoje</h3><strong id="k_plays">0</strong></div>
-    <div class="card"><h3>✅ +50% assistido</h3><strong id="k_50">0</strong></div>
-    <div class="card"><h3>🏁 Concluídos</h3><strong id="k_done">0</strong></div>
+  <div class="kpis">
+    <div class="kpi"><span>👥 Assistindo agora</span><strong id="kpiOnline">0</strong></div>
+    <div class="kpi"><span>▶ Plays hoje</span><strong id="kpiPlays">0</strong></div>
+    <div class="kpi"><span>✅ +50% assistido</span><strong id="kpi50">0</strong></div>
+    <div class="kpi"><span>🏁 Concluídos</span><strong id="kpiFinish">0</strong></div>
   </div>
 
-  <!-- GRÁFICO -->
-  <div class="card">
-    <h3>📈 Audiência por hora (hoje)</h3>
-    <canvas id="chart"></canvas>
+  <!-- QUEM ESTÁ ASSISTINDO -->
+  <div class="panel">
+    <h2>👀 Quem está assistindo agora</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Usuário</th>
+          <th>Conteúdo</th>
+          <th>Tipo</th>
+          <th>Progresso</th>
+        </tr>
+      </thead>
+      <tbody id="onlineList"></tbody>
+    </table>
   </div>
 
-  <!-- SEARCH -->
-  <div class="card">
-    <h3>🔎 Buscar conteúdo</h3>
-    <div class="search">
-      <input id="search" placeholder="Filme ou série...">
+  <!-- GRÁFICOS -->
+  <div class="grid">
+    <div class="panel">
+      <h2>📈 Plays por hora (hoje)</h2>
+      <canvas id="chartHoras"></canvas>
     </div>
+    <div class="panel">
+      <h2>🎬 Filmes x Séries</h2>
+      <canvas id="chartTipos"></canvas>
+    </div>
+  </div>
 
+  <!-- TOP 10 -->
+  <div class="panel">
+    <h2>🏆 Top 10 Conteúdos</h2>
     <table>
       <thead>
         <tr>
           <th>Conteúdo</th>
-          <th>Tipo</th>
-          <th>Assistindo agora</th>
-          <th>Já assistiram</th>
-          <th>Concluíram</th>
+          <th>Plays</th>
         </tr>
       </thead>
-      <tbody id="table"></tbody>
+      <tbody id="topList"></tbody>
     </table>
   </div>
 
 </main>
 
 <script>
-/* ================= SUPABASE ================= */
-const supabase = window.supabase.createClient(
+const supabaseClient = supabase.createClient(
   "https://dxkszikemntfusfyrzos.supabase.co",
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-/* ================= KPI ================= */
-async function loadKPIs(){
-  const { data:online } = await supabase
+const kpiOnline = document.getElementById("kpiOnline");
+const kpiPlays = document.getElementById("kpiPlays");
+const kpi50 = document.getElementById("kpi50");
+const kpiFinish = document.getElementById("kpiFinish");
+const onlineList = document.getElementById("onlineList");
+const topList = document.getElementById("topList");
+
+let chartHoras, chartTipos;
+
+async function loadDashboard(){
+  /* ONLINE */
+  const { data: online } = await supabaseClient
     .from("rs_sessions")
-    .select("id")
-    .gt("last_ping", new Date(Date.now()-30000).toISOString());
+    .select("*")
+    .gte("last_ping", new Date(Date.now()-30000).toISOString());
 
-  document.getElementById("k_online").innerText = online.length;
+  kpiOnline.textContent = online.length;
+  onlineList.innerHTML = "";
+  online.forEach(u=>{
+    onlineList.innerHTML += `
+      <tr>
+        <td>${u.user_id.slice(0,8)}</td>
+        <td>${u.serie_nome || "-"}</td>
+        <td>${u.content_tipo}</td>
+        <td>ativo</td>
+      </tr>`;
+  });
 
-  const { data:events } = await supabase
+  /* EVENTS */
+  const { data: events } = await supabaseClient
     .from("rs_play_events")
     .select("*");
 
   const hoje = new Date().toISOString().slice(0,10);
+  const hojeEvents = events.filter(e=>e.created_at.startsWith(hoje));
 
-  document.getElementById("k_plays").innerText =
-    events.filter(e=>e.acao==="play" && e.created_at.startsWith(hoje)).length;
+  kpiPlays.textContent = hojeEvents.filter(e=>e.acao==="play").length;
+  kpi50.textContent = events.filter(e=>e.progress_percent>=50).length;
+  kpiFinish.textContent = events.filter(e=>e.progress_percent>=90).length;
 
-  document.getElementById("k_50").innerText =
-    new Set(events.filter(e=>e.progress_percent>=50).map(e=>e.user_id)).size;
-
-  document.getElementById("k_done").innerText =
-    new Set(events.filter(e=>e.progress_percent>=90).map(e=>e.user_id)).size;
-}
-
-/* ================= CHART ================= */
-let chart;
-async function loadChart(){
-  const { data } = await supabase.from("rs_play_events").select("created_at");
-
-  const horas = Array(24).fill(0);
-  data.forEach(e=>{
-    const h = new Date(e.created_at).getHours();
-    horas[h]++;
+  /* TOP 10 */
+  const map = {};
+  events.forEach(e=>{
+    if(e.acao==="play"){
+      map[e.titulo]=(map[e.titulo]||0)+1;
+    }
   });
 
-  if(chart) chart.destroy();
-  chart = new Chart(document.getElementById("chart"),{
+  topList.innerHTML="";
+  Object.entries(map)
+    .sort((a,b)=>b[1]-a[1])
+    .slice(0,10)
+    .forEach(([t,c])=>{
+      topList.innerHTML+=`<tr><td>${t}</td><td>${c}</td></tr>`;
+    });
+
+  /* CHART HORAS */
+  const horas = {};
+  hojeEvents.forEach(e=>{
+    const h = new Date(e.created_at).getHours();
+    horas[h]=(horas[h]||0)+1;
+  });
+
+  if(chartHoras) chartHoras.destroy();
+  chartHoras = new Chart(document.getElementById("chartHoras"),{
     type:"line",
     data:{
-      labels:[...Array(24).keys()].map(h=>h+"h"),
+      labels:Object.keys(horas),
       datasets:[{
-        label:"Plays",
-        data:horas,
+        data:Object.values(horas),
         borderColor:"#e50914",
-        backgroundColor:"rgba(229,9,20,.2)",
-        tension:.3
+        fill:false
+      }]
+    }
+  });
+
+  /* TIPOS */
+  const filmes = events.filter(e=>e.tipo==="filme").length;
+  const series = events.filter(e=>e.tipo==="serie").length;
+
+  if(chartTipos) chartTipos.destroy();
+  chartTipos = new Chart(document.getElementById("chartTipos"),{
+    type:"doughnut",
+    data:{
+      labels:["Filmes","Séries"],
+      datasets:[{
+        data:[filmes,series],
+        backgroundColor:["#e50914","#6366f1"]
       }]
     }
   });
 }
 
-/* ================= TABLE ================= */
-async function loadTable(filter=""){
-  const { data } = await supabase.from("rs_play_events").select("*");
-
-  const grouped = {};
-  data.forEach(e=>{
-    const key = e.titulo || e.serie_nome;
-    if(!key) return;
-    if(filter && !key.toLowerCase().includes(filter)) return;
-
-    grouped[key] ??= {tipo:e.tipo, users:new Set(), done:new Set()};
-    grouped[key].users.add(e.user_id);
-    if(e.progress_percent>=90) grouped[key].done.add(e.user_id);
-  });
-
-  const tbody = document.getElementById("table");
-  tbody.innerHTML="";
-
-  Object.entries(grouped).forEach(([k,v])=>{
-    tbody.innerHTML+=`
-      <tr>
-        <td>${k}</td>
-        <td>${v.tipo}</td>
-        <td>${v.users.size}</td>
-        <td>${v.users.size}</td>
-        <td>${v.done.size}</td>
-      </tr>`;
-  });
-}
-
-/* ================= SEARCH ================= */
-document.getElementById("search").oninput = e=>{
-  loadTable(e.target.value.toLowerCase());
-};
-
-/* ================= INIT ================= */
-async function init(){
-  await loadKPIs();
-  await loadChart();
-  await loadTable();
-}
-init();
-setInterval(init,10000);
+loadDashboard();
+setInterval(loadDashboard,15000);
 </script>
 
 </body>
