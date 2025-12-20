@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>SESSÃO 99 • Painel Admin</title>
+<title>SESSÃO 99 • Admin Upload</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -10,7 +10,8 @@
 <style>
 :root{
   --bg:#05070f;
-  --card:#0b1020;
+  --panel:#0b1020;
+  --input:#020617;
   --accent:#e50914;
   --ok:#22c55e;
   --err:#ef4444;
@@ -23,85 +24,84 @@ body{
   color:#fff;
   font-family:Inter,Arial,sans-serif;
 }
-main{
-  max-width:960px;
+.container{
+  max-width:980px;
   margin:40px auto;
-  background:var(--card);
-  padding:32px;
-  border-radius:20px;
+  background:var(--panel);
+  padding:36px;
+  border-radius:22px;
 }
-h1{margin-top:0}
+h1{margin:0 0 20px}
 
 /* STATUS */
 .status{
-  padding:14px;
-  border-radius:10px;
-  background:#020617;
-  font-weight:600;
+  padding:14px 16px;
+  border-radius:12px;
+  background:var(--input);
   margin-bottom:12px;
+  font-weight:600;
 }
 .ok{color:var(--ok)}
 .err{color:var(--err)}
 .muted{color:var(--muted)}
 
 /* FORM */
-label{display:block;margin-top:18px;font-weight:600}
+label{display:block;margin-top:20px;font-weight:600}
 input,textarea{
   width:100%;
-  padding:14px;
   margin-top:6px;
-  border-radius:10px;
+  padding:14px;
+  border-radius:12px;
   border:none;
-  background:#020617;
+  background:var(--input);
   color:#fff;
 }
 textarea{resize:vertical}
 button{
-  margin-top:30px;
+  margin-top:32px;
   width:100%;
   padding:18px;
-  background:var(--accent);
-  border:none;
-  border-radius:14px;
-  color:#fff;
   font-size:17px;
+  border:none;
+  border-radius:16px;
+  background:var(--accent);
+  color:#fff;
   cursor:pointer;
 }
-button:disabled{opacity:.6}
+button:disabled{opacity:.5;cursor:not-allowed}
 
 /* OVERLAY */
 #overlay{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.92);
+  background:rgba(0,0,0,.94);
   display:none;
   align-items:center;
   justify-content:center;
   z-index:9999;
 }
-#box{
-  background:#020617;
+#modal{
+  background:var(--panel);
   padding:34px;
-  border-radius:18px;
+  border-radius:20px;
   width:90%;
-  max-width:420px;
+  max-width:440px;
   text-align:center;
 }
-#barWrap{
-  width:100%;
+#progressWrap{
+  margin-top:20px;
   height:14px;
   background:#111;
   border-radius:14px;
   overflow:hidden;
-  margin-top:18px;
 }
-#bar{
+#progress{
   height:100%;
   width:0%;
   background:var(--accent);
 }
-#msg{
-  margin-top:18px;
+#overlayMsg{
+  margin-top:16px;
   min-height:22px;
   font-weight:600;
 }
@@ -111,18 +111,18 @@ button:disabled{opacity:.6}
 
 <!-- OVERLAY -->
 <div id="overlay">
-  <div id="box">
+  <div id="modal">
     <h3>🎬 Enviando filme</h3>
-    <div id="barWrap"><div id="bar"></div></div>
-    <div id="msg" class="muted">Preparando…</div>
+    <div id="progressWrap"><div id="progress"></div></div>
+    <div id="overlayMsg" class="muted">Inicializando…</div>
   </div>
 </div>
 
-<main>
+<div class="container">
   <h1>SESSÃO 99 — Painel Admin</h1>
 
   <div id="supabaseStatus" class="status muted">🔌 Supabase: verificando…</div>
-  <div id="bunnyStatus" class="status ok">🐰 Bunny: pronto para upload</div>
+  <div id="bunnyStatus" class="status muted">🐰 Bunny.net: verificando…</div>
 
   <label>Título *</label>
   <input id="titulo">
@@ -139,8 +139,8 @@ button:disabled{opacity:.6}
   <label>Arquivo de vídeo *</label>
   <input type="file" id="video" accept="video/*">
 
-  <button id="btn">Enviar Filme</button>
-</main>
+  <button id="btnEnviar">Enviar Filme</button>
+</div>
 
 <script>
 /* ================= CONFIG ================= */
@@ -157,19 +157,18 @@ const BUNNY = {
 };
 
 /* ================= ELEMENTOS ================= */
-/* ================= ELEMENTOS ================= */
 const supabaseStatus = document.getElementById("supabaseStatus");
+const bunnyStatus = document.getElementById("bunnyStatus");
 const overlay = document.getElementById("overlay");
-const bar = document.getElementById("bar");
-const msg = document.getElementById("msg");
-const btn = document.getElementById("btn");
+const progress = document.getElementById("progress");
+const overlayMsg = document.getElementById("overlayMsg");
+const btn = document.getElementById("btnEnviar");
 
 const titulo = document.getElementById("titulo");
 const descricao = document.getElementById("descricao");
 const categoria = document.getElementById("categoria");
 const capa = document.getElementById("capa");
 const video = document.getElementById("video");
-
 
 /* ================= TESTE SUPABASE ================= */
 (async ()=>{
@@ -185,61 +184,77 @@ const video = document.getElementById("video");
 
     if(error) throw error;
 
-    supabaseStatus.innerText="🟢 Supabase conectado";
+    supabaseStatus.textContent="🟢 Supabase conectado";
     supabaseStatus.className="status ok";
-  }catch{
-    supabaseStatus.innerText="🔴 Supabase erro de conexão ou permissão";
+  }catch(e){
+    supabaseStatus.textContent="🔴 Supabase ERRO: conexão ou RLS";
     supabaseStatus.className="status err";
   }
 })();
 
-/* ================= UPLOAD ================= */
+/* ================= TESTE BUNNY ================= */
+(async ()=>{
+  try{
+    const res = await fetch(
+      `https://${BUNNY.region}.storage.bunnycdn.com/${BUNNY.zone}/`,
+      { method:"HEAD", headers:{AccessKey:BUNNY.key} }
+    );
+    if(!res.ok) throw new Error(res.status);
+    bunnyStatus.textContent="🟢 Bunny.net conectado";
+    bunnyStatus.className="status ok";
+  }catch(e){
+    bunnyStatus.textContent="🔴 Bunny ERRO: "+e.message;
+    bunnyStatus.className="status err";
+  }
+})();
+
+/* ================= ENVIO ================= */
 btn.onclick = ()=>{
   if(!titulo.value || !video.files[0]){
     alert("Título e vídeo são obrigatórios");
     return;
   }
-  iniciarUpload();
+  upload();
 };
 
-function iniciarUpload(){
+function upload(){
   btn.disabled=true;
   overlay.style.display="flex";
-  bar.style.width="0%";
-  msg.innerText="Enviando para Bunny…";
+  progress.style.width="0%";
+  overlayMsg.textContent="Enviando para Bunny…";
 
   const file = video.files[0];
-  const name = Date.now()+"_"+file.name.replace(/\s+/g,"_");
-  const url = `https://${BUNNY.region}.storage.bunnycdn.com/${BUNNY.zone}/filmes/${name}`;
+  const fileName = Date.now()+"_"+file.name.replace(/\s+/g,"_");
+  const uploadUrl = `https://${BUNNY.region}.storage.bunnycdn.com/${BUNNY.zone}/filmes/${fileName}`;
 
   const xhr = new XMLHttpRequest();
-  xhr.open("PUT",url);
+  xhr.open("PUT", uploadUrl);
   xhr.setRequestHeader("AccessKey",BUNNY.key);
   xhr.setRequestHeader("Content-Type","application/octet-stream");
 
-  xhr.upload.onprogress=e=>{
+  xhr.upload.onprogress = e=>{
     if(e.lengthComputable){
-      const p=Math.round((e.loaded/e.total)*100);
-      bar.style.width=p+"%";
-      msg.innerText=`Upload ${p}%`;
+      const pct = Math.round((e.loaded/e.total)*100);
+      progress.style.width=pct+"%";
+      overlayMsg.textContent=`Upload ${pct}%`;
     }
   };
 
-  xhr.onerror=()=>falha("Erro de rede no upload");
+  xhr.onerror = ()=>erro("Erro de rede no upload");
 
-  xhr.onload=()=>{
+  xhr.onload = ()=>{
     if(xhr.status!==201){
-      falha("Bunny recusou (HTTP "+xhr.status+")");
+      erro("Bunny recusou (HTTP "+xhr.status+")");
       return;
     }
-    salvarSupabase(`${BUNNY.cdn}/filmes/${name}`);
+    salvarSupabase(`${BUNNY.cdn}/filmes/${fileName}`);
   };
 
   xhr.send(file);
 }
 
 async function salvarSupabase(videoUrl){
-  msg.innerText="Salvando informações…";
+  overlayMsg.textContent="Salvando no Supabase…";
 
   const { error } = await supabase.from("filmes").insert({
     titulo:titulo.value,
@@ -250,18 +265,17 @@ async function salvarSupabase(videoUrl){
     ativo:true
   });
 
-if(error){
-  falha("Supabase ("+error.code+"): "+error.message);
-  console.error(error);
-  return;
+  if(error){
+    erro("Supabase: "+error.message);
+    return;
+  }
+
+  overlayMsg.textContent="✅ Filme enviado com sucesso!";
+  setTimeout(()=>location.reload(),1600);
 }
 
-  msg.innerText="✅ Filme enviado com sucesso!";
-  setTimeout(()=>location.reload(),1500);
-}
-
-function falha(t){
-  msg.innerText="❌ "+t;
+function erro(msg){
+  overlayMsg.textContent="❌ "+msg;
   btn.disabled=false;
 }
 </script>
