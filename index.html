@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>SESSÃO 99</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+:root{
+  --bg:#020617;
+  --card:#0b1224;
+  --primary:#e11d48;
+  --text:#e5e7eb;
+  --muted:#94a3b8;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Inter, Arial, sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  overflow:hidden;
+}
+
+/* ===== SPLASH ===== */
+#splash{
+  position:fixed;
+  inset:0;
+  background:#000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+  animation:fadeOut 1.2s ease forwards;
+  animation-delay:2.8s;
+}
+#splash h1{
+  font-size:64px;
+  letter-spacing:6px;
+  color:#fff;
+  animation:zoomGlow 2.8s ease forwards;
+}
+
+@keyframes zoomGlow{
+  0%{transform:scale(.6);opacity:0}
+  40%{opacity:1}
+  100%{
+    transform:scale(1.1);
+    text-shadow:0 0 40px #e11d48;
+  }
+}
+@keyframes fadeOut{
+  to{opacity:0;visibility:hidden}
+}
+
+/* ===== HEADER ===== */
+header{
+  padding:16px 24px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border-bottom:1px solid #111827;
+}
+header h2{
+  margin:0;
+  font-weight:700;
+}
+header input{
+  width:260px;
+  padding:10px;
+  border-radius:8px;
+  border:none;
+  background:#020617;
+  color:#fff;
+}
+
+/* ===== GRID ===== */
+main{
+  padding:24px;
+  display:none;
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:18px;
+}
+
+/* RESPONSIVO */
+@media(max-width:1400px){
+  .grid{grid-template-columns:repeat(5,1fr)}
+}
+@media(max-width:1200px){
+  .grid{grid-template-columns:repeat(4,1fr)}
+}
+@media(max-width:900px){
+  .grid{grid-template-columns:repeat(3,1fr)}
+}
+@media(max-width:600px){
+  .grid{grid-template-columns:repeat(2,1fr)}
+}
+
+/* ===== CARD ===== */
+.card{
+  background:var(--card);
+  border-radius:14px;
+  overflow:hidden;
+  cursor:pointer;
+  transition:.25s;
+}
+.card:hover{
+  transform:scale(1.05);
+}
+.card img{
+  width:100%;
+  height:280px;
+  object-fit:cover;
+}
+.card div{
+  padding:10px;
+}
+.card h3{
+  margin:0;
+  font-size:14px;
+}
+.card span{
+  font-size:12px;
+  color:var(--muted);
+}
+
+/* ===== MODAL ===== */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.8);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:50;
+}
+.modal-content{
+  width:90%;
+  max-width:900px;
+  background:#020617;
+  border-radius:14px;
+  overflow:hidden;
+}
+.modal iframe{
+  width:100%;
+  height:480px;
+}
+.modal-body{
+  padding:16px;
+}
+.close{
+  position:absolute;
+  top:20px;
+  right:20px;
+  background:#dc2626;
+  border:none;
+  color:#fff;
+  padding:8px 14px;
+  border-radius:6px;
+  cursor:pointer;
+}
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <h1>SESSÃO 99</h1>
+</div>
+
+<header>
+  <h2>🎬 SESSÃO 99</h2>
+  <input id="search" placeholder="Buscar filmes...">
+</header>
+
+<main id="content">
+  <div class="grid" id="grid"></div>
+</main>
+
+<div class="modal" id="modal">
+  <button class="close" onclick="closeModal()">Fechar</button>
+  <div class="modal-content">
+    <iframe id="player"></iframe>
+    <div class="modal-body">
+      <h2 id="title"></h2>
+      <p id="description"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+const supabase = supabaseJs.createClient(
+  "https://dxkszikemntfusfyrzos.supabase.co",
+  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+);
+
+const grid=document.getElementById("grid");
+const search=document.getElementById("search");
+const content=document.getElementById("content");
+
+let filmes=[];
+
+// Exibir conteúdo após splash
+setTimeout(()=>{
+  document.body.style.overflow="auto";
+  content.style.display="block";
+},3000);
+
+async function carregar(){
+  const {data}=await supabase.from("filmes").select("*").eq("ativo",true);
+  filmes=data||[];
+  render(filmes);
+}
+function render(lista){
+  grid.innerHTML="";
+  lista.forEach(f=>{
+    const c=document.createElement("div");
+    c.className="card";
+    c.innerHTML=`
+      <img src="${f.capa_url}">
+      <div>
+        <h3>${f.titulo}</h3>
+        <span>${f.categoria}</span>
+      </div>
+    `;
+    c.onclick=()=>openModal(f);
+    grid.appendChild(c);
+  });
+}
+search.oninput=()=>{
+  const v=search.value.toLowerCase();
+  render(filmes.filter(f=>f.titulo.toLowerCase().includes(v)));
+}
+function openModal(f){
+  modal.style.display="flex";
+  player.src=f.video_url;
+  title.innerText=f.titulo;
+  description.innerText=f.descricao;
+}
+function closeModal(){
+  modal.style.display="none";
+  player.src="";
+}
+carregar();
+</script>
+
+</body>
+</html>
