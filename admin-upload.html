@@ -169,20 +169,32 @@ const btn = document.getElementById("btn");
 const timeout = ms => new Promise((_,r)=>setTimeout(()=>r(new Error("Timeout")),ms));
 
 /* ================= TESTE SUPABASE ================= */
+/* ================= STATUS SUPABASE ================= */
 (async ()=>{
   try{
-    const { error } = await Promise.race([
-      supabase.from("filmes").select("id").limit(1),
-      timeout(3000)
-    ]);
+    const controller = new AbortController();
+    setTimeout(()=>controller.abort(),3000);
+
+    const { error } = await supabase
+      .from("filmes")
+      .select("id")
+      .limit(1)
+      .abortSignal(controller.signal);
+
     if(error) throw error;
-    supabaseStatus.innerText="🟢 Supabase conectado";
-    supabaseStatus.className="status ok";
+
+    supabaseStatus.innerText = "🟢 Supabase conectado";
+    supabaseStatus.className = "status ok";
   }catch(e){
-    supabaseStatus.innerText="🔴 Supabase ERRO: "+e.message;
-    supabaseStatus.className="status err";
+    supabaseStatus.innerText = "🔴 Supabase ERRO: conexão ou permissão";
+    supabaseStatus.className = "status err";
   }
 })();
+
+/* ================= STATUS BUNNY ================= */
+bunnyStatus.innerText = "🟢 Bunny pronto para upload";
+bunnyStatus.className = "status ok";
+
 
 /* ================= TESTE BUNNY ================= */
 (async ()=>{
