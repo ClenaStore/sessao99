@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>SESSÃO 99 • Admin</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <style>
@@ -19,43 +20,62 @@ body{
 }
 
 /* BOOT */
-#boot{position:fixed;inset:0;background:#05070f;display:flex;
-align-items:center;justify-content:center;z-index:99999}
-#bootBox{background:#0f1424;padding:28px 34px;border-radius:18px;text-align:center}
+#boot{
+  position:fixed;inset:0;background:#05070f;
+  display:flex;align-items:center;justify-content:center;z-index:9999
+}
+#bootBox{
+  background:#0f1424;padding:28px 34px;border-radius:18px;text-align:center
+}
 #bootStatus{color:var(--muted);font-weight:600}
 
 /* LAYOUT */
 .wrapper{max-width:1200px;margin:32px auto;padding:24px;display:none}
 header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
-header input{background:var(--input);border:none;border-radius:10px;padding:10px 14px;color:#fff}
-.status{background:var(--input);padding:12px 16px;border-radius:10px;margin-bottom:14px;font-weight:600}
+header h1{margin:0}
+header input{
+  background:var(--input);border:none;border-radius:10px;
+  padding:10px 14px;color:#fff;width:260px
+}
+.status{
+  background:var(--input);padding:12px 16px;border-radius:10px;
+  margin-bottom:14px;font-weight:600
+}
 .ok{color:var(--ok)} .err{color:var(--err)} .muted{color:var(--muted)}
 .grid{display:grid;grid-template-columns:360px 1fr;gap:24px}
 .panel{background:var(--panel);border-radius:18px;padding:24px}
 
 /* FORM */
 label{display:block;margin-top:14px;font-weight:600}
-input,textarea{
+input,textarea,select{
   width:100%;margin-top:6px;padding:12px;border-radius:10px;
   border:none;background:var(--input);color:#fff
 }
+textarea{resize:vertical}
 button{
   width:100%;margin-top:18px;padding:14px;border:none;border-radius:12px;
   background:var(--accent);color:#fff;font-size:15px;cursor:pointer
 }
 button:disabled{opacity:.6}
 
+/* AUTOCOMPLETE */
+.sugestoes{
+  background:#0b1020;border-radius:8px;margin-top:6px;display:none
+}
+.sugestoes div{
+  padding:10px;cursor:pointer
+}
+.sugestoes div:hover{background:#1c2240}
+
 /* PROGRESSO */
-.progress{margin-top:12px;display:none}
+.progress{margin-top:14px;display:none}
 .progressBar{
   width:100%;height:10px;background:#111;border-radius:10px;overflow:hidden
 }
 .progressBar div{
   height:100%;width:0%;background:var(--accent);transition:width .2s
 }
-.progressText{
-  margin-top:6px;font-size:13px;color:var(--muted)
-}
+.progressText{margin-top:6px;font-size:13px;color:var(--muted)}
 
 /* LISTA */
 .list{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px}
@@ -68,6 +88,7 @@ button:disabled{opacity:.6}
 </head>
 <body>
 
+<!-- BOOT -->
 <div id="boot">
   <div id="bootBox">
     <h2>SESSÃO 99</h2>
@@ -79,15 +100,22 @@ button:disabled{opacity:.6}
 
 <header>
   <h1>Painel Admin</h1>
-  <input id="search" placeholder="Buscar filme...">
+  <input id="search" placeholder="Buscar títulos…">
 </header>
 
 <div id="status" class="status muted">Inicializando…</div>
 
 <div class="grid">
 
+<!-- FORM -->
 <div class="panel">
-  <h3>Novo Filme</h3>
+  <h3>Novo Conteúdo</h3>
+
+  <label>Tipo</label>
+  <select id="tipo" onchange="toggleSerie()">
+    <option value="filme">🎬 Filme</option>
+    <option value="serie">📺 Série (episódio)</option>
+  </select>
 
   <label>Título *</label>
   <input id="titulo">
@@ -101,10 +129,30 @@ button:disabled{opacity:.6}
   <label>URL da capa</label>
   <input id="capa">
 
+  <!-- CAMPOS DE SÉRIE -->
+  <div id="serieFields" style="display:none">
+
+    <label>Nome da série</label>
+    <input id="serie_nome" placeholder="Digite para buscar…">
+    <div class="sugestoes" id="serieSugestoes"></div>
+
+    <label>Temporada</label>
+    <select id="temporada">
+      <option value="1">Temporada 1</option>
+      <option value="2">Temporada 2</option>
+      <option value="3">Temporada 3</option>
+      <option value="4">Temporada 4</option>
+      <option value="5">Temporada 5</option>
+    </select>
+
+    <label>Episódio</label>
+    <input id="episodio" type="number" min="1">
+  </div>
+
   <label>Arquivo de vídeo *</label>
   <input type="file" id="video" accept="video/*">
 
-  <button id="btnEnviar" onclick="enviar()">Enviar Filme</button>
+  <button id="btnEnviar" onclick="enviar()">Enviar</button>
 
   <div class="progress" id="progress">
     <div class="progressBar"><div id="bar"></div></div>
@@ -112,8 +160,9 @@ button:disabled{opacity:.6}
   </div>
 </div>
 
+<!-- LISTA -->
 <div class="panel">
-  <h3>Filmes cadastrados</h3>
+  <h3>Conteúdos cadastrados</h3>
   <div id="lista" class="list"></div>
 </div>
 
@@ -121,17 +170,20 @@ button:disabled{opacity:.6}
 </div>
 
 <script>
+/* SUPABASE */
 const supabaseClient = supabase.createClient(
   "https://dxkszikemntfusfyrzos.supabase.co",
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
+/* BUNNY */
 const BUNNY={
   zone:"sessao99",
   key:"d498d56e-361b-4a1e-9edb9eb63e3b-2e6a-4c17",
   cdn:"https://sessao99.b-cdn.net"
 };
 
+/* ELEMENTOS */
 const boot=document.getElementById("boot");
 const app=document.getElementById("app");
 const statusEl=document.getElementById("status");
@@ -141,16 +193,26 @@ const bar=document.getElementById("bar");
 const progressText=document.getElementById("progressText");
 const btn=document.getElementById("btnEnviar");
 
+const tipo=document.getElementById("tipo");
+const serieFields=document.getElementById("serieFields");
+const serieNome=document.getElementById("serie_nome");
+const sugestoes=document.getElementById("serieSugestoes");
+
+let dados=[];
+
+/* INIT */
 async function init(){
-  const { data } = await supabaseClient.from("filmes")
-    .select("*").order("created_at",{ascending:false});
-  render(data||[]);
-  statusEl.textContent=`🟢 ${data.length} filme(s) carregado(s)`;
+  const { data } = await supabaseClient
+    .from("filmes").select("*").order("created_at",{ascending:false});
+  dados=data||[];
+  render(dados);
+  statusEl.textContent=`🟢 ${dados.length} registros carregados`;
   statusEl.className="status ok";
   boot.style.display="none";
   app.style.display="block";
 }
 
+/* RENDER */
 function render(list){
   lista.innerHTML="";
   list.forEach(f=>{
@@ -158,11 +220,46 @@ function render(list){
     lista.innerHTML+=`
       <div class="item">
         <img src="${f.capa_url}">
-        <div><h4>${f.titulo}</h4><span>${f.categoria||""}</span></div>
+        <div>
+          <h4>${f.titulo}</h4>
+          <span>${f.tipo==='serie'
+            ? `S${f.temporada}E${f.episodio}`
+            : 'Filme'}</span>
+        </div>
       </div>`;
   });
 }
 
+/* TOGGLE */
+function toggleSerie(){
+  serieFields.style.display = tipo.value==="serie" ? "block" : "none";
+}
+
+/* AUTOCOMPLETE SÉRIES */
+serieNome.addEventListener("input", async ()=>{
+  const v=serieNome.value.trim();
+  if(v.length<2){sugestoes.style.display="none";return;}
+
+  const { data } = await supabaseClient
+    .from("filmes")
+    .select("serie_nome")
+    .eq("tipo","serie")
+    .ilike("serie_nome",`%${v}%`)
+    .limit(5);
+
+  if(!data||data.length===0){sugestoes.style.display="none";return;}
+
+  sugestoes.innerHTML="";
+  sugestoes.style.display="block";
+  [...new Set(data.map(d=>d.serie_nome))].forEach(n=>{
+    const div=document.createElement("div");
+    div.textContent=n;
+    div.onclick=()=>{serieNome.value=n;sugestoes.style.display="none";}
+    sugestoes.appendChild(div);
+  });
+});
+
+/* UPLOAD */
 function enviar(){
   const file=video.files[0];
   if(!titulo.value||!file){alert("Título e vídeo obrigatórios");return;}
@@ -171,7 +268,6 @@ function enviar(){
   progress.style.display="block";
   bar.style.width="0%";
 
-  const total=file.size;
   const nome=Date.now()+"_"+file.name.replace(/\s+/g,"_");
   const url=`https://br.storage.bunnycdn.com/${BUNNY.zone}/filmes/${nome}`;
 
@@ -181,14 +277,11 @@ function enviar(){
   xhr.setRequestHeader("Content-Type","application/octet-stream");
 
   xhr.upload.onprogress=e=>{
-    if(e.lengthComputable){
-      const pct=Math.round((e.loaded/e.total)*100);
-      const sent=(e.loaded/1024/1024).toFixed(1);
-      const tot=(e.total/1024/1024).toFixed(1);
-      const left=(tot-sent).toFixed(1);
-      bar.style.width=pct+"%";
-      progressText.textContent=`${pct}% • ${sent} MB de ${tot} MB (faltam ${left} MB)`;
-    }
+    const pct=Math.round((e.loaded/e.total)*100);
+    const sent=(e.loaded/1024/1024).toFixed(1);
+    const tot=(e.total/1024/1024).toFixed(1);
+    bar.style.width=pct+"%";
+    progressText.textContent=`${pct}% • ${sent} MB de ${tot} MB`;
   };
 
   xhr.onload=async()=>{
@@ -198,9 +291,13 @@ function enviar(){
       categoria:categoria.value,
       capa_url:capa.value,
       video_url:`${BUNNY.cdn}/filmes/${nome}`,
+      tipo:tipo.value,
+      serie_nome:tipo.value==="serie"?serieNome.value:null,
+      temporada:tipo.value==="serie"?Number(temporada.value):null,
+      episodio:tipo.value==="serie"?Number(episodio.value):null,
       ativo:true
     });
-    alert("✅ Upload concluído com sucesso!");
+    alert("✅ Upload concluído!");
     location.reload();
   };
 
