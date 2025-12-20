@@ -2,342 +2,328 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>SESSÃO 99</title>
+<title>SESSÃO 99 • Admin</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
+<!-- SUPABASE -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <style>
 :root{
   --bg:#05070f;
-  --panel:#0b1020;
-  --card:#141a2e;
-  --accent:#e50914;
-  --text:#fff;
+  --panel:#0f1424;
+  --card:#151a30;
+  --input:#0b1020;
+  --accent:#6366f1;
+  --ok:#22c55e;
+  --err:#ef4444;
+  --text:#e5e7eb;
   --muted:#9ca3af;
 }
 *{box-sizing:border-box}
 body{
   margin:0;
-  background:var(--bg);
+  background:linear-gradient(180deg,#05060c,#07090f);
   color:var(--text);
   font-family:Inter,Arial,sans-serif;
 }
 
-/* HEADER */
+/* OVERLAY BOOT */
+#boot{
+  position:fixed;
+  inset:0;
+  background:#05070f;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:99999;
+}
+#bootBox{
+  background:#0f1424;
+  padding:28px 34px;
+  border-radius:18px;
+  text-align:center;
+}
+#bootStatus{color:var(--muted);font-weight:600}
+
+/* LAYOUT */
+.wrapper{
+  max-width:1200px;
+  margin:32px auto;
+  padding:24px;
+  display:none;
+}
 header{
-  padding:18px 32px;
   display:flex;
   justify-content:space-between;
   align-items:center;
-  background:linear-gradient(180deg,#000,transparent);
-  position:sticky;
-  top:0;
-  z-index:10;
+  margin-bottom:20px;
 }
-header h1{color:var(--accent);margin:0}
 header input{
-  background:#111;
+  background:var(--input);
   border:none;
-  border-radius:8px;
+  border-radius:10px;
   padding:10px 14px;
   color:#fff;
-  width:260px;
 }
-
-/* HOME */
-section{padding:0 32px 32px}
-section h2{margin:14px 0;font-size:18px}
-.row{
-  display:flex;
-  gap:14px;
-  overflow-x:auto;
-}
-.row::-webkit-scrollbar{display:none}
-.card{
-  min-width:180px;
-  cursor:pointer;
-  transition:.25s;
-}
-.card:hover{transform:scale(1.08)}
-.card img{
-  width:100%;
-  height:260px;
-  object-fit:cover;
+.status{
+  background:var(--input);
+  padding:12px 16px;
   border-radius:10px;
+  margin-bottom:14px;
+  font-weight:600;
+}
+.ok{color:var(--ok)}
+.err{color:var(--err)}
+.muted{color:var(--muted)}
+
+.grid{
+  display:grid;
+  grid-template-columns:360px 1fr;
+  gap:24px;
+}
+.panel{
+  background:var(--panel);
+  border-radius:18px;
+  padding:24px;
 }
 
-/* PLAYER */
-#player{
-  position:fixed;
-  inset:0;
-  background:#000;
-  display:none;
-  flex-direction:column;
-  z-index:9999;
-}
-.top{
-  padding:14px 18px;
-  display:flex;
-  align-items:center;
-  gap:12px;
-}
-.top button{
-  background:#111;
+/* FORM */
+label{display:block;margin-top:14px;font-weight:600}
+input,textarea{
+  width:100%;
+  margin-top:6px;
+  padding:12px;
+  border-radius:10px;
   border:none;
+  background:var(--input);
   color:#fff;
-  padding:8px 14px;
-  border-radius:8px;
+}
+textarea{resize:vertical}
+button{
+  width:100%;
+  margin-top:18px;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  background:var(--accent);
+  color:#fff;
+  font-size:15px;
   cursor:pointer;
 }
-.cover{
+
+/* LISTA */
+.list{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+  gap:16px;
+}
+.item{
+  background:var(--card);
+  border-radius:14px;
+  overflow:hidden;
+  cursor:pointer;
+  transition:.2s;
+}
+.item:hover{transform:scale(1.03)}
+.item img{
   width:100%;
-  max-height:420px;
+  height:240px;
   object-fit:cover;
 }
-.selects{
-  display:flex;
-  gap:12px;
-  padding:12px 18px;
-}
-select{
-  background:#111;
-  border:none;
-  color:#fff;
-  padding:10px;
-  border-radius:8px;
-}
-video{
-  width:100%;
-  height:calc(100vh - 320px);
-  background:#000;
-}
-
-/* RECOMENDAÇÕES */
-.recos{
-  padding:20px 32px 60px;
-}
+.item div{padding:12px}
+.item h4{margin:0 0 6px;font-size:14px}
+.item span{font-size:12px;color:var(--muted)}
 </style>
 </head>
-
 <body>
 
+<!-- OVERLAY -->
+<div id="boot">
+  <div id="bootBox">
+    <h2>SESSÃO 99</h2>
+    <div id="bootStatus">Conectando ao Supabase…</div>
+  </div>
+</div>
+
+<div class="wrapper" id="app">
+
 <header>
-  <h1>SESSÃO 99</h1>
-  <input id="search" placeholder="Buscar...">
+  <h1>Painel Admin</h1>
+  <input id="search" placeholder="Buscar filme...">
 </header>
 
-<div id="home"></div>
+<div id="status" class="status muted">Inicializando…</div>
 
-<!-- PLAYER -->
-<div id="player">
-  <div class="top">
-    <button onclick="fechar()">⬅ Voltar</button>
-    <strong id="tituloPlayer"></strong>
-  </div>
-  <img id="capaPlayer" class="cover">
-  <div class="selects">
-    <select id="selTemporada"></select>
-    <select id="selEpisodio"></select>
-  </div>
-  <video id="video" controls autoplay></video>
+<div class="grid">
 
-  <div class="recos" id="recomendacoes"></div>
+<!-- FORM -->
+<div class="panel">
+  <h3>Novo Filme</h3>
+
+  <label>Título *</label>
+  <input id="titulo">
+
+  <label>Descrição</label>
+  <textarea id="descricao"></textarea>
+
+  <label>Categoria</label>
+  <input id="categoria">
+
+  <label>URL da capa</label>
+  <input id="capa">
+
+  <label>Arquivo de vídeo *</label>
+  <input type="file" id="video" accept="video/*">
+
+  <button onclick="enviar()">Enviar Filme</button>
+</div>
+
+<!-- LISTA -->
+<div class="panel">
+  <h3>Filmes cadastrados</h3>
+  <div id="lista" class="list"></div>
+</div>
+
+</div>
 </div>
 
 <script>
 /* ================= SUPABASE ================= */
-const supabaseClient = supabase.createClient(
+const supabaseClient = window.supabase.createClient(
   "https://dxkszikemntfusfyrzos.supabase.co",
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-/* ================= USER ================= */
-const USER_ID = localStorage.user_id || crypto.randomUUID();
-localStorage.user_id = USER_ID;
-
-/* ================= ELEMENTOS ================= */
-const home = document.getElementById("home");
-const search = document.getElementById("search");
-const player = document.getElementById("player");
-const tituloPlayer = document.getElementById("tituloPlayer");
-const capaPlayer = document.getElementById("capaPlayer");
-const selTemporada = document.getElementById("selTemporada");
-const selEpisodio = document.getElementById("selEpisodio");
-const video = document.getElementById("video");
-const recosBox = document.getElementById("recomendacoes");
-
-/* ================= STATE ================= */
-let dados = [];
-let serieAtual = [];
-let episodioAtual = null;
-let pingTimer = null;
-
-/* ================= TRACKING (ANTI DUPLICAÇÃO) ================= */
-async function registrar(acao){
-  if(!episodioAtual || !video.duration) return;
-
-  const played = Math.floor(video.currentTime);
-  const duration = Math.floor(video.duration);
-  const percent = Math.round((played / duration) * 100);
-
-  await supabaseClient.from("rs_play_events").insert({
-    user_id: USER_ID,
-    content_id: episodioAtual.id,
-    acao,
-    tipo: episodioAtual.tipo,
-    titulo: episodioAtual.titulo,
-    serie_nome: episodioAtual.serie_nome,
-    temporada: episodioAtual.temporada,
-    episodio: episodioAtual.episodio,
-    played_seconds: played,
-    duration_seconds: duration,
-    progress_percent: percent,
-    user_agent: navigator.userAgent
-  });
-
-  await supabaseClient
-    .from("rs_sessions")
-    .upsert({
-      user_id: USER_ID,
-      content_id: episodioAtual.id,
-      content_tipo: episodioAtual.tipo,
-      serie_nome: episodioAtual.serie_nome,
-      last_ping: new Date().toISOString()
-    },{ onConflict:"user_id" });
-}
-
-/* ================= LOAD ================= */
-async function load(){
-  const { data } = await supabaseClient
-    .from("filmes")
-    .select("*")
-    .eq("ativo", true);
-
-  dados = data || [];
-  renderHome(dados);
-}
-
-/* ================= HOME ================= */
-function renderHome(list){
-  home.innerHTML = "";
-
-  const filmes = list.filter(i=>i.tipo==="filme");
-  const series = [...new Map(
-    list.filter(i=>i.tipo==="serie").map(s=>[s.serie_nome,s])
-  ).values()];
-
-  renderRow("🎬 Filmes",filmes,playFilme);
-  renderRow("📺 Séries",series,s=>abrirSerie(s.serie_nome));
-}
-
-function renderRow(titulo,itens,click){
-  if(!itens.length) return;
-  const sec=document.createElement("section");
-  sec.innerHTML=`<h2>${titulo}</h2>`;
-  const row=document.createElement("div");
-  row.className="row";
-
-  itens.forEach(i=>{
-    const c=document.createElement("div");
-    c.className="card";
-    c.innerHTML=`<img src="${i.capa_url}">`;
-    c.onclick=()=>click(i);
-    row.appendChild(c);
-  });
-
-  sec.appendChild(row);
-  home.appendChild(sec);
-}
-
-/* ================= PLAYER ================= */
-function playFilme(f){
-  serieAtual=[f];
-  tocar(f);
-  tituloPlayer.textContent=f.titulo;
-  capaPlayer.src=f.capa_url;
-  selTemporada.innerHTML="";
-  selEpisodio.innerHTML="";
-  mostrarRecomendacoes(f.genero,f.id);
-  player.style.display="flex";
-}
-
-function abrirSerie(nome){
-  serieAtual=dados
-    .filter(d=>d.serie_nome===nome)
-    .sort((a,b)=>a.temporada-b.temporada||a.episodio-b.episodio);
-
-  const base=serieAtual[0];
-  tituloPlayer.textContent=nome;
-  capaPlayer.src=base.capa_url;
-  montarTemporadas();
-  mostrarRecomendacoes(base.genero,base.id);
-  player.style.display="flex";
-}
-
-function montarTemporadas(){
-  const temps=[...new Set(serieAtual.map(e=>e.temporada))];
-  selTemporada.innerHTML="";
-  temps.forEach(t=>selTemporada.innerHTML+=`<option value="${t}">Temporada ${t}</option>`);
-  selTemporada.onchange=montarEpisodios;
-  montarEpisodios();
-}
-
-function montarEpisodios(){
-  const t=Number(selTemporada.value);
-  const eps=serieAtual.filter(e=>e.temporada===t);
-  selEpisodio.innerHTML="";
-  eps.forEach((e,i)=>selEpisodio.innerHTML+=`<option value="${i}">Episódio ${e.episodio}</option>`);
-  selEpisodio.onchange=()=>tocar(eps[selEpisodio.value]);
-  tocar(eps[0]);
-}
-
-function tocar(ep){
-  episodioAtual=ep;
-  video.src=ep.video_url;
-  video.play();
-}
-
-/* ================= EVENTS ================= */
-video.addEventListener("play",()=>{
-  registrar("play");
-  pingTimer=setInterval(()=>registrar("ping"),15000);
-});
-video.addEventListener("pause",()=>{
-  clearInterval(pingTimer);
-  registrar("stop");
-});
-window.addEventListener("beforeunload",()=>registrar("stop"));
-
-function fechar(){
-  clearInterval(pingTimer);
-  registrar("stop");
-  video.pause();
-  video.src="";
-  player.style.display="none";
-}
-
-/* ================= RECOMENDAÇÕES ================= */
-function mostrarRecomendacoes(genero,idAtual){
-  recosBox.innerHTML="";
-
-  const mesmoGenero=dados.filter(f=>f.genero===genero&&f.id!==idAtual).slice(0,12);
-  const aleatorio=dados.filter(f=>f.genero!==genero).sort(()=>0.5-Math.random()).slice(0,6);
-
-  renderRow("🎯 Recomendados",mesmoGenero,playFilme);
-  renderRow("🎲 Descubra",aleatorio,playFilme);
-}
-
-/* ================= SEARCH ================= */
-search.oninput=()=>{
-  const v=search.value.toLowerCase();
-  renderHome(dados.filter(d=>
-    d.titulo.toLowerCase().includes(v) ||
-    (d.serie_nome&&d.serie_nome.toLowerCase().includes(v))
-  ));
+/* ================= BUNNY ================= */
+const BUNNY = {
+  zone: "sessao99",
+  region: "br",
+  key: "d498d56e-361b-4a1e-9edb9eb63e3b-2e6a-4c17",
+  cdn: "https://sessao99.b-cdn.net"
 };
 
-load();
+/* ================= ELEMENTOS ================= */
+const boot = document.getElementById("boot");
+const bootStatus = document.getElementById("bootStatus");
+const app = document.getElementById("app");
+const statusEl = document.getElementById("status");
+const lista = document.getElementById("lista");
+const search = document.getElementById("search");
+
+let filmes = [];
+
+/* ================= INIT ================= */
+async function init(){
+  try{
+    bootStatus.innerText = "Buscando registros…";
+
+    const { data, error } = await supabaseClient
+      .from("filmes")
+      .select("*")
+      .order("created_at",{ascending:false});
+
+    if(error) throw error.message;
+
+    filmes = data || [];
+    render(filmes);
+
+    statusEl.innerHTML = `🟢 ${filmes.length} filme(s) carregado(s)`;
+    statusEl.className = "status ok";
+
+    boot.style.display = "none";
+    app.style.display = "block";
+
+  }catch(e){
+    bootStatus.innerText = "ERRO: " + e;
+    bootStatus.style.color = "#ef4444";
+  }
+}
+
+/* ================= RENDER ================= */
+function render(listaFilmes){
+  lista.innerHTML = "";
+  if(listaFilmes.length === 0){
+    lista.innerHTML = "<p class='muted'>Nenhum filme cadastrado</p>";
+    return;
+  }
+  listaFilmes.forEach(f=>{
+    if(!f.capa_url) return;
+    const d = document.createElement("div");
+    d.className = "item";
+    d.innerHTML = `
+      <img src="${f.capa_url}">
+      <div>
+        <h4>${f.titulo}</h4>
+        <span>${f.categoria || ""}</span>
+      </div>
+    `;
+    lista.appendChild(d);
+  });
+}
+
+/* ================= BUSCA ================= */
+search.oninput = ()=>{
+  const v = search.value.toLowerCase();
+  render(filmes.filter(f=>f.titulo.toLowerCase().includes(v)));
+};
+
+/* ================= UPLOAD ================= */
+async function enviar(){
+  const titulo = document.getElementById("titulo").value;
+  const descricao = document.getElementById("descricao").value;
+  const categoria = document.getElementById("categoria").value;
+  const capa = document.getElementById("capa").value;
+  const videoInput = document.getElementById("video");
+
+  if(!titulo || !videoInput.files[0]){
+    alert("Título e vídeo são obrigatórios");
+    return;
+  }
+
+  statusEl.textContent = "⏳ Enviando vídeo…";
+  statusEl.className = "status muted";
+
+  const file = videoInput.files[0];
+  const nome = Date.now()+"_"+file.name.replace(/\s+/g,"_");
+
+  const uploadUrl = `https://${BUNNY.region}.storage.bunnycdn.com/${BUNNY.zone}/filmes/${nome}`;
+
+  const res = await fetch(uploadUrl,{
+    method:"PUT",
+    headers:{
+      "AccessKey": BUNNY.key,
+      "Content-Type":"application/octet-stream"
+    },
+    body:file
+  });
+
+  if(!res.ok){
+    alert("Erro no upload para Bunny");
+    return;
+  }
+
+  const videoUrl = `${BUNNY.cdn}/filmes/${nome}`;
+
+  const { error } = await supabaseClient.from("filmes").insert({
+    titulo,
+    descricao,
+    categoria,
+    capa_url: capa,
+    video_url: videoUrl,
+    ativo: true
+  });
+
+  if(error){
+    alert("Erro Supabase: "+error.message);
+    return;
+  }
+
+  alert("Filme enviado com sucesso!");
+  location.reload();
+}
+
+init();
 </script>
 
 </body>
