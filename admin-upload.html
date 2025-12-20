@@ -26,8 +26,8 @@ body{
 
 /* ===== LAYOUT ===== */
 main{
-  max-width:960px;
-  margin:40px auto;
+  max-width:1000px;
+  margin:32px auto;
   background:var(--card);
   padding:32px;
   border-radius:18px;
@@ -35,12 +35,25 @@ main{
 }
 h1{margin-top:0}
 
-/* ===== FORM ===== */
-label{
-  display:block;
-  margin-top:16px;
+/* ===== STATUS ===== */
+#statusBox{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  margin-bottom:32px;
+}
+.status{
+  padding:16px;
+  border-radius:12px;
+  background:#020617;
   font-weight:600;
 }
+.ok{color:var(--ok)}
+.err{color:var(--err)}
+.muted{color:var(--muted)}
+
+/* ===== FORM ===== */
+label{display:block;margin-top:16px;font-weight:600}
 input,textarea{
   width:100%;
   padding:12px;
@@ -63,10 +76,7 @@ button{
   font-size:16px;
   cursor:pointer;
 }
-button:disabled{
-  opacity:.5;
-  cursor:not-allowed;
-}
+button:disabled{opacity:.5;cursor:not-allowed}
 
 /* ===== OVERLAY ===== */
 #overlay{
@@ -85,9 +95,6 @@ button:disabled{
   padding:32px;
   border-radius:18px;
   text-align:center;
-}
-#overlayBox h3{
-  margin-top:0;
 }
 #progress{
   width:100%;
@@ -108,9 +115,6 @@ button:disabled{
   min-height:24px;
   font-weight:600;
 }
-.ok{color:var(--ok)}
-.err{color:var(--err)}
-.muted{color:var(--muted)}
 </style>
 </head>
 <body>
@@ -118,15 +122,22 @@ button:disabled{
 <!-- OVERLAY -->
 <div id="overlay">
   <div id="overlayBox">
-    <h3>🎬 Enviando filme</h3>
+    <h3>🎬 Processando</h3>
     <div id="progress"><div id="bar"></div></div>
-    <div id="msg" class="muted">Preparando…</div>
+    <div id="msg" class="muted">Inicializando…</div>
   </div>
 </div>
 
 <main>
   <h1>SESSÃO 99 — Painel Admin</h1>
 
+  <!-- STATUS -->
+  <div id="statusBox">
+    <div id="supabaseStatus" class="status muted">🔌 Supabase: verificando…</div>
+    <div id="bunnyStatus" class="status muted">🐰 Bunny.net: verificando…</div>
+  </div>
+
+  <!-- FORM -->
   <label>Título *</label>
   <input id="titulo">
 
@@ -137,7 +148,7 @@ button:disabled{
   <input id="categoria">
 
   <label>URL da capa</label>
-  <input id="capa" placeholder="https://...jpg">
+  <input id="capa">
 
   <label>Arquivo de vídeo *</label>
   <input type="file" id="video" accept="video/*">
@@ -164,25 +175,45 @@ const overlay = document.getElementById("overlay");
 const bar = document.getElementById("bar");
 const msg = document.getElementById("msg");
 const btn = document.getElementById("btn");
+const supabaseStatus = document.getElementById("supabaseStatus");
+const bunnyStatus = document.getElementById("bunnyStatus");
 
-/* ================= EVENTO ================= */
+/* ================= STATUS CHECK ================= */
+window.onload = async ()=>{
+  verificarSupabase();
+  verificarBunny();
+};
+
+async function verificarSupabase(){
+  try{
+    const { error } = await supabase.from("filmes").select("id").limit(1);
+    if(error) throw error;
+    supabaseStatus.innerText="🟢 Supabase conectado";
+    supabaseStatus.className="status ok";
+  }catch(e){
+    supabaseStatus.innerText="🔴 Supabase ERRO: "+e.message;
+    supabaseStatus.className="status err";
+  }
+}
+
+async function verificarBunny(){
+  try{
+    const testUrl = `https://${BUNNY.region}.storage.bunnycdn.com/${BUNNY.zone}/`;
+    const res = await fetch(testUrl,{
+      method:"HEAD",
+      headers:{ "AccessKey": BUNNY.key }
+    });
+    if(!res.ok) throw new Error("HTTP "+res.status);
+    bunnyStatus.innerText="🟢 Bunny conectado";
+    bunnyStatus.className="status ok";
+  }catch(e){
+    bunnyStatus.innerText="🔴 Bunny ERRO: "+e.message;
+    bunnyStatus.className="status err";
+  }
+}
+
+/* ================= UPLOAD ================= */
 btn.onclick = iniciar;
-
-/* ================= FUNÇÕES ================= */
-function mostrarOverlay(text){
-  overlay.style.display="flex";
-  msg.innerText = text;
-  msg.className="muted";
-  bar.style.width="0%";
-  bar.style.background="var(--accent)";
-}
-
-function erro(text){
-  msg.innerText = "❌ " + text;
-  msg.className="err";
-  bar.style.background="var(--err)";
-  btn.disabled=false;
-}
 
 function iniciar(){
   if(!titulo.value || !video.files[0]){
@@ -190,8 +221,17 @@ function iniciar(){
     return;
   }
   btn.disabled=true;
-  mostrarOverlay("Validando arquivo…");
+  overlay.style.display="flex";
+  bar.style.width="0%";
+  msg.innerText="Validando…";
   enviarBunny();
+}
+
+function erro(text){
+  msg.innerText="❌ "+text;
+  msg.className="err";
+  bar.style.background="var(--err)";
+  btn.disabled=false;
 }
 
 function enviarBunny(){
@@ -199,12 +239,12 @@ function enviarBunny(){
   const name = Date.now()+"_"+file.name.replace(/\s+/g,"_");
   const url = `https://${BUNNY.region}.storage.bunnycdn.com/${BUNNY.zone}/filmes/${name}`;
 
-  msg.innerText="Enviando para Bunny.net…";
+  msg.innerText="Enviando para Bunny…";
 
   const xhr = new XMLHttpRequest();
   xhr.open("PUT", url);
   xhr.setRequestHeader("AccessKey", BUNNY.key);
-  xhr.setRequestHeader("Content-Type", "application/octet-stream");
+  xhr.setRequestHeader("Content-Type","application/octet-stream");
 
   xhr.upload.onprogress = e=>{
     if(e.lengthComputable){
@@ -218,7 +258,7 @@ function enviarBunny(){
 
   xhr.onload = ()=>{
     if(xhr.status !== 201){
-      erro(`Bunny recusou (HTTP ${xhr.status})`);
+      erro("Bunny recusou (HTTP "+xhr.status+")");
       return;
     }
     salvarSupabase(`${BUNNY.cdn}/filmes/${name}`);
@@ -245,7 +285,7 @@ async function salvarSupabase(videoUrl){
   }
 
   bar.style.width="100%";
-  msg.innerText="✅ Filme enviado com sucesso!";
+  msg.innerText="✅ Upload finalizado com sucesso!";
   msg.className="ok";
 
   setTimeout(()=>{
