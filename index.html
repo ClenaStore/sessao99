@@ -4,22 +4,51 @@
 <meta charset="UTF-8">
 <title>SESSÃO 99</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- SUPABASE CDN -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-body{margin:0;background:#05070f;color:#fff;font-family:Inter}
-header{
-  position:fixed;top:0;width:100%;z-index:10;
-  padding:16px 40px;
-  display:flex;justify-content:space-between;
-  background:rgba(0,0,0,.8)
+body{
+  margin:0;
+  background:#05070f;
+  color:#fff;
+  font-family:Inter,Arial,sans-serif;
 }
-main{margin-top:90px;padding:40px}
-.row{display:flex;gap:16px;overflow-x:auto}
-.card{min-width:220px;height:330px;border-radius:12px;overflow:hidden;cursor:pointer}
-.card img{width:100%;height:100%;object-fit:cover}
-.debug{color:#22c55e;margin-bottom:20px}
-.error{color:#ef4444}
+header{
+  padding:16px 32px;
+  background:#000;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+main{
+  padding:32px;
+}
+.row{
+  display:flex;
+  gap:16px;
+  flex-wrap:wrap;
+}
+.card{
+  width:200px;
+  height:300px;
+  border-radius:12px;
+  overflow:hidden;
+  cursor:pointer;
+}
+.card img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+#debug{
+  margin-bottom:20px;
+  color:#22c55e;
+}
+.error{
+  color:#ef4444;
+}
 </style>
 </head>
 <body>
@@ -30,60 +59,73 @@ main{margin-top:90px;padding:40px}
 </header>
 
 <main>
-  <div id="debug" class="debug">Carregando...</div>
-  <div id="content"></div>
+  <div id="debug">Inicializando Supabase…</div>
+  <div class="row" id="grid"></div>
 </main>
 
 <script>
-const supabase = supabaseJs.createClient(
+/* ===============================
+   SUPABASE CLIENT (CORRETO)
+================================ */
+const supabase = window.supabase.createClient(
   "https://dxkszikemntfusfyrzos.supabase.co",
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-const debug=document.getElementById("debug");
-const content=document.getElementById("content");
+const debug = document.getElementById("debug");
+const grid = document.getElementById("grid");
+const search = document.getElementById("search");
 
+let filmes = [];
+
+/* ===============================
+   LOAD
+================================ */
 async function carregar(){
-  const {data,error} = await supabase
+  debug.innerText = "Buscando filmes no Supabase…";
+
+  const { data, error } = await supabase
     .from("filmes")
     .select("*")
-    .eq("ativo",true);
+    .eq("ativo", true);
 
   if(error){
-    debug.innerHTML = "❌ ERRO SUPABASE:<br>"+JSON.stringify(error,null,2);
-    debug.className="error";
+    debug.innerHTML = "❌ ERRO:<br>" + JSON.stringify(error, null, 2);
+    debug.className = "error";
     return;
   }
 
   debug.innerText = `✅ ${data.length} filme(s) carregado(s)`;
-  render(data);
+  filmes = data || [];
+  render(filmes);
 }
 
+/* ===============================
+   RENDER
+================================ */
 function render(lista){
-  content.innerHTML="";
-  const categorias=[...new Set(lista.map(f=>f.categoria||"Outros"))];
+  grid.innerHTML = "";
+  lista.forEach(f => {
+    if(!f.capa_url) return;
 
-  categorias.forEach(cat=>{
-    const h=document.createElement("h3");
-    h.innerText=cat;
-    const row=document.createElement("div");
-    row.className="row";
-
-    lista.filter(f=>(f.categoria||"Outros")==cat).forEach(f=>{
-      if(!f.capa_url) return;
-      const c=document.createElement("div");
-      c.className="card";
-      c.innerHTML=`<img src="${f.capa_url}">`;
-      c.onclick=()=>window.open(f.video_url,"_blank");
-      row.appendChild(c);
-    });
-
-    content.appendChild(h);
-    content.appendChild(row);
+    const c = document.createElement("div");
+    c.className = "card";
+    c.innerHTML = `<img src="${f.capa_url}">`;
+    c.onclick = () => window.open(f.video_url, "_blank");
+    grid.appendChild(c);
   });
 }
 
+/* ===============================
+   SEARCH
+================================ */
+search.oninput = () => {
+  const v = search.value.toLowerCase();
+  render(filmes.filter(f => f.titulo.toLowerCase().includes(v)));
+};
+
 carregar();
 </script>
+
 </body>
 </html>
