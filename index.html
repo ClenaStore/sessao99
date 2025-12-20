@@ -5,7 +5,6 @@
 <title>SESSÃO 99 • Admin</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- SUPABASE -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <style>
@@ -15,8 +14,8 @@
   --card:#151a30;
   --input:#0b1020;
   --accent:#6366f1;
+  --danger:#ef4444;
   --ok:#22c55e;
-  --err:#ef4444;
   --text:#e5e7eb;
   --muted:#9ca3af;
 }
@@ -25,12 +24,14 @@
 
 body{
   margin:0;
+  height:100vh;
+  overflow:hidden;
   background:linear-gradient(180deg,#05060c,#07090f);
   color:var(--text);
   font-family:Inter,Arial,sans-serif;
 }
 
-/* ================= OVERLAY INICIAL ================= */
+/* ================= OVERLAY BOOT ================= */
 #boot{
   position:fixed;
   inset:0;
@@ -38,141 +39,186 @@ body{
   display:flex;
   align-items:center;
   justify-content:center;
-  z-index:99999;
+  z-index:9999;
 }
-
 #bootBox{
-  background:#0f1424;
-  padding:28px 34px;
+  background:var(--panel);
+  padding:28px 36px;
   border-radius:18px;
   text-align:center;
-  min-width:280px;
 }
-
-#bootBox h2{
-  margin:0 0 8px;
-}
-
-#bootStatus{
-  color:var(--muted);
-  font-weight:600;
-}
+#bootStatus{color:var(--muted);font-weight:600}
 
 /* ================= LAYOUT ================= */
 .wrapper{
-  max-width:1200px;
-  margin:32px auto;
-  padding:24px;
-  display:none; /* só libera depois do load */
+  display:none;
+  height:100vh;
+  padding:16px 24px;
 }
-
 header{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  margin-bottom:20px;
+  margin-bottom:12px;
 }
-
 header input{
   background:var(--input);
   border:none;
   border-radius:10px;
-  padding:10px 14px;
+  padding:8px 12px;
   color:#fff;
 }
 
 .status{
   background:var(--input);
-  padding:12px 16px;
+  padding:10px 14px;
   border-radius:10px;
-  margin-bottom:14px;
   font-weight:600;
+  margin-bottom:10px;
 }
-
 .ok{color:var(--ok)}
-.err{color:var(--err)}
+.err{color:var(--danger)}
 .muted{color:var(--muted)}
 
 .grid{
   display:grid;
-  grid-template-columns:360px 1fr;
-  gap:24px;
-}
-
-.panel{
-  background:var(--panel);
-  border-radius:18px;
-  padding:24px;
+  grid-template-columns:340px 1fr;
+  gap:16px;
+  height:calc(100vh - 120px);
 }
 
 /* ================= FORM ================= */
-label{display:block;margin-top:14px;font-weight:600}
-
+.panel{
+  background:var(--panel);
+  border-radius:18px;
+  padding:18px;
+}
+label{display:block;margin-top:10px;font-weight:600}
 input,textarea{
   width:100%;
-  margin-top:6px;
-  padding:12px;
+  margin-top:4px;
+  padding:10px;
   border-radius:10px;
   border:none;
   background:var(--input);
   color:#fff;
 }
-
-textarea{resize:vertical}
-
+textarea{resize:none;height:60px}
 button{
   width:100%;
-  margin-top:18px;
-  padding:14px;
+  margin-top:14px;
+  padding:12px;
   border:none;
   border-radius:12px;
   background:var(--accent);
   color:#fff;
-  font-size:15px;
   cursor:pointer;
 }
 
 /* ================= LISTA ================= */
 .list{
+  height:100%;
+  overflow-y:auto;
   display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
-  gap:16px;
+  grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
+  gap:12px;
+  padding-right:4px;
 }
-
 .item{
   background:var(--card);
-  border-radius:14px;
+  border-radius:12px;
   overflow:hidden;
   cursor:pointer;
   transition:.2s;
 }
-
-.item:hover{transform:scale(1.03)}
-
+.item:hover{transform:scale(1.05)}
 .item img{
   width:100%;
-  height:240px;
+  height:160px;
   object-fit:cover;
 }
-
 .item div{
-  padding:12px;
+  padding:8px;
 }
-
 .item h4{
-  margin:0 0 6px;
-  font-size:14px;
+  margin:0;
+  font-size:13px;
+}
+.item span{
+  font-size:11px;
+  color:var(--muted);
 }
 
-.item span{
-  font-size:12px;
-  color:var(--muted);
+/* ================= MODAL ================= */
+#modalBg{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.85);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9998;
+}
+#modal{
+  background:var(--panel);
+  width:700px;
+  max-width:95%;
+  border-radius:18px;
+  display:grid;
+  grid-template-columns:260px 1fr;
+}
+#modal img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  border-radius:18px 0 0 18px;
+}
+#modalContent{
+  padding:20px;
+}
+#modalContent input,#modalContent textarea{
+  margin-bottom:8px;
+}
+.modalBtns{
+  display:flex;
+  gap:10px;
+  margin-top:10px;
+}
+.danger{background:var(--danger)}
+
+/* ================= UPLOAD OVERLAY ================= */
+#upload{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.9);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+}
+#uploadBox{
+  background:var(--panel);
+  padding:26px;
+  border-radius:16px;
+  text-align:center;
+}
+#barWrap{
+  margin-top:12px;
+  background:#111;
+  border-radius:10px;
+  overflow:hidden;
+  height:10px;
+}
+#bar{
+  height:100%;
+  width:0%;
+  background:var(--accent);
 }
 </style>
 </head>
 <body>
 
-<!-- OVERLAY BOOT -->
+<!-- BOOT -->
 <div id="boot">
   <div id="bootBox">
     <h2>SESSÃO 99</h2>
@@ -180,131 +226,157 @@ button{
   </div>
 </div>
 
-<div class="wrapper" id="app">
+<!-- UPLOAD -->
+<div id="upload">
+  <div id="uploadBox">
+    <strong>Enviando vídeo…</strong>
+    <div id="barWrap"><div id="bar"></div></div>
+  </div>
+</div>
 
+<!-- MODAL -->
+<div id="modalBg">
+  <div id="modal">
+    <img id="mCapa">
+    <div id="modalContent">
+      <input id="mTitulo">
+      <textarea id="mDescricao"></textarea>
+      <input id="mCategoria">
+      <input id="mCapaUrl">
+      <div class="modalBtns">
+        <button onclick="salvarEdicao()">Salvar</button>
+        <button class="danger" onclick="excluir()">Excluir</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wrapper" id="app">
 <header>
-  <h1>Painel Admin</h1>
-  <input id="search" placeholder="Buscar filme...">
+  <h2>Painel Admin</h2>
+  <input id="search" placeholder="Buscar...">
 </header>
 
 <div id="status" class="status muted">Inicializando…</div>
 
 <div class="grid">
-
-  <!-- FORM -->
   <div class="panel">
     <h3>Novo Filme</h3>
-
-    <label>Título *</label>
-    <input id="titulo">
-
-    <label>Descrição</label>
-    <textarea id="descricao"></textarea>
-
-    <label>Categoria</label>
-    <input id="categoria">
-
-    <label>URL da capa</label>
-    <input id="capa">
-
-    <label>Arquivo de vídeo *</label>
-    <input type="file" id="video" accept="video/*">
-
-    <button onclick="alert('Upload já validado no painel anterior')">
-      Enviar Filme
-    </button>
+    <label>Título *</label><input id="titulo">
+    <label>Descrição</label><textarea id="descricao"></textarea>
+    <label>Categoria</label><input id="categoria">
+    <label>URL da capa</label><input id="capa">
+    <label>Vídeo *</label><input type="file" id="video">
+    <button onclick="upload()">Enviar</button>
   </div>
 
-  <!-- LISTA -->
   <div class="panel">
-    <h3>Filmes cadastrados</h3>
-    <div id="lista" class="list"></div>
+    <h3>Filmes</h3>
+    <div class="list" id="lista"></div>
   </div>
-
 </div>
 </div>
 
 <script>
-const boot = document.getElementById("boot");
-const bootStatus = document.getElementById("bootStatus");
-const app = document.getElementById("app");
-const statusEl = document.getElementById("status");
-const lista = document.getElementById("lista");
-const search = document.getElementById("search");
+const supabase = window.supabase.createClient(
+  "https://dxkszikemntfusfyrzos.supabase.co",
+  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+);
 
-let filmes = [];
+const BUNNY={
+  zone:"sessao99",
+  region:"br",
+  key:"d498d56e-361b-4a1e-9edb9eb63e3b-2e6a-4c17",
+  cdn:"https://sessao99.b-cdn.net"
+};
 
-/* ================= INIT ================= */
-async function init(){
-  try{
-    if(!window.supabase){
-      throw "Supabase não carregou";
-    }
+let filmes=[], atual=null;
 
-    const supabaseClient = window.supabase.createClient(
-      "https://dxkszikemntfusfyrzos.supabase.co",
-      "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
-    );
+/* INIT */
+(async()=>{
+  const { data } = await supabase.from("filmes").select("*").order("created_at",{ascending:false});
+  filmes=data||[];
+  render(filmes);
+  document.getElementById("boot").style.display="none";
+  document.getElementById("app").style.display="block";
+  document.getElementById("status").innerHTML=`🟢 ${filmes.length} registros`;
+  document.getElementById("status").className="status ok";
+})();
 
-    bootStatus.innerText = "Buscando registros…";
-
-    const { data, error } = await supabaseClient
-      .from("filmes")
-      .select("*")
-      .order("created_at",{ascending:false});
-
-    if(error) throw error.message;
-
-    filmes = data || [];
-
-    render(filmes);
-
-    statusEl.innerHTML = `🟢 ${filmes.length} filme(s) carregado(s)`;
-    statusEl.className = "status ok";
-
-    /* LIBERA A TELA */
-    boot.style.display = "none";
-    app.style.display = "block";
-
-  }catch(e){
-    bootStatus.innerText = "ERRO: " + e;
-    bootStatus.style.color = "#ef4444";
-  }
-}
-
-/* ================= RENDER ================= */
-function render(listaFilmes){
-  lista.innerHTML = "";
-
-  if(listaFilmes.length === 0){
-    lista.innerHTML = "<p class='muted'>Nenhum filme cadastrado</p>";
-    return;
-  }
-
-  listaFilmes.forEach(f=>{
-    if(!f.capa_url) return;
-
-    const d = document.createElement("div");
-    d.className = "item";
-    d.innerHTML = `
-      <img src="${f.capa_url}">
-      <div>
-        <h4>${f.titulo}</h4>
-        <span>${f.categoria || ""}</span>
-      </div>
-    `;
-    d.onclick = ()=>window.open(f.video_url,"_blank");
+/* RENDER */
+function render(arr){
+  lista.innerHTML="";
+  arr.forEach(f=>{
+    const d=document.createElement("div");
+    d.className="item";
+    d.innerHTML=`<img src="${f.capa_url||''}"><div><h4>${f.titulo}</h4><span>${f.categoria||''}</span></div>`;
+    d.onclick=()=>abrir(f);
     lista.appendChild(d);
   });
 }
 
-/* ================= BUSCA ================= */
-search.oninput = ()=>{
-  const v = search.value.toLowerCase();
+/* MODAL */
+function abrir(f){
+  atual=f;
+  modalBg.style.display="flex";
+  mCapa.src=f.capa_url||"";
+  mTitulo.value=f.titulo;
+  mDescricao.value=f.descricao||"";
+  mCategoria.value=f.categoria||"";
+  mCapaUrl.value=f.capa_url||"";
+}
+modalBg.onclick=e=>{if(e.target===modalBg)modalBg.style.display="none"};
+
+/* EDITAR */
+async function salvarEdicao(){
+  await supabase.from("filmes").update({
+    titulo:mTitulo.value,
+    descricao:mDescricao.value,
+    categoria:mCategoria.value,
+    capa_url:mCapaUrl.value
+  }).eq("id",atual.id);
+  location.reload();
+}
+
+/* EXCLUIR */
+async function excluir(){
+  if(!confirm("Excluir filme?"))return;
+  await supabase.from("filmes").delete().eq("id",atual.id);
+  location.reload();
+}
+
+/* UPLOAD */
+function upload(){
+  const file=video.files[0];
+  if(!titulo.value||!file){alert("Título e vídeo");return;}
+  upload.style.display="flex";
+  const name=Date.now()+"_"+file.name;
+  const url=`https://${BUNNY.region}.storage.bunnycdn.com/${BUNNY.zone}/filmes/${name}`;
+  const xhr=new XMLHttpRequest();
+  xhr.open("PUT",url);
+  xhr.setRequestHeader("AccessKey",BUNNY.key);
+  xhr.upload.onprogress=e=>{
+    if(e.lengthComputable)bar.style.width=Math.round(e.loaded/e.total*100)+"%";
+  };
+  xhr.onload=async()=>{
+    await supabase.from("filmes").insert({
+      titulo:titulo.value,
+      descricao:descricao.value,
+      categoria:categoria.value,
+      capa_url:capa.value,
+      video_url:`${BUNNY.cdn}/filmes/${name}`,
+      ativo:true
+    });
+    location.reload();
+  };
+  xhr.send(file);
+}
+
+/* BUSCA */
+search.oninput=()=>{
+  const v=search.value.toLowerCase();
   render(filmes.filter(f=>f.titulo.toLowerCase().includes(v)));
 };
-
-init();
 </script>
 
 </body>
