@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>📊 Monitoramento • SESSÃO 99</title>
+<title>📊 SESSÃO 99 • Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -26,13 +26,12 @@ body{
 }
 header{
   padding:20px 32px;
-  background:#000;
   display:flex;
   justify-content:space-between;
   align-items:center;
+  background:#000;
 }
 header h1{margin:0;color:var(--accent)}
-header span{color:#22c55e}
 
 main{
   padding:24px 32px;
@@ -41,164 +40,161 @@ main{
   gap:20px;
 }
 
-/* CARDS */
-.card{
+/* KPI */
+.kpi{
   background:var(--panel);
   padding:18px;
   border-radius:14px;
 }
-.card h3{
-  margin:0 0 8px;
-  font-size:14px;
-  color:var(--muted);
-}
-.card strong{font-size:28px}
+.kpi span{color:var(--muted);font-size:13px}
+.kpi strong{font-size:28px}
 
-/* GRÁFICOS */
-.chart{
-  background:var(--panel);
-  padding:18px;
-  border-radius:14px;
-}
-.chart canvas{height:280px!important}
-
-/* TABELAS */
+/* TABLE */
 .table{
   background:var(--panel);
-  padding:18px;
   border-radius:14px;
+  overflow:hidden;
 }
-table{
+.table table{
   width:100%;
   border-collapse:collapse;
-  font-size:14px;
 }
-th,td{
-  padding:8px;
+.table th,.table td{
+  padding:12px;
   border-bottom:1px solid #222;
+  font-size:13px;
 }
-th{color:var(--muted);text-align:left}
+.table th{color:var(--muted);text-align:left}
 
-/* FULL */
+/* CHART */
+.chart{
+  background:var(--panel);
+  border-radius:14px;
+  padding:18px;
+}
 .full{grid-column:1/-1}
 </style>
 </head>
 <body>
 
 <header>
-  <h1>📊 Monitoramento</h1>
-  <span>● Online</span>
+  <h1>📊 Dashboard • SESSÃO 99</h1>
+  <span id="status">🔴 Offline</span>
 </header>
 
 <main>
 
-  <!-- KPIs -->
-  <div class="card"><h3>Usuários Online</h3><strong id="kpiOnline">0</strong></div>
-  <div class="card"><h3>Plays Hoje</h3><strong id="kpiPlays">0</strong></div>
-  <div class="card"><h3>Filmes</h3><strong id="kpiFilmes">0</strong></div>
-  <div class="card"><h3>Séries</h3><strong id="kpiSeries">0</strong></div>
+  <!-- KPI -->
+  <div class="kpi"><span>👥 Assistindo agora</span><strong id="kpiOnline">0</strong></div>
+  <div class="kpi"><span>▶ Plays hoje</span><strong id="kpiPlays">0</strong></div>
+  <div class="kpi"><span>✅ >50% assistido</span><strong id="kpi50">0</strong></div>
+  <div class="kpi"><span>🏁 Concluídos</span><strong id="kpiDone">0</strong></div>
 
-  <!-- GRÁFICOS -->
-  <div class="chart full"><canvas id="chartOnline"></canvas></div>
-  <div class="chart"><canvas id="chartTipo"></canvas></div>
-  <div class="chart"><canvas id="chartTop"></canvas></div>
-
-  <!-- QUEM ESTÁ ASSISTINDO -->
+  <!-- ONLINE -->
   <div class="table full">
-    <h3>👥 Quem está assistindo agora</h3>
     <table>
       <thead>
         <tr>
           <th>Usuário</th>
           <th>Conteúdo</th>
           <th>Tipo</th>
-          <th>Localização</th>
-          <th>Último ping</th>
+          <th>Progresso</th>
         </tr>
       </thead>
-      <tbody id="tableOnline"></tbody>
+      <tbody id="onlineList"></tbody>
     </table>
+  </div>
+
+  <!-- RANKING -->
+  <div class="chart full">
+    <canvas id="chartTop"></canvas>
+  </div>
+
+  <!-- HORAS -->
+  <div class="chart full">
+    <canvas id="chartHoras"></canvas>
   </div>
 
 </main>
 
 <script>
 /* SUPABASE */
-const supabaseClient = supabase.createClient(
+const supabase = supabasejs.createClient(
   "https://dxkszikemntfusfyrzos.supabase.co",
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
 const kpiOnline=document.getElementById("kpiOnline");
 const kpiPlays=document.getElementById("kpiPlays");
-const kpiFilmes=document.getElementById("kpiFilmes");
-const kpiSeries=document.getElementById("kpiSeries");
-const tableOnline=document.getElementById("tableOnline");
+const kpi50=document.getElementById("kpi50");
+const kpiDone=document.getElementById("kpiDone");
+const onlineList=document.getElementById("onlineList");
+const status=document.getElementById("status");
 
-let chartOnline,chartTipo,chartTop;
+let chartTop,chartHoras;
 
 /* LOAD */
 async function load(){
-  const agora = new Date(Date.now()-30000).toISOString();
+  const { data,error } = await supabase
+    .from("rs_play_events")
+    .select("*");
 
-  const [{data:sessions},{data:plays},{data:filmes}] = await Promise.all([
-    supabaseClient.from("rs_sessions").select("*").gte("last_ping",agora),
-    supabaseClient.from("rs_play_events").select("*"),
-    supabaseClient.from("filmes").select("*")
-  ]);
-
-  kpiOnline.textContent=sessions.length;
-  kpiPlays.textContent=plays.filter(p=>p.acao==="play").length;
-  kpiFilmes.textContent=filmes.filter(f=>f.tipo==="filme").length;
-  kpiSeries.textContent=[...new Set(filmes.filter(f=>f.tipo==="serie").map(f=>f.serie_nome))].length;
-
-  renderOnline(sessions,plays);
-  graficoOnline(sessions);
-  graficoTipo(plays);
-  graficoTop(plays);
+  if(error){status.textContent="🔴 Erro";return;}
+  status.textContent="🟢 Online";
+  analisar(data||[]);
 }
 
-function renderOnline(sessions,plays){
-  tableOnline.innerHTML="";
-  sessions.forEach(s=>{
-    const lastPlay=plays.filter(p=>p.user_id===s.user_id).slice(-1)[0];
-    if(!lastPlay) return;
+/* ANALYTICS */
+function analisar(dados){
+  const agora=Date.now();
 
-    tableOnline.innerHTML+=`
+  const online = dados.filter(d =>
+    d.acao==="ping" &&
+    agora - new Date(d.created_at).getTime() < 30000
+  );
+
+  const playsHoje = dados.filter(d=>{
+    const d0=new Date(d.created_at);
+    const hoje=new Date();
+    return d0.toDateString()===hoje.toDateString();
+  });
+
+  const over50 = dados.filter(d=>d.progress_percent>=50);
+  const concluidos = dados.filter(d=>d.duration - d.current_time <= 600);
+
+  kpiOnline.textContent=[...new Set(online.map(d=>d.user_id))].length;
+  kpiPlays.textContent=playsHoje.length;
+  kpi50.textContent=over50.length;
+  kpiDone.textContent=concluidos.length;
+
+  renderOnline(online);
+  renderTop(playsHoje);
+  renderHoras(playsHoje);
+}
+
+/* ONLINE */
+function renderOnline(list){
+  onlineList.innerHTML="";
+  const map={};
+  list.forEach(d=>map[d.user_id]=d);
+
+  Object.values(map).forEach(d=>{
+    onlineList.innerHTML+=`
       <tr>
-        <td>${s.user_id.slice(0,8)}</td>
-        <td>${lastPlay.titulo}</td>
-        <td>${lastPlay.tipo}</td>
-        <td>${s.city||"-"} / ${s.country||"-"}</td>
-        <td>${new Date(s.last_ping).toLocaleTimeString()}</td>
+        <td>${d.user_id.slice(0,6)}</td>
+        <td>${d.titulo || d.serie_nome}</td>
+        <td>${d.tipo}</td>
+        <td>${d.progress_percent || 0}%</td>
       </tr>`;
   });
 }
 
-/* GRÁFICOS */
-function graficoOnline(list){
-  if(chartOnline) chartOnline.destroy();
-  chartOnline=new Chart(document.getElementById("chartOnline"),{
-    type:"line",
-    data:{labels:["Agora"],datasets:[{label:"Usuários Online",data:[list.length],borderColor:"#e50914"}]}
-  });
-}
-
-function graficoTipo(list){
-  const f=list.filter(p=>p.tipo==="filme").length;
-  const s=list.filter(p=>p.tipo==="serie").length;
-
-  if(chartTipo) chartTipo.destroy();
-  chartTipo=new Chart(document.getElementById("chartTipo"),{
-    type:"pie",
-    data:{labels:["Filmes","Séries"],datasets:[{data:[f,s],backgroundColor:["#e50914","#6366f1"]}]}
-  });
-}
-
-function graficoTop(list){
+/* TOP */
+function renderTop(list){
   const map={};
-  list.filter(p=>p.acao==="play").forEach(p=>{
-    map[p.titulo]=(map[p.titulo]||0)+1;
+  list.forEach(d=>{
+    const k=d.titulo||d.serie_nome;
+    map[k]=(map[k]||0)+1;
   });
 
   const labels=Object.keys(map).slice(0,10);
@@ -207,7 +203,25 @@ function graficoTop(list){
   if(chartTop) chartTop.destroy();
   chartTop=new Chart(document.getElementById("chartTop"),{
     type:"bar",
-    data:{labels,datasets:[{data,backgroundColor:"#22c55e"}]}
+    data:{labels,datasets:[{data,backgroundColor:"#e50914"}]}
+  });
+}
+
+/* HORAS */
+function renderHoras(list){
+  const map={};
+  list.forEach(d=>{
+    const h=new Date(d.created_at).getHours();
+    map[h]=(map[h]||0)+1;
+  });
+
+  if(chartHoras) chartHoras.destroy();
+  chartHoras=new Chart(document.getElementById("chartHoras"),{
+    type:"line",
+    data:{
+      labels:Object.keys(map),
+      datasets:[{data:Object.values(map),borderColor:"#22c55e"}]
+    }
   });
 }
 
