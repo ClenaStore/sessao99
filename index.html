@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>SESSÃO 99</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -11,13 +12,15 @@
   --bg:#020617;
   --card:#0b1224;
   --primary:#e50914;
-  --text:#fff;
+  --ok:#22c55e;
+  --erro:#ef4444;
+  --text:#ffffff;
   --muted:#9ca3af;
 }
 *{box-sizing:border-box}
 body{
   margin:0;
-  font-family:Inter,Arial,sans-serif;
+  font-family:Inter, Arial, sans-serif;
   background:var(--bg);
   color:var(--text);
 }
@@ -26,24 +29,26 @@ body{
 header{
   position:sticky;
   top:0;
-  z-index:20;
-  padding:16px 32px;
+  z-index:50;
+  padding:18px 32px;
   display:flex;
   justify-content:space-between;
   align-items:center;
-  background:linear-gradient(to bottom,#020617,rgba(2,6,23,.6));
+  background:linear-gradient(to bottom,#020617,rgba(2,6,23,.7));
+  border-bottom:1px solid #111827;
 }
 #statusText{
   font-weight:900;
   letter-spacing:1px;
   cursor:pointer;
+  user-select:none;
 }
-.status-ok{color:#22c55e}
-.status-erro{color:#ef4444}
+.status-ok{color:var(--ok);text-shadow:0 0 12px rgba(34,197,94,.5)}
+.status-erro{color:var(--erro);text-shadow:0 0 12px rgba(239,68,68,.5)}
 header input{
   width:260px;
-  padding:10px;
-  border-radius:6px;
+  padding:10px 12px;
+  border-radius:8px;
   border:none;
   background:#020617;
   color:#fff;
@@ -51,16 +56,17 @@ header input{
 
 /* CONTEÚDO */
 main{
-  padding:20px 32px;
+  padding:24px 32px;
 }
 
 /* CATEGORIA */
 .categoria{
-  margin-bottom:34px;
+  margin-bottom:38px;
 }
 .categoria h2{
   margin:0 0 12px;
   font-size:18px;
+  font-weight:700;
 }
 
 /* CARROSSEL */
@@ -69,6 +75,7 @@ main{
   gap:14px;
   overflow-x:auto;
   scroll-behavior:smooth;
+  padding-bottom:4px;
 }
 .row::-webkit-scrollbar{display:none}
 
@@ -76,14 +83,14 @@ main{
 .card{
   min-width:180px;
   background:var(--card);
-  border-radius:12px;
+  border-radius:14px;
   overflow:hidden;
   cursor:pointer;
   transition:.3s;
 }
 .card:hover{
-  transform:scale(1.15);
-  z-index:5;
+  transform:scale(1.18);
+  z-index:10;
 }
 .card img{
   width:100%;
@@ -99,21 +106,22 @@ main{
   display:none;
   align-items:center;
   justify-content:center;
-  z-index:50;
+  z-index:100;
 }
 .modal-content{
   width:90%;
   max-width:900px;
   background:#020617;
-  border-radius:14px;
+  border-radius:16px;
   overflow:hidden;
 }
 .modal iframe{
   width:100%;
   height:480px;
+  border:none;
 }
 .modal-body{
-  padding:16px;
+  padding:18px;
 }
 .close{
   position:absolute;
@@ -122,13 +130,16 @@ main{
   background:#dc2626;
   color:#fff;
   border:none;
-  padding:8px 14px;
+  padding:8px 16px;
   border-radius:6px;
   cursor:pointer;
 }
 
 /* ERRO */
-pre{white-space:pre-wrap;color:#fca5a5}
+pre{
+  white-space:pre-wrap;
+  color:#fca5a5;
+}
 </style>
 </head>
 <body>
@@ -146,7 +157,7 @@ pre{white-space:pre-wrap;color:#fca5a5}
 <div class="modal" id="playerModal">
   <button class="close" onclick="fecharPlayer()">Fechar</button>
   <div class="modal-content">
-    <iframe id="player"></iframe>
+    <iframe id="player" allowfullscreen></iframe>
     <div class="modal-body">
       <h2 id="title"></h2>
       <p id="description"></p>
@@ -169,70 +180,99 @@ const supabase = supabaseJs.createClient(
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-const statusText=document.getElementById("statusText");
-const content=document.getElementById("content");
-const erroTexto=document.getElementById("erroTexto");
-let erroGlobal="Nenhum erro";
-let filmes=[];
+const statusText = document.getElementById("statusText");
+const content = document.getElementById("content");
+const erroTexto = document.getElementById("erroTexto");
+const search = document.getElementById("search");
 
+let filmes = [];
+let erroGlobal = "Nenhum erro capturado.";
+
+/* ===============================
+   CARREGAMENTO
+================================*/
 async function carregar(){
-  const {data,error}=await supabase
+  const { data, error } = await supabase
     .from("filmes")
     .select("*")
-    .eq("ativo",true);
+    .eq("ativo", true)
+    .order("created_at", { ascending:false });
 
   if(error){
     statusText.className="status-erro";
-    erroGlobal=JSON.stringify(error,null,2);
+    erroGlobal = JSON.stringify(error, null, 2);
+    console.error(error);
     return;
   }
 
   statusText.className="status-ok";
-  filmes=data||[];
+  filmes = data || [];
   montarNetflix(filmes);
 }
 
+/* ===============================
+   NETFLIX LAYOUT
+================================*/
 function montarNetflix(lista){
   content.innerHTML="";
-  const categorias=[...new Set(lista.map(f=>f.categoria||"Outros"))];
+  const categorias = [...new Set(lista.map(f => f.categoria || "Outros"))];
 
   categorias.forEach(cat=>{
-    const sec=document.createElement("div");
-    sec.className="categoria";
-    sec.innerHTML=`<h2>${cat}</h2><div class="row"></div>`;
-    const row=sec.querySelector(".row");
+    const sec = document.createElement("div");
+    sec.className = "categoria";
+    sec.innerHTML = `<h2>${cat}</h2><div class="row"></div>`;
+    const row = sec.querySelector(".row");
 
-    lista.filter(f=>f.categoria===cat).forEach(f=>{
-      const card=document.createElement("div");
-      card.className="card";
-      card.innerHTML=`<img src="${f.capa_url}">`;
-      card.onclick=()=>abrirPlayer(f);
-      row.appendChild(card);
-    });
+    lista
+      .filter(f => (f.categoria || "Outros") === cat)
+      .forEach(f=>{
+        const card = document.createElement("div");
+        card.className="card";
+        card.innerHTML = `<img src="${f.capa_url}">`;
+        card.onclick = () => abrirPlayer(f);
+        row.appendChild(card);
+      });
 
     content.appendChild(sec);
   });
 }
 
+/* ===============================
+   BUSCA
+================================*/
+search.oninput = () => {
+  const v = search.value.toLowerCase();
+  montarNetflix(
+    filmes.filter(f => f.titulo.toLowerCase().includes(v))
+  );
+};
+
+/* ===============================
+   PLAYER
+================================*/
 function abrirPlayer(f){
   playerModal.style.display="flex";
-  player.src=f.video_url;
-  title.innerText=f.titulo;
-  description.innerText=f.descricao||"";
+  player.src = f.video_url;
+  title.innerText = f.titulo;
+  description.innerText = f.descricao || "";
 }
 function fecharPlayer(){
   playerModal.style.display="none";
   player.src="";
 }
 
+/* ===============================
+   ERRO
+================================*/
 function mostrarErro(){
-  erroTexto.innerText=erroGlobal;
+  erroTexto.innerText = erroGlobal;
   erroModal.style.display="flex";
 }
 function fecharErro(){
   erroModal.style.display="none";
 }
 
+/* START */
 carregar();
 </script>
 
