@@ -2,34 +2,34 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>SESSÃO 99 • Upload de Filmes</title>
+<title>SESSÃO 99 • Upload Admin</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <style>
+:root{
+  --bg:#05070f;
+  --card:#0b1020;
+  --accent:#e50914;
+  --ok:#22c55e;
+  --err:#ef4444;
+}
 body{
   margin:0;
-  background:#05070f;
+  background:var(--bg);
   color:#fff;
   font-family:Inter,Arial,sans-serif;
 }
 main{
   max-width:900px;
   margin:40px auto;
-  background:#0b1020;
+  background:var(--card);
   padding:32px;
   border-radius:16px;
 }
-h2{
-  margin-top:0;
-}
-label{
-  display:block;
-  margin-top:16px;
-  font-weight:600;
-}
-input, textarea, select{
+label{display:block;margin-top:16px;font-weight:600}
+input,textarea{
   width:100%;
   padding:12px;
   margin-top:6px;
@@ -44,20 +44,59 @@ button{
   width:100%;
   border:none;
   border-radius:10px;
-  background:#e50914;
+  background:var(--accent);
   color:#fff;
   font-size:16px;
   cursor:pointer;
 }
-#status{
-  margin-top:20px;
-  font-weight:600;
+button:disabled{opacity:.5;cursor:not-allowed}
+
+/* OVERLAY */
+#overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.85);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
 }
-.ok{color:#22c55e}
-.err{color:#ef4444}
+#box{
+  background:#020617;
+  padding:32px;
+  border-radius:16px;
+  width:90%;
+  max-width:420px;
+  text-align:center;
+}
+#progress{
+  width:100%;
+  height:10px;
+  background:#111;
+  border-radius:10px;
+  overflow:hidden;
+  margin-top:16px;
+}
+#bar{
+  height:100%;
+  width:0%;
+  background:var(--accent);
+  transition:.2s;
+}
+#msg{margin-top:16px;font-weight:600}
+.ok{color:var(--ok)}
+.err{color:var(--err)}
 </style>
 </head>
 <body>
+
+<div id="overlay">
+  <div id="box">
+    <h3>⏳ Enviando filme</h3>
+    <div id="progress"><div id="bar"></div></div>
+    <div id="msg">Preparando…</div>
+  </div>
+</div>
 
 <main>
   <h2>🎬 Upload de Filme — SESSÃO 99</h2>
@@ -69,85 +108,105 @@ button{
   <textarea id="descricao"></textarea>
 
   <label>Categoria</label>
-  <input id="categoria" placeholder="Ex: Ficção Científica">
+  <input id="categoria">
 
-  <label>URL da capa (imagem)</label>
+  <label>URL da capa</label>
   <input id="capa">
 
   <label>Arquivo de vídeo</label>
   <input type="file" id="video" accept="video/*">
 
-  <button onclick="upload()">Enviar Filme</button>
-
-  <div id="status"></div>
+  <button id="btn" onclick="upload()">Enviar Filme</button>
 </main>
 
 <script>
-/* ================= SUPABASE ================= */
+/* ========= CONFIG ========= */
 const supabase = window.supabase.createClient(
   "https://dxkszikemntfusfyrzos.supabase.co",
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-/* ================= BUNNY CONFIG ================= */
-const BUNNY_STORAGE_ZONE = "sessao99";
-const BUNNY_PASSWORD = "d498d56e-361b-4a1e-9edb9eb63e3b-2e6a-4c17"; // ⚠️ write password
+const BUNNY_ZONE = "sessao99";
+const BUNNY_PASS = "d498d56e-361b-4a1e-9edb9eb63e3b-2e6a-4c17";
 const BUNNY_REGION = "br";
 const BUNNY_CDN = "https://sessao99.b-cdn.net";
 
-/* ================= UPLOAD ================= */
+/* ========= ELEMENTOS ========= */
+const overlay = document.getElementById("overlay");
+const bar = document.getElementById("bar");
+const msg = document.getElementById("msg");
+const btn = document.getElementById("btn");
+
+/* ========= UPLOAD ========= */
 async function upload(){
-  const status = document.getElementById("status");
-  status.innerText = "⏳ Enviando vídeo…";
+  const file = video.files[0];
+  if(!file) return alert("Selecione um vídeo");
 
-  const file = document.getElementById("video").files[0];
-  if(!file){
-    status.innerText = "Selecione um vídeo";
-    status.className="err";
-    return;
-  }
+  btn.disabled = true;
+  overlay.style.display = "flex";
+  bar.style.width = "0%";
+  msg.innerText = "Iniciando upload…";
 
-  const fileName = Date.now()+"_"+file.name.replace(/\s+/g,"_");
-  const uploadUrl = `https://${BUNNY_REGION}.storage.bunnycdn.com/${BUNNY_STORAGE_ZONE}/filmes/${fileName}`;
+  const safeName = Date.now()+"_"+file.name.replace(/\s+/g,"_");
+  const uploadUrl = `https://${BUNNY_REGION}.storage.bunnycdn.com/${BUNNY_ZONE}/filmes/${safeName}`;
 
-  /* UPLOAD PARA BUNNY */
-  const res = await fetch(uploadUrl,{
-    method:"PUT",
-    headers:{
-      "AccessKey": BUNNY_PASSWORD,
-      "Content-Type": "application/octet-stream"
-    },
-    body:file
-  });
+  const xhr = new XMLHttpRequest();
+  xhr.open("PUT", uploadUrl, true);
+  xhr.setRequestHeader("AccessKey", BUNNY_PASS);
+  xhr.setRequestHeader("Content-Type", "application/octet-stream");
 
-  if(!res.ok){
-    status.innerText="❌ Erro no upload Bunny";
-    status.className="err";
-    return;
-  }
+  xhr.upload.onprogress = e => {
+    if(e.lengthComputable){
+      const p = Math.round((e.loaded / e.total) * 100);
+      bar.style.width = p+"%";
+      msg.innerText = `Upload ${p}%`;
+    }
+  };
 
-  const videoUrl = `${BUNNY_CDN}/filmes/${fileName}`;
+  xhr.onerror = () => erro("Erro de rede no upload");
 
-  status.innerText="💾 Salvando no Supabase…";
+  xhr.onload = async () => {
+    if(xhr.status !== 201){
+      erro(`Erro Bunny (${xhr.status})`);
+      return;
+    }
 
-  /* SALVAR NO SUPABASE */
-  const { error } = await supabase.from("filmes").insert({
-    titulo: titulo.value,
-    descricao: descricao.value,
-    categoria: categoria.value,
-    capa_url: capa.value,
-    video_url: videoUrl,
-    ativo: true
-  });
+    msg.innerText = "Salvando no Supabase…";
 
-  if(error){
-    status.innerText="❌ Erro Supabase: "+error.message;
-    status.className="err";
-    return;
-  }
+    const videoUrl = `${BUNNY_CDN}/filmes/${safeName}`;
 
-  status.innerText="✅ Filme enviado com sucesso!";
-  status.className="ok";
+    const { error } = await supabase.from("filmes").insert({
+      titulo: titulo.value,
+      descricao: descricao.value,
+      categoria: categoria.value,
+      capa_url: capa.value,
+      video_url: videoUrl,
+      ativo: true
+    });
+
+    if(error){
+      erro("Supabase: "+error.message);
+      return;
+    }
+
+    msg.innerText = "✅ Upload finalizado!";
+    msg.className="ok";
+
+    setTimeout(()=>{
+      overlay.style.display="none";
+      btn.disabled=false;
+      location.reload();
+    },1500);
+  };
+
+  xhr.send(file);
+}
+
+function erro(text){
+  msg.innerText = text;
+  msg.className="err";
+  bar.style.background="#ef4444";
+  btn.disabled=false;
 }
 </script>
 
