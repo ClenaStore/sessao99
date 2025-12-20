@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>SESSÃO 99</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <style>
@@ -22,11 +23,17 @@ body{
   color:var(--text);
   font-family:Inter,Arial,sans-serif;
 }
+
+/* HEADER */
 header{
   padding:18px 32px;
   display:flex;
   justify-content:space-between;
   align-items:center;
+  background:linear-gradient(180deg,#000,transparent);
+  position:sticky;
+  top:0;
+  z-index:10;
 }
 header h1{color:var(--accent);margin:0}
 header input{
@@ -37,12 +44,16 @@ header input{
   color:#fff;
   width:260px;
 }
+
+/* HOME */
 section{padding:0 32px 32px}
+section h2{margin:14px 0;font-size:18px}
 .row{
   display:flex;
   gap:14px;
   overflow-x:auto;
 }
+.row::-webkit-scrollbar{display:none}
 .card{
   min-width:180px;
   cursor:pointer;
@@ -98,8 +109,13 @@ select{
 }
 video{
   width:100%;
-  height:calc(100vh - 280px);
+  height:calc(100vh - 320px);
   background:#000;
+}
+
+/* RECOMENDAÇÕES */
+.recos{
+  padding:20px 32px 60px;
 }
 </style>
 </head>
@@ -113,6 +129,7 @@ video{
 
 <div id="home"></div>
 
+<!-- PLAYER -->
 <div id="player">
   <div class="top">
     <button onclick="fechar()">⬅ Voltar</button>
@@ -124,6 +141,8 @@ video{
     <select id="selEpisodio"></select>
   </div>
   <video id="video" controls autoplay></video>
+
+  <div class="recos" id="recomendacoes"></div>
 </div>
 
 <script>
@@ -146,6 +165,7 @@ const capaPlayer = document.getElementById("capaPlayer");
 const selTemporada = document.getElementById("selTemporada");
 const selEpisodio = document.getElementById("selEpisodio");
 const video = document.getElementById("video");
+const recosBox = document.getElementById("recomendacoes");
 
 /* ================= STATE ================= */
 let dados = [];
@@ -153,7 +173,7 @@ let serieAtual = [];
 let episodioAtual = null;
 let pingTimer = null;
 
-/* ================= TRACKING ================= */
+/* ================= TRACKING (ANTI DUPLICAÇÃO) ================= */
 async function registrar(acao){
   if(!episodioAtual || !video.duration) return;
 
@@ -161,7 +181,6 @@ async function registrar(acao){
   const duration = Math.floor(video.duration);
   const percent = Math.round((played / duration) * 100);
 
-  /* EVENTO */
   await supabaseClient.from("rs_play_events").insert({
     user_id: USER_ID,
     content_id: episodioAtual.id,
@@ -177,14 +196,15 @@ async function registrar(acao){
     user_agent: navigator.userAgent
   });
 
-  /* SESSÃO ATIVA */
-  await supabaseClient.from("rs_sessions").upsert({
-    user_id: USER_ID,
-    content_id: episodioAtual.id,
-    content_tipo: episodioAtual.tipo,
-    serie_nome: episodioAtual.serie_nome,
-    last_ping: new Date().toISOString()
-  });
+  await supabaseClient
+    .from("rs_sessions")
+    .upsert({
+      user_id: USER_ID,
+      content_id: episodioAtual.id,
+      content_tipo: episodioAtual.tipo,
+      serie_nome: episodioAtual.serie_nome,
+      last_ping: new Date().toISOString()
+    },{ onConflict:"user_id" });
 }
 
 /* ================= LOAD ================= */
@@ -202,27 +222,27 @@ async function load(){
 function renderHome(list){
   home.innerHTML = "";
 
-  const filmes = list.filter(i => i.tipo === "filme");
+  const filmes = list.filter(i=>i.tipo==="filme");
   const series = [...new Map(
-    list.filter(i => i.tipo === "serie").map(s => [s.serie_nome, s])
+    list.filter(i=>i.tipo==="serie").map(s=>[s.serie_nome,s])
   ).values()];
 
-  renderRow("🎬 Filmes", filmes, playFilme);
-  renderRow("📺 Séries", series, s => abrirSerie(s.serie_nome));
+  renderRow("🎬 Filmes",filmes,playFilme);
+  renderRow("📺 Séries",series,s=>abrirSerie(s.serie_nome));
 }
 
-function renderRow(titulo, itens, click){
+function renderRow(titulo,itens,click){
   if(!itens.length) return;
-  const sec = document.createElement("section");
-  sec.innerHTML = `<h2>${titulo}</h2>`;
-  const row = document.createElement("div");
-  row.className = "row";
+  const sec=document.createElement("section");
+  sec.innerHTML=`<h2>${titulo}</h2>`;
+  const row=document.createElement("div");
+  row.className="row";
 
   itens.forEach(i=>{
-    const c = document.createElement("div");
-    c.className = "card";
-    c.innerHTML = `<img src="${i.capa_url}">`;
-    c.onclick = () => click(i);
+    const c=document.createElement("div");
+    c.className="card";
+    c.innerHTML=`<img src="${i.capa_url}">`;
+    c.onclick=()=>click(i);
     row.appendChild(c);
   });
 
@@ -232,80 +252,88 @@ function renderRow(titulo, itens, click){
 
 /* ================= PLAYER ================= */
 function playFilme(f){
-  serieAtual = [f];
+  serieAtual=[f];
   tocar(f);
-  tituloPlayer.textContent = f.titulo;
-  capaPlayer.src = f.capa_url;
-  selTemporada.innerHTML = "";
-  selEpisodio.innerHTML = "";
-  player.style.display = "flex";
+  tituloPlayer.textContent=f.titulo;
+  capaPlayer.src=f.capa_url;
+  selTemporada.innerHTML="";
+  selEpisodio.innerHTML="";
+  mostrarRecomendacoes(f.genero,f.id);
+  player.style.display="flex";
 }
 
 function abrirSerie(nome){
-  serieAtual = dados
-    .filter(d => d.serie_nome === nome)
-    .sort((a,b)=>a.temporada-b.temporada || a.episodio-b.episodio);
+  serieAtual=dados
+    .filter(d=>d.serie_nome===nome)
+    .sort((a,b)=>a.temporada-b.temporada||a.episodio-b.episodio);
 
-  tituloPlayer.textContent = nome;
-  capaPlayer.src = serieAtual[0].capa_url;
+  const base=serieAtual[0];
+  tituloPlayer.textContent=nome;
+  capaPlayer.src=base.capa_url;
   montarTemporadas();
-  player.style.display = "flex";
+  mostrarRecomendacoes(base.genero,base.id);
+  player.style.display="flex";
 }
 
 function montarTemporadas(){
-  const temps = [...new Set(serieAtual.map(e=>e.temporada))];
-  selTemporada.innerHTML = "";
-  temps.forEach(t=>{
-    selTemporada.innerHTML += `<option value="${t}">Temporada ${t}</option>`;
-  });
-  selTemporada.onchange = montarEpisodios;
+  const temps=[...new Set(serieAtual.map(e=>e.temporada))];
+  selTemporada.innerHTML="";
+  temps.forEach(t=>selTemporada.innerHTML+=`<option value="${t}">Temporada ${t}</option>`);
+  selTemporada.onchange=montarEpisodios;
   montarEpisodios();
 }
 
 function montarEpisodios(){
-  const t = Number(selTemporada.value);
-  const eps = serieAtual.filter(e=>e.temporada===t);
-  selEpisodio.innerHTML = "";
-  eps.forEach((e,i)=>{
-    selEpisodio.innerHTML += `<option value="${i}">Episódio ${e.episodio}</option>`;
-  });
-  selEpisodio.onchange = ()=>tocar(eps[selEpisodio.value]);
+  const t=Number(selTemporada.value);
+  const eps=serieAtual.filter(e=>e.temporada===t);
+  selEpisodio.innerHTML="";
+  eps.forEach((e,i)=>selEpisodio.innerHTML+=`<option value="${i}">Episódio ${e.episodio}</option>`);
+  selEpisodio.onchange=()=>tocar(eps[selEpisodio.value]);
   tocar(eps[0]);
 }
 
 function tocar(ep){
-  episodioAtual = ep;
-  video.src = ep.video_url;
+  episodioAtual=ep;
+  video.src=ep.video_url;
   video.play();
 }
 
 /* ================= EVENTS ================= */
 video.addEventListener("play",()=>{
   registrar("play");
-  pingTimer = setInterval(()=>registrar("ping"),15000);
+  pingTimer=setInterval(()=>registrar("ping"),15000);
 });
-
 video.addEventListener("pause",()=>{
   clearInterval(pingTimer);
   registrar("stop");
 });
-
 window.addEventListener("beforeunload",()=>registrar("stop"));
 
 function fechar(){
   clearInterval(pingTimer);
   registrar("stop");
   video.pause();
-  video.src = "";
-  player.style.display = "none";
+  video.src="";
+  player.style.display="none";
+}
+
+/* ================= RECOMENDAÇÕES ================= */
+function mostrarRecomendacoes(genero,idAtual){
+  recosBox.innerHTML="";
+
+  const mesmoGenero=dados.filter(f=>f.genero===genero&&f.id!==idAtual).slice(0,12);
+  const aleatorio=dados.filter(f=>f.genero!==genero).sort(()=>0.5-Math.random()).slice(0,6);
+
+  renderRow("🎯 Recomendados",mesmoGenero,playFilme);
+  renderRow("🎲 Descubra",aleatorio,playFilme);
 }
 
 /* ================= SEARCH ================= */
-search.oninput = ()=>{
-  const v = search.value.toLowerCase();
-  renderHome(dados.filter(d =>
+search.oninput=()=>{
+  const v=search.value.toLowerCase();
+  renderHome(dados.filter(d=>
     d.titulo.toLowerCase().includes(v) ||
-    (d.serie_nome && d.serie_nome.toLowerCase().includes(v))
+    (d.serie_nome&&d.serie_nome.toLowerCase().includes(v))
   ));
 };
 
