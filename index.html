@@ -24,35 +24,50 @@ body{
   overflow:hidden;
 }
 
-/* ===== SPLASH ===== */
+/* ===== SPLASH CINEMA ===== */
 #splash{
   position:fixed;
   inset:0;
-  background:#000;
+  background:radial-gradient(circle at center,#12091c,#000);
   display:flex;
   align-items:center;
   justify-content:center;
   z-index:999;
-  animation:fadeOut 1.2s ease forwards;
-  animation-delay:2.8s;
+  animation:splashOut 1.4s ease forwards;
+  animation-delay:3.2s;
 }
 #splash h1{
-  font-size:64px;
-  letter-spacing:6px;
+  font-size:72px;
+  letter-spacing:12px;
+  font-weight:800;
   color:#fff;
-  animation:zoomGlow 2.8s ease forwards;
+  animation:cinemaLogo 3.2s ease forwards;
 }
 
-@keyframes zoomGlow{
-  0%{transform:scale(.6);opacity:0}
-  40%{opacity:1}
+@keyframes cinemaLogo{
+  0%{
+    opacity:0;
+    transform:scale(.5) translateY(40px);
+    letter-spacing:2px;
+    filter:blur(10px);
+  }
+  40%{
+    opacity:1;
+    filter:blur(0);
+  }
   100%{
-    transform:scale(1.1);
-    text-shadow:0 0 40px #e11d48;
+    transform:scale(1.1) translateY(0);
+    letter-spacing:14px;
+    text-shadow:
+      0 0 20px #e11d48,
+      0 0 60px rgba(225,29,72,.6);
   }
 }
-@keyframes fadeOut{
-  to{opacity:0;visibility:hidden}
+@keyframes splashOut{
+  to{
+    opacity:0;
+    visibility:hidden;
+  }
 }
 
 /* ===== HEADER ===== */
@@ -62,16 +77,18 @@ header{
   justify-content:space-between;
   align-items:center;
   border-bottom:1px solid #111827;
+  backdrop-filter:blur(10px);
 }
 header h2{
   margin:0;
-  font-weight:700;
+  font-weight:800;
+  letter-spacing:1px;
 }
 header input{
   width:260px;
-  padding:10px;
-  border-radius:8px;
-  border:none;
+  padding:10px 12px;
+  border-radius:10px;
+  border:1px solid #111827;
   background:#020617;
   color:#fff;
 }
@@ -80,6 +97,11 @@ header input{
 main{
   padding:24px;
   display:none;
+  animation:contentIn .8s ease forwards;
+}
+@keyframes contentIn{
+  from{opacity:0;transform:translateY(20px)}
+  to{opacity:1;transform:none}
 }
 .grid{
   display:grid;
@@ -88,29 +110,23 @@ main{
 }
 
 /* RESPONSIVO */
-@media(max-width:1400px){
-  .grid{grid-template-columns:repeat(5,1fr)}
-}
-@media(max-width:1200px){
-  .grid{grid-template-columns:repeat(4,1fr)}
-}
-@media(max-width:900px){
-  .grid{grid-template-columns:repeat(3,1fr)}
-}
-@media(max-width:600px){
-  .grid{grid-template-columns:repeat(2,1fr)}
-}
+@media(max-width:1400px){.grid{grid-template-columns:repeat(5,1fr)}}
+@media(max-width:1200px){.grid{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:900px){.grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:600px){.grid{grid-template-columns:repeat(2,1fr)}}
 
 /* ===== CARD ===== */
 .card{
   background:var(--card);
-  border-radius:14px;
+  border-radius:16px;
   overflow:hidden;
   cursor:pointer;
-  transition:.25s;
+  transition:.35s;
+  box-shadow:0 10px 30px rgba(0,0,0,.4);
 }
 .card:hover{
-  transform:scale(1.05);
+  transform:translateY(-6px) scale(1.05);
+  box-shadow:0 20px 50px rgba(225,29,72,.25);
 }
 .card img{
   width:100%;
@@ -118,11 +134,12 @@ main{
   object-fit:cover;
 }
 .card div{
-  padding:10px;
+  padding:12px;
 }
 .card h3{
   margin:0;
   font-size:14px;
+  font-weight:600;
 }
 .card span{
   font-size:12px;
@@ -133,7 +150,7 @@ main{
 .modal{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.8);
+  background:rgba(0,0,0,.85);
   display:none;
   align-items:center;
   justify-content:center;
@@ -143,7 +160,7 @@ main{
   width:90%;
   max-width:900px;
   background:#020617;
-  border-radius:14px;
+  border-radius:18px;
   overflow:hidden;
 }
 .modal iframe{
@@ -151,7 +168,7 @@ main{
   height:480px;
 }
 .modal-body{
-  padding:16px;
+  padding:18px;
 }
 .close{
   position:absolute;
@@ -160,8 +177,8 @@ main{
   background:#dc2626;
   border:none;
   color:#fff;
-  padding:8px 14px;
-  border-radius:6px;
+  padding:8px 16px;
+  border-radius:8px;
   cursor:pointer;
 }
 </style>
@@ -185,7 +202,7 @@ main{
 <div class="modal" id="modal">
   <button class="close" onclick="closeModal()">Fechar</button>
   <div class="modal-content">
-    <iframe id="player"></iframe>
+    <iframe id="player" allowfullscreen></iframe>
     <div class="modal-body">
       <h2 id="title"></h2>
       <p id="description"></p>
@@ -199,23 +216,34 @@ const supabase = supabaseJs.createClient(
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-const grid=document.getElementById("grid");
-const search=document.getElementById("search");
-const content=document.getElementById("content");
+const grid = document.getElementById("grid");
+const search = document.getElementById("search");
+const content = document.getElementById("content");
 
 let filmes=[];
 
-// Exibir conteúdo após splash
+// Mostrar conteúdo após splash
 setTimeout(()=>{
   document.body.style.overflow="auto";
   content.style.display="block";
-},3000);
+},3400);
 
 async function carregar(){
-  const {data}=await supabase.from("filmes").select("*").eq("ativo",true);
-  filmes=data||[];
+  const { data, error } = await supabase
+    .from("filmes")
+    .select("*")
+    .eq("ativo", true)
+    .order("created_at",{ascending:false});
+
+  if(error){
+    console.error(error);
+    return;
+  }
+
+  filmes = data || [];
   render(filmes);
 }
+
 function render(lista){
   grid.innerHTML="";
   lista.forEach(f=>{
@@ -232,20 +260,23 @@ function render(lista){
     grid.appendChild(c);
   });
 }
+
 search.oninput=()=>{
   const v=search.value.toLowerCase();
   render(filmes.filter(f=>f.titulo.toLowerCase().includes(v)));
 }
+
 function openModal(f){
   modal.style.display="flex";
   player.src=f.video_url;
   title.innerText=f.titulo;
-  description.innerText=f.descricao;
+  description.innerText=f.descricao || "";
 }
 function closeModal(){
   modal.style.display="none";
   player.src="";
 }
+
 carregar();
 </script>
 
