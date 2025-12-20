@@ -2,17 +2,19 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>SESSÃO 99 — Painel Admin</title>
+<title>SESSÃO 99 • Upload de Filmes</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <style>
 :root{
   --bg:#05070f;
   --card:#0b1020;
+  --accent:#e50914;
   --ok:#22c55e;
   --err:#ef4444;
-  --accent:#e50914;
+  --muted:#9ca3af;
 }
 *{box-sizing:border-box}
 body{
@@ -22,21 +24,26 @@ body{
   font-family:Inter,Arial,sans-serif;
 }
 main{
-  max-width:1000px;
-  margin:32px auto;
+  max-width:960px;
+  margin:40px auto;
   background:var(--card);
   padding:32px;
   border-radius:18px;
 }
-.status{
+
+/* STATUS */
+#conn{
+  margin-bottom:24px;
   padding:14px;
   border-radius:10px;
   background:#020617;
   font-weight:600;
-  margin-bottom:12px;
 }
 .ok{color:var(--ok)}
 .err{color:var(--err)}
+.muted{color:var(--muted)}
+
+/* FORM */
 label{display:block;margin-top:16px;font-weight:600}
 input,textarea{
   width:100%;
@@ -47,8 +54,9 @@ input,textarea{
   background:#020617;
   color:#fff;
 }
+textarea{resize:vertical}
 button{
-  margin-top:24px;
+  margin-top:28px;
   width:100%;
   padding:16px;
   background:var(--accent);
@@ -56,16 +64,63 @@ button{
   border-radius:12px;
   color:#fff;
   font-size:16px;
+  cursor:pointer;
+}
+button:disabled{opacity:.5}
+
+/* OVERLAY */
+#overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.92);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+}
+#box{
+  background:#020617;
+  padding:32px;
+  border-radius:16px;
+  width:90%;
+  max-width:420px;
+  text-align:center;
+}
+#barWrap{
+  width:100%;
+  height:12px;
+  background:#111;
+  border-radius:12px;
+  overflow:hidden;
+  margin-top:16px;
+}
+#bar{
+  height:100%;
+  width:0%;
+  background:var(--accent);
+}
+#msg{
+  margin-top:16px;
+  min-height:22px;
+  font-weight:600;
 }
 </style>
 </head>
 <body>
 
-<main>
-  <h1>SESSÃO 99 — Painel Admin</h1>
+<!-- OVERLAY -->
+<div id="overlay">
+  <div id="box">
+    <h3>🎬 Enviando filme</h3>
+    <div id="barWrap"><div id="bar"></div></div>
+    <div id="msg" class="muted">Preparando…</div>
+  </div>
+</div>
 
-  <div id="supabaseStatus" class="status">🔌 Supabase: verificando…</div>
-  <div id="bunnyStatus" class="status">🐰 Bunny.net: verificando…</div>
+<main>
+  <h1>SESSÃO 99 — Upload de Filmes</h1>
+
+  <div id="conn" class="muted">🔌 Supabase: verificando conexão…</div>
 
   <label>Título *</label>
   <input id="titulo">
@@ -86,7 +141,7 @@ button{
 </main>
 
 <script>
-/* ========= CONFIG ========= */
+/* ================= CONFIG ================= */
 const supabase = window.supabase.createClient(
   "https://dxkszikemntfusfyrzos.supabase.co",
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
@@ -95,57 +150,115 @@ const supabase = window.supabase.createClient(
 const BUNNY = {
   zone: "sessao99",
   region: "br",
-  key: "d498d56e-361b-4a1e-9edb9eb63e3b-2e6a-4c17"
+  key: "d498d56e-361b-4a1e-9edb9eb63e3b-2e6a-4c17",
+  cdn: "https://sessao99.b-cdn.net"
 };
 
-const supabaseStatus = document.getElementById("supabaseStatus");
-const bunnyStatus = document.getElementById("bunnyStatus");
+/* ================= ELEMENTOS ================= */
+const conn = document.getElementById("conn");
+const overlay = document.getElementById("overlay");
+const bar = document.getElementById("bar");
+const msg = document.getElementById("msg");
+const btn = document.getElementById("btn");
 
-/* ========= TIMEOUT ========= */
-function withTimeout(promise, ms){
-  return Promise.race([
-    promise,
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("Timeout")), ms)
-    )
-  ]);
+/* ================= TESTE SUPABASE ================= */
+function timeout(ms){
+  return new Promise((_,reject)=>setTimeout(()=>reject(new Error("Timeout")),ms));
 }
 
-/* ========= TESTES ========= */
-window.onload = () => {
-  testarSupabase();
-  testarBunny();
-};
-
-async function testarSupabase(){
+(async ()=>{
   try{
-    const { error } = await withTimeout(
-      supabase.from("filmes").select("id", { count: "exact", head: true }),
-      3000
-    );
+    const { error } = await Promise.race([
+      supabase.from("filmes").select("id").limit(1),
+      timeout(3000)
+    ]);
     if(error) throw error;
-    supabaseStatus.innerText="🟢 Supabase conectado";
-    supabaseStatus.className="status ok";
+    conn.innerText="🟢 Supabase conectado";
+    conn.className="ok";
   }catch(e){
-    supabaseStatus.innerText="🔴 Supabase ERRO: "+e.message;
-    supabaseStatus.className="status err";
+    conn.innerText="🔴 Supabase ERRO: "+e.message;
+    conn.className="err";
   }
+})();
+
+/* ================= UPLOAD ================= */
+btn.onclick = ()=>{
+  if(!titulo.value || !video.files[0]){
+    alert("Título e vídeo são obrigatórios");
+    return;
+  }
+  iniciarUpload();
+};
+
+function falha(text){
+  msg.innerText="❌ "+text;
+  msg.className="err";
+  btn.disabled=false;
 }
 
-async function testarBunny(){
-  try{
-    const testUrl = `https://${BUNNY.region}.storage.bunnycdn.com/${BUNNY.zone}/__test__`;
-    const res = await withTimeout(fetch(testUrl,{
-      method:"PUT",
-      headers:{ "AccessKey": BUNNY.key }
-    }),3000);
-    if(!res.ok && res.status !== 201) throw new Error("HTTP "+res.status);
-    bunnyStatus.innerText="🟢 Bunny conectado";
-    bunnyStatus.className="status ok";
-  }catch(e){
-    bunnyStatus.innerText="🔴 Bunny ERRO: "+e.message;
-    bunnyStatus.className="status err";
+function iniciarUpload(){
+  btn.disabled=true;
+  overlay.style.display="flex";
+  bar.style.width="0%";
+  msg.className="muted";
+  msg.innerText="Enviando para Bunny…";
+
+  const file = video.files[0];
+  const name = Date.now()+"_"+file.name.replace(/\s+/g,"_");
+  const uploadUrl = `https://${BUNNY.region}.storage.bunnycdn.com/${BUNNY.zone}/filmes/${name}`;
+
+  const xhr = new XMLHttpRequest();
+  xhr.open("PUT", uploadUrl);
+  xhr.setRequestHeader("AccessKey", BUNNY.key);
+  xhr.setRequestHeader("Content-Type","application/octet-stream");
+
+  xhr.upload.onprogress = e=>{
+    if(e.lengthComputable){
+      const p = Math.round((e.loaded/e.total)*100);
+      bar.style.width=p+"%";
+      msg.innerText=`Upload ${p}%`;
+    }
+  };
+
+  xhr.onerror = ()=> falha("Erro de rede no upload");
+
+  xhr.onload = ()=>{
+    if(xhr.status !== 201){
+      falha("Bunny recusou (HTTP "+xhr.status+")");
+      return;
+    }
+    salvarSupabase(`${BUNNY.cdn}/filmes/${name}`);
+  };
+
+  xhr.send(file);
+}
+
+async function salvarSupabase(videoUrl){
+  msg.innerText="Salvando informações no Supabase…";
+
+  const { error } = await supabase.from("filmes").insert({
+    titulo: titulo.value,
+    descricao: descricao.value,
+    categoria: categoria.value,
+    capa_url: capa.value,
+    video_url: videoUrl,
+    ativo: true
+  });
+
+  if(error){
+    falha("Supabase: "+error.message);
+    return;
   }
+
+  bar.style.width="100%";
+  msg.innerText="✅ Filme enviado com sucesso!";
+  msg.className="ok";
+
+  setTimeout(()=>{
+    overlay.style.display="none";
+    btn.disabled=false;
+    location.reload();
+  },1500);
 }
 </script>
 
