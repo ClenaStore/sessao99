@@ -94,126 +94,132 @@ main{
 </main>
 
 <script>
-/* SUPABASE */
 const supabaseClient = supabase.createClient(
   "https://dxkszikemntfusfyrzos.supabase.co",
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-/* ELEMENTOS */
-const kpiOnline = document.getElementById("kpiOnline");
-const kpiPlays = document.getElementById("kpiPlays");
-const kpiFilmes = document.getElementById("kpiFilmes");
-const kpiSeries = document.getElementById("kpiSeries");
-const onlineStatus = document.getElementById("onlineStatus");
+const ctxOnline = document.getElementById("chartOnline").getContext("2d");
+const ctxConteudos = document.getElementById("chartConteudos").getContext("2d");
+const ctxTipo = document.getElementById("chartTipo").getContext("2d");
+const ctxHoras = document.getElementById("chartHoras").getContext("2d");
 
-let chartOnline, chartConteudos, chartTipo, chartHoras;
+let cOnline, cConteudos, cTipo, cHoras;
 
-/* INIT */
-async function init(){
-  onlineStatus.textContent = "🟢 Online";
-  await carregarDados();
-  setInterval(carregarDados, 15000); // tempo real leve
-}
-
-/* LOAD */
-async function carregarDados(){
-  const { data, error } = await supabaseClient
+async function carregar() {
+  const { data } = await supabaseClient
     .from("registros_streaming")
     .select("*");
-
-  if(error){
-    onlineStatus.textContent = "🔴 Erro";
-    return;
-  }
 
   analisar(data || []);
 }
 
-/* ANALYTICS */
-function analisar(dados){
+function analisar(dados) {
   const agora = Date.now();
-  const ultimos5min = dados.filter(d =>
-    agora - new Date(d.created_at).getTime() < 5*60*1000
+
+  const online = dados.filter(d =>
+    d.acao === "ping" &&
+    agora - new Date(d.created_at).getTime() < 30000
   );
 
-  const plays = dados.filter(d=>d.acao==="play");
+  const playsHoje = dados.filter(d =>
+    d.acao === "play" &&
+    new Date(d.created_at).toDateString() === new Date().toDateString()
+  );
 
-  kpiOnline.textContent = new Set(ultimos5min.map(d=>d.user_id)).size;
-  kpiPlays.textContent = plays.length;
-  kpiFilmes.textContent = plays.filter(d=>d.tipo==="filme").length;
-  kpiSeries.textContent = plays.filter(d=>d.tipo==="serie").length;
+  document.getElementById("kpiOnline").textContent =
+    new Set(online.map(d=>d.user_id)).size;
 
-  graficoOnline(ultimos5min);
-  graficoConteudos(plays);
-  graficoTipo(plays);
-  graficoHoras(plays);
+  document.getElementById("kpiPlays").textContent = playsHoje.length;
+  document.getElementById("kpiFilmes").textContent =
+    playsHoje.filter(d=>d.tipo==="filme").length;
+
+  document.getElementById("kpiSeries").textContent =
+    playsHoje.filter(d=>d.tipo==="serie").length;
+
+  graficoOnline(online.length);
+  graficoTipo(playsHoje);
+  graficoConteudos(playsHoje);
+  graficoHoras(playsHoje);
 }
 
-/* GRÁFICOS */
-function graficoOnline(list){
-  const labels=["Agora"];
-  const data=[new Set(list.map(d=>d.user_id)).size];
-
-  if(chartOnline) chartOnline.destroy();
-  chartOnline = new Chart(chartOnlineCtx,{
+function graficoOnline(qtd){
+  cOnline?.destroy();
+  cOnline = new Chart(ctxOnline,{
     type:"line",
-    data:{labels,datasets:[{label:"Usuários Online",data,borderColor:"#e50914"}]}
-  });
-}
-
-function graficoConteudos(list){
-  const map={};
-  list.forEach(d=>map[d.titulo]=(map[d.titulo]||0)+1);
-
-  if(chartConteudos) chartConteudos.destroy();
-  chartConteudos = new Chart(chartConteudosCtx,{
-    type:"bar",
     data:{
-      labels:Object.keys(map),
-      datasets:[{data:Object.values(map),backgroundColor:"#e50914"}]
+      labels:["Agora"],
+      datasets:[{
+        label:"Usuários Online",
+        data:[qtd],
+        borderColor:"#e50914",
+        tension:.4
+      }]
     }
   });
 }
 
 function graficoTipo(list){
-  const f=list.filter(d=>d.tipo==="filme").length;
-  const s=list.filter(d=>d.tipo==="serie").length;
+  cTipo?.destroy();
+  const filmes=list.filter(d=>d.tipo==="filme").length;
+  const series=list.filter(d=>d.tipo==="serie").length;
 
-  if(chartTipo) chartTipo.destroy();
-  chartTipo = new Chart(chartTipoCtx,{
-    type:"pie",
+  cTipo = new Chart(ctxTipo,{
+    type:"doughnut",
     data:{
       labels:["Filmes","Séries"],
-      datasets:[{data:[f,s],backgroundColor:["#e50914","#6366f1"]}]
+      datasets:[{
+        data:[filmes,series],
+        backgroundColor:["#e50914","#6366f1"]
+      }]
+    }
+  });
+}
+
+function graficoConteudos(list){
+  const map={};
+  list.forEach(d=>{
+    if(!d.titulo) return;
+    map[d.titulo]=(map[d.titulo]||0)+1;
+  });
+
+  cConteudos?.destroy();
+  cConteudos = new Chart(ctxConteudos,{
+    type:"bar",
+    data:{
+      labels:Object.keys(map),
+      datasets:[{
+        label:"Plays",
+        data:Object.values(map),
+        backgroundColor:"#e50914"
+      }]
     }
   });
 }
 
 function graficoHoras(list){
-  const map={};
+  const horas = Array(24).fill(0);
   list.forEach(d=>{
-    const h=new Date(d.created_at).getHours();
-    map[h]=(map[h]||0)+1;
+    horas[new Date(d.created_at).getHours()]++;
   });
 
-  if(chartHoras) chartHoras.destroy();
-  chartHoras = new Chart(chartHorasCtx,{
+  cHoras?.destroy();
+  cHoras = new Chart(ctxHoras,{
     type:"line",
     data:{
-      labels:Object.keys(map),
-      datasets:[{data:Object.values(map),borderColor:"#22c55e"}]
+      labels:[...Array(24).keys()],
+      datasets:[{
+        label:"Plays por Hora",
+        data:horas,
+        borderColor:"#22c55e",
+        tension:.3
+      }]
     }
   });
 }
 
-/* CONTEXTS */
-const chartOnlineCtx=document.getElementById("chartOnline");
-const chartConteudosCtx=document.getElementById("chartConteudos");
-const chartTipoCtx=document.getElementById("chartTipo");
-const chartHorasCtx=document.getElementById("chartHoras");
-
-init();
+setInterval(carregar, 5000);
+carregar();
 </script>
 
 </body>
