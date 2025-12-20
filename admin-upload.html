@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>SESSÃO 99 • Upload Admin</title>
+<title>SESSÃO 99 • Painel Admin</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -14,6 +14,7 @@
   --accent:#e50914;
   --ok:#22c55e;
   --err:#ef4444;
+  --muted:#9ca3af;
 }
 *{box-sizing:border-box}
 body{
@@ -22,14 +23,24 @@ body{
   color:#fff;
   font-family:Inter,Arial,sans-serif;
 }
+
+/* ===== LAYOUT ===== */
 main{
-  max-width:900px;
+  max-width:960px;
   margin:40px auto;
   background:var(--card);
   padding:32px;
-  border-radius:16px;
+  border-radius:18px;
+  box-shadow:0 20px 60px rgba(0,0,0,.6);
 }
-label{display:block;margin-top:16px;font-weight:600}
+h1{margin-top:0}
+
+/* ===== FORM ===== */
+label{
+  display:block;
+  margin-top:16px;
+  font-weight:600;
+}
 input,textarea{
   width:100%;
   padding:12px;
@@ -39,44 +50,52 @@ input,textarea{
   background:#020617;
   color:#fff;
 }
+textarea{resize:vertical}
+
 button{
-  margin-top:24px;
-  padding:14px;
+  margin-top:28px;
+  padding:16px;
   width:100%;
   border:none;
-  border-radius:10px;
+  border-radius:12px;
   background:var(--accent);
   color:#fff;
   font-size:16px;
   cursor:pointer;
 }
-button:disabled{opacity:.5;cursor:not-allowed}
+button:disabled{
+  opacity:.5;
+  cursor:not-allowed;
+}
 
-/* OVERLAY */
+/* ===== OVERLAY ===== */
 #overlay{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.9);
+  background:rgba(0,0,0,.92);
   display:none;
   align-items:center;
   justify-content:center;
   z-index:9999;
 }
-#box{
-  background:#020617;
-  padding:32px;
-  border-radius:16px;
+#overlayBox{
   width:90%;
   max-width:420px;
+  background:#020617;
+  padding:32px;
+  border-radius:18px;
   text-align:center;
+}
+#overlayBox h3{
+  margin-top:0;
 }
 #progress{
   width:100%;
-  height:10px;
+  height:12px;
   background:#111;
-  border-radius:10px;
+  border-radius:12px;
   overflow:hidden;
-  margin-top:16px;
+  margin-top:18px;
 }
 #bar{
   height:100%;
@@ -85,28 +104,30 @@ button:disabled{opacity:.5;cursor:not-allowed}
   transition:.2s;
 }
 #msg{
-  margin-top:16px;
-  font-weight:600;
+  margin-top:18px;
   min-height:24px;
+  font-weight:600;
 }
 .ok{color:var(--ok)}
 .err{color:var(--err)}
+.muted{color:var(--muted)}
 </style>
 </head>
 <body>
 
+<!-- OVERLAY -->
 <div id="overlay">
-  <div id="box">
-    <h3>⏳ Processando upload</h3>
+  <div id="overlayBox">
+    <h3>🎬 Enviando filme</h3>
     <div id="progress"><div id="bar"></div></div>
-    <div id="msg">Inicializando…</div>
+    <div id="msg" class="muted">Preparando…</div>
   </div>
 </div>
 
 <main>
-  <h2>🎬 Upload de Filme — SESSÃO 99</h2>
+  <h1>SESSÃO 99 — Painel Admin</h1>
 
-  <label>Título</label>
+  <label>Título *</label>
   <input id="titulo">
 
   <label>Descrição</label>
@@ -116,9 +137,9 @@ button:disabled{opacity:.5;cursor:not-allowed}
   <input id="categoria">
 
   <label>URL da capa</label>
-  <input id="capa">
+  <input id="capa" placeholder="https://...jpg">
 
-  <label>Arquivo de vídeo</label>
+  <label>Arquivo de vídeo *</label>
   <input type="file" id="video" accept="video/*">
 
   <button id="btn">Enviar Filme</button>
@@ -144,38 +165,41 @@ const bar = document.getElementById("bar");
 const msg = document.getElementById("msg");
 const btn = document.getElementById("btn");
 
-/* ================= EVENT ================= */
-btn.onclick = iniciarUpload;
+/* ================= EVENTO ================= */
+btn.onclick = iniciar;
 
 /* ================= FUNÇÕES ================= */
-function erro(text){
-  msg.innerText = "❌ " + text;
-  msg.className = "err";
-  bar.style.background = "#ef4444";
-  btn.disabled = false;
+function mostrarOverlay(text){
+  overlay.style.display="flex";
+  msg.innerText = text;
+  msg.className="muted";
+  bar.style.width="0%";
+  bar.style.background="var(--accent)";
 }
 
-function iniciarUpload(){
+function erro(text){
+  msg.innerText = "❌ " + text;
+  msg.className="err";
+  bar.style.background="var(--err)";
+  btn.disabled=false;
+}
+
+function iniciar(){
   if(!titulo.value || !video.files[0]){
     alert("Título e vídeo são obrigatórios");
     return;
   }
-
-  btn.disabled = true;
-  overlay.style.display = "flex";
-  bar.style.width = "0%";
-  bar.style.background = "var(--accent)";
-  msg.innerText = "Validando arquivo…";
-
-  enviarParaBunny();
+  btn.disabled=true;
+  mostrarOverlay("Validando arquivo…");
+  enviarBunny();
 }
 
-function enviarParaBunny(){
+function enviarBunny(){
   const file = video.files[0];
-  const safeName = Date.now()+"_"+file.name.replace(/\s+/g,"_");
-  const url = `https://${BUNNY.region}.storage.bunnycdn.com/${BUNNY.zone}/filmes/${safeName}`;
+  const name = Date.now()+"_"+file.name.replace(/\s+/g,"_");
+  const url = `https://${BUNNY.region}.storage.bunnycdn.com/${BUNNY.zone}/filmes/${name}`;
 
-  msg.innerText = "Enviando para o Bunny.net…";
+  msg.innerText="Enviando para Bunny.net…";
 
   const xhr = new XMLHttpRequest();
   xhr.open("PUT", url);
@@ -190,21 +214,21 @@ function enviarParaBunny(){
     }
   };
 
-  xhr.onerror = ()=> erro("Falha de rede durante upload");
+  xhr.onerror = ()=> erro("Falha de rede no upload");
 
   xhr.onload = ()=>{
     if(xhr.status !== 201){
-      erro(`Bunny recusou o upload (HTTP ${xhr.status})`);
+      erro(`Bunny recusou (HTTP ${xhr.status})`);
       return;
     }
-    salvarSupabase(`${BUNNY.cdn}/filmes/${safeName}`);
+    salvarSupabase(`${BUNNY.cdn}/filmes/${name}`);
   };
 
   xhr.send(file);
 }
 
 async function salvarSupabase(videoUrl){
-  msg.innerText = "Salvando informações no banco…";
+  msg.innerText="Salvando no banco…";
 
   const { error } = await supabase.from("filmes").insert({
     titulo: titulo.value,
@@ -212,17 +236,17 @@ async function salvarSupabase(videoUrl){
     categoria: categoria.value,
     capa_url: capa.value,
     video_url: videoUrl,
-    ativo: true
+    ativo:true
   });
 
   if(error){
-    erro("Supabase: " + error.message);
+    erro("Supabase: "+error.message);
     return;
   }
 
-  msg.innerText = "✅ Upload finalizado com sucesso!";
-  msg.className = "ok";
-  bar.style.width = "100%";
+  bar.style.width="100%";
+  msg.innerText="✅ Filme enviado com sucesso!";
+  msg.className="ok";
 
   setTimeout(()=>{
     overlay.style.display="none";
