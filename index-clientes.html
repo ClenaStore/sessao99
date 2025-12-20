@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <title>SESSÃO 99</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <style>
@@ -104,6 +103,7 @@ video{
 }
 </style>
 </head>
+
 <body>
 
 <header>
@@ -127,17 +127,17 @@ video{
 </div>
 
 <script>
-/* SUPABASE */
+/* ================= SUPABASE ================= */
 const supabaseClient = supabase.createClient(
   "https://dxkszikemntfusfyrzos.supabase.co",
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-/* USER */
+/* ================= USER ================= */
 const USER_ID = localStorage.user_id || crypto.randomUUID();
 localStorage.user_id = USER_ID;
 
-/* ELEMENTOS */
+/* ================= ELEMENTOS ================= */
 const home = document.getElementById("home");
 const search = document.getElementById("search");
 const player = document.getElementById("player");
@@ -147,33 +147,47 @@ const selTemporada = document.getElementById("selTemporada");
 const selEpisodio = document.getElementById("selEpisodio");
 const video = document.getElementById("video");
 
-/* STATE */
-let dados=[], serieAtual=[], episodioAtual=null;
-let pingTimer=null;
+/* ================= STATE ================= */
+let dados = [];
+let serieAtual = [];
+let episodioAtual = null;
+let pingTimer = null;
 
-/* TRACKING */
+/* ================= TRACKING ================= */
 async function registrar(acao){
   if(!episodioAtual || !video.duration) return;
 
-  const current = Math.floor(video.currentTime);
+  const played = Math.floor(video.currentTime);
   const duration = Math.floor(video.duration);
-  const percent = Math.round((current / duration) * 100);
+  const percent = Math.round((played / duration) * 100);
 
+  /* EVENTO */
   await supabaseClient.from("rs_play_events").insert({
     user_id: USER_ID,
+    content_id: episodioAtual.id,
     acao,
     tipo: episodioAtual.tipo,
     titulo: episodioAtual.titulo,
     serie_nome: episodioAtual.serie_nome,
     temporada: episodioAtual.temporada,
     episodio: episodioAtual.episodio,
-played_seconds: current,
-duration_seconds: duration,
-    progress_percent: percent
+    played_seconds: played,
+    duration_seconds: duration,
+    progress_percent: percent,
+    user_agent: navigator.userAgent
+  });
+
+  /* SESSÃO ATIVA */
+  await supabaseClient.from("rs_sessions").upsert({
+    user_id: USER_ID,
+    content_id: episodioAtual.id,
+    content_tipo: episodioAtual.tipo,
+    serie_nome: episodioAtual.serie_nome,
+    last_ping: new Date().toISOString()
   });
 }
 
-/* LOAD */
+/* ================= LOAD ================= */
 async function load(){
   const { data } = await supabaseClient
     .from("filmes")
@@ -184,30 +198,31 @@ async function load(){
   renderHome(dados);
 }
 
-/* HOME */
+/* ================= HOME ================= */
 function renderHome(list){
-  home.innerHTML="";
-  const filmes=list.filter(i=>i.tipo==="filme");
-  const series=[...new Map(
-    list.filter(i=>i.tipo==="serie").map(s=>[s.serie_nome,s])
+  home.innerHTML = "";
+
+  const filmes = list.filter(i => i.tipo === "filme");
+  const series = [...new Map(
+    list.filter(i => i.tipo === "serie").map(s => [s.serie_nome, s])
   ).values()];
 
-  renderRow("🎬 Filmes",filmes,playFilme);
-  renderRow("📺 Séries",series,s=>abrirSerie(s.serie_nome));
+  renderRow("🎬 Filmes", filmes, playFilme);
+  renderRow("📺 Séries", series, s => abrirSerie(s.serie_nome));
 }
 
-function renderRow(titulo,itens,click){
+function renderRow(titulo, itens, click){
   if(!itens.length) return;
-  const sec=document.createElement("section");
-  sec.innerHTML=`<h2>${titulo}</h2>`;
-  const row=document.createElement("div");
-  row.className="row";
+  const sec = document.createElement("section");
+  sec.innerHTML = `<h2>${titulo}</h2>`;
+  const row = document.createElement("div");
+  row.className = "row";
 
   itens.forEach(i=>{
-    const c=document.createElement("div");
-    c.className="card";
-    c.innerHTML=`<img src="${i.capa_url}">`;
-    c.onclick=()=>click(i);
+    const c = document.createElement("div");
+    c.className = "card";
+    c.innerHTML = `<img src="${i.capa_url}">`;
+    c.onclick = () => click(i);
     row.appendChild(c);
   });
 
@@ -215,65 +230,59 @@ function renderRow(titulo,itens,click){
   home.appendChild(sec);
 }
 
-/* PLAYER */
+/* ================= PLAYER ================= */
 function playFilme(f){
-  serieAtual=[f];
+  serieAtual = [f];
   tocar(f);
-  tituloPlayer.textContent=f.titulo;
-  capaPlayer.src=f.capa_url;
-  selTemporada.innerHTML="";
-  selEpisodio.innerHTML="";
-  player.style.display="flex";
+  tituloPlayer.textContent = f.titulo;
+  capaPlayer.src = f.capa_url;
+  selTemporada.innerHTML = "";
+  selEpisodio.innerHTML = "";
+  player.style.display = "flex";
 }
 
 function abrirSerie(nome){
-  serieAtual=dados
-    .filter(d=>d.serie_nome===nome)
-    .sort((a,b)=>a.temporada-b.temporada||a.episodio-b.episodio);
+  serieAtual = dados
+    .filter(d => d.serie_nome === nome)
+    .sort((a,b)=>a.temporada-b.temporada || a.episodio-b.episodio);
 
-  tituloPlayer.textContent=nome;
-  capaPlayer.src=serieAtual[0].capa_url;
+  tituloPlayer.textContent = nome;
+  capaPlayer.src = serieAtual[0].capa_url;
   montarTemporadas();
-  player.style.display="flex";
+  player.style.display = "flex";
 }
 
 function montarTemporadas(){
-  const temps=[...new Set(serieAtual.map(e=>e.temporada))];
-  selTemporada.innerHTML="";
+  const temps = [...new Set(serieAtual.map(e=>e.temporada))];
+  selTemporada.innerHTML = "";
   temps.forEach(t=>{
-    selTemporada.innerHTML+=`<option value="${t}">Temporada ${t}</option>`;
+    selTemporada.innerHTML += `<option value="${t}">Temporada ${t}</option>`;
   });
-  selTemporada.onchange=montarEpisodios;
+  selTemporada.onchange = montarEpisodios;
   montarEpisodios();
 }
 
 function montarEpisodios(){
-  const t=Number(selTemporada.value);
-  const eps=serieAtual.filter(e=>e.temporada===t);
-  selEpisodio.innerHTML="";
+  const t = Number(selTemporada.value);
+  const eps = serieAtual.filter(e=>e.temporada===t);
+  selEpisodio.innerHTML = "";
   eps.forEach((e,i)=>{
-    selEpisodio.innerHTML+=`<option value="${i}">Episódio ${e.episodio}</option>`;
+    selEpisodio.innerHTML += `<option value="${i}">Episódio ${e.episodio}</option>`;
   });
-  selEpisodio.onchange=()=>tocar(eps[selEpisodio.value]);
+  selEpisodio.onchange = ()=>tocar(eps[selEpisodio.value]);
   tocar(eps[0]);
 }
 
 function tocar(ep){
-  episodioAtual=ep;
-  video.src=ep.video_url;
+  episodioAtual = ep;
+  video.src = ep.video_url;
   video.play();
 }
 
-/* AUTO NEXT */
-video.onended=()=>{
-  const idx=serieAtual.findIndex(e=>e.id===episodioAtual.id);
-  if(serieAtual[idx+1]) tocar(serieAtual[idx+1]);
-};
-
-/* EVENTS */
+/* ================= EVENTS ================= */
 video.addEventListener("play",()=>{
   registrar("play");
-  pingTimer=setInterval(()=>registrar("ping"),15000);
+  pingTimer = setInterval(()=>registrar("ping"),15000);
 });
 
 video.addEventListener("pause",()=>{
@@ -287,14 +296,14 @@ function fechar(){
   clearInterval(pingTimer);
   registrar("stop");
   video.pause();
-  video.src="";
-  player.style.display="none";
+  video.src = "";
+  player.style.display = "none";
 }
 
-/* SEARCH */
-search.oninput=()=>{
-  const v=search.value.toLowerCase();
-  renderHome(dados.filter(d=>
+/* ================= SEARCH ================= */
+search.oninput = ()=>{
+  const v = search.value.toLowerCase();
+  renderHome(dados.filter(d =>
     d.titulo.toLowerCase().includes(v) ||
     (d.serie_nome && d.serie_nome.toLowerCase().includes(v))
   ));
