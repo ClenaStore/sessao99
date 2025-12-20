@@ -67,7 +67,7 @@ button{
   font-size:17px;
   cursor:pointer;
 }
-button:disabled{opacity:.6;cursor:not-allowed}
+button:disabled{opacity:.6}
 
 /* OVERLAY */
 #overlay{
@@ -99,7 +99,6 @@ button:disabled{opacity:.6;cursor:not-allowed}
   height:100%;
   width:0%;
   background:var(--accent);
-  transition:width .15s;
 }
 #msg{
   margin-top:18px;
@@ -123,7 +122,7 @@ button:disabled{opacity:.6;cursor:not-allowed}
   <h1>SESSÃO 99 — Painel Admin</h1>
 
   <div id="supabaseStatus" class="status muted">🔌 Supabase: verificando…</div>
-  <div id="bunnyStatus" class="status muted">🐰 Bunny.net: verificando…</div>
+  <div id="bunnyStatus" class="status ok">🐰 Bunny: pronto para upload</div>
 
   <label>Título *</label>
   <input id="titulo">
@@ -151,25 +150,20 @@ const supabase = window.supabase.createClient(
 );
 
 const BUNNY = {
-  zone: "sessao99",
-  region: "br",
-  key: "d498d56e-361b-4a1e-9edb9eb63e3b-2e6a-4c17",
-  cdn: "https://sessao99.b-cdn.net"
+  zone:"sessao99",
+  region:"br",
+  key:"d498d56e-361b-4a1e-9edb9eb63e3b-2e6a-4c17",
+  cdn:"https://sessao99.b-cdn.net"
 };
 
 /* ================= ELEMENTOS ================= */
 const supabaseStatus = document.getElementById("supabaseStatus");
-const bunnyStatus = document.getElementById("bunnyStatus");
 const overlay = document.getElementById("overlay");
 const bar = document.getElementById("bar");
 const msg = document.getElementById("msg");
 const btn = document.getElementById("btn");
 
-/* ================= UTIL ================= */
-const timeout = ms => new Promise((_,r)=>setTimeout(()=>r(new Error("Timeout")),ms));
-
 /* ================= TESTE SUPABASE ================= */
-/* ================= STATUS SUPABASE ================= */
 (async ()=>{
   try{
     const controller = new AbortController();
@@ -183,35 +177,11 @@ const timeout = ms => new Promise((_,r)=>setTimeout(()=>r(new Error("Timeout")),
 
     if(error) throw error;
 
-    supabaseStatus.innerText = "🟢 Supabase conectado";
-    supabaseStatus.className = "status ok";
-  }catch(e){
-    supabaseStatus.innerText = "🔴 Supabase ERRO: conexão ou permissão";
-    supabaseStatus.className = "status err";
-  }
-})();
-
-/* ================= STATUS BUNNY ================= */
-bunnyStatus.innerText = "🟢 Bunny pronto para upload";
-bunnyStatus.className = "status ok";
-
-
-/* ================= TESTE BUNNY ================= */
-(async ()=>{
-  try{
-    const res = await Promise.race([
-      fetch(`https://${BUNNY.region}.storage.bunnycdn.com/${BUNNY.zone}/`,{
-        method:"HEAD",
-        headers:{ "AccessKey": BUNNY.key }
-      }),
-      timeout(3000)
-    ]);
-    if(!res.ok) throw new Error("HTTP "+res.status);
-    bunnyStatus.innerText="🟢 Bunny.net conectado";
-    bunnyStatus.className="status ok";
-  }catch(e){
-    bunnyStatus.innerText="🔴 Bunny ERRO: "+e.message;
-    bunnyStatus.className="status err";
+    supabaseStatus.innerText="🟢 Supabase conectado";
+    supabaseStatus.className="status ok";
+  }catch{
+    supabaseStatus.innerText="🔴 Supabase erro de conexão ou permissão";
+    supabaseStatus.className="status err";
   }
 })();
 
@@ -232,25 +202,25 @@ function iniciarUpload(){
 
   const file = video.files[0];
   const name = Date.now()+"_"+file.name.replace(/\s+/g,"_");
-  const uploadUrl = `https://${BUNNY.region}.storage.bunnycdn.com/${BUNNY.zone}/filmes/${name}`;
+  const url = `https://${BUNNY.region}.storage.bunnycdn.com/${BUNNY.zone}/filmes/${name}`;
 
   const xhr = new XMLHttpRequest();
-  xhr.open("PUT", uploadUrl);
-  xhr.setRequestHeader("AccessKey", BUNNY.key);
+  xhr.open("PUT",url);
+  xhr.setRequestHeader("AccessKey",BUNNY.key);
   xhr.setRequestHeader("Content-Type","application/octet-stream");
 
-  xhr.upload.onprogress = e=>{
+  xhr.upload.onprogress=e=>{
     if(e.lengthComputable){
-      const p = Math.round((e.loaded/e.total)*100);
+      const p=Math.round((e.loaded/e.total)*100);
       bar.style.width=p+"%";
       msg.innerText=`Upload ${p}%`;
     }
   };
 
-  xhr.onerror = ()=>falha("Erro de rede no upload");
+  xhr.onerror=()=>falha("Erro de rede no upload");
 
-  xhr.onload = ()=>{
-    if(xhr.status !== 201){
+  xhr.onload=()=>{
+    if(xhr.status!==201){
       falha("Bunny recusou (HTTP "+xhr.status+")");
       return;
     }
@@ -264,12 +234,12 @@ async function salvarSupabase(videoUrl){
   msg.innerText="Salvando informações…";
 
   const { error } = await supabase.from("filmes").insert({
-    titulo: titulo.value,
-    descricao: descricao.value,
-    categoria: categoria.value,
-    capa_url: capa.value,
-    video_url: videoUrl,
-    ativo: true
+    titulo:titulo.value,
+    descricao:descricao.value,
+    categoria:categoria.value,
+    capa_url:capa.value,
+    video_url:videoUrl,
+    ativo:true
   });
 
   if(error){
@@ -281,9 +251,8 @@ async function salvarSupabase(videoUrl){
   setTimeout(()=>location.reload(),1500);
 }
 
-function falha(texto){
-  msg.innerText="❌ "+texto;
-  msg.className="err";
+function falha(t){
+  msg.innerText="❌ "+t;
   btn.disabled=false;
 }
 </script>
