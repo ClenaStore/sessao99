@@ -5,160 +5,299 @@
 <title>SESSÃO 99</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- SUPABASE CDN -->
+<!-- SUPABASE UMD (GARANTIDO) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <style>
+:root{
+  --bg:#05070f;
+  --red:#e50914;
+  --text:#ffffff;
+  --muted:#9ca3af;
+}
+*{box-sizing:border-box}
 body{
   margin:0;
-  background:#05070f;
-  color:#fff;
-  font-family:Inter,Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Inter,system-ui,Arial,sans-serif;
 }
+
+/* ================= HEADER ================= */
 header{
-  padding:16px 32px;
-  background:#000;
+  position:fixed;
+  top:0;
+  width:100%;
+  z-index:100;
+  padding:16px 48px;
   display:flex;
   justify-content:space-between;
   align-items:center;
+  background:linear-gradient(to bottom,rgba(0,0,0,.9),rgba(0,0,0,.4));
 }
-main{
-  padding:32px;
+header h1{
+  margin:0;
+  font-size:22px;
+  font-weight:900;
+  letter-spacing:2px;
 }
-#status{
-  margin-bottom:20px;
-  font-weight:600;
+header input{
+  width:260px;
+  padding:10px 14px;
+  border-radius:6px;
+  border:none;
 }
-.ok{color:#22c55e}
-.err{color:#ef4444}
-.grid{
+
+/* ================= HERO ================= */
+.hero{
+  height:85vh;
+  padding:140px 48px 48px;
   display:flex;
-  gap:16px;
-  flex-wrap:wrap;
+  align-items:flex-end;
+  background-size:cover;
+  background-position:center;
+  position:relative;
 }
+.hero::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(
+    to right,
+    rgba(0,0,0,.9),
+    rgba(0,0,0,.4),
+    rgba(0,0,0,.2)
+  );
+}
+.hero-content{
+  position:relative;
+  max-width:600px;
+}
+.hero h2{
+  font-size:56px;
+  margin:0 0 16px;
+}
+.hero p{
+  color:#e5e7eb;
+  line-height:1.5;
+}
+.hero button{
+  margin-top:20px;
+  padding:12px 22px;
+  border:none;
+  border-radius:6px;
+  background:var(--red);
+  color:#fff;
+  font-size:16px;
+  cursor:pointer;
+}
+
+/* ================= MAIN (CRÍTICO) ================= */
+main{
+  position:relative;
+  margin-top:85vh;   /* <<< ISSO GARANTE QUE OS CARDS APARECEM */
+  padding:40px 48px;
+  background:var(--bg);
+}
+
+/* ================= ROW ================= */
+.row{
+  margin-bottom:48px;
+}
+.row h3{
+  margin:0 0 14px;
+}
+.cards{
+  display:flex;
+  gap:14px;
+  overflow-x:auto;
+  scroll-behavior:smooth;
+}
+.cards::-webkit-scrollbar{display:none}
+
+/* ================= CARD ================= */
 .card{
-  width:200px;
+  min-width:200px;
   height:300px;
-  border-radius:12px;
+  border-radius:10px;
   overflow:hidden;
   cursor:pointer;
+  transition:.3s;
 }
 .card img{
   width:100%;
   height:100%;
   object-fit:cover;
 }
+.card:hover{
+  transform:scale(1.15);
+  z-index:10;
+}
+
+/* ================= MODAL ================= */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.9);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:200;
+}
+.modal-content{
+  width:90%;
+  max-width:1000px;
+}
+.modal iframe{
+  width:100%;
+  height:560px;
+}
+.close{
+  position:absolute;
+  top:20px;
+  right:20px;
+  background:#dc2626;
+  border:none;
+  color:#fff;
+  padding:8px 14px;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+/* ================= STATUS ================= */
+#status{
+  color:#22c55e;
+  margin-bottom:20px;
+  font-weight:600;
+}
+.error{color:#ef4444}
 </style>
 </head>
 <body>
 
 <header>
-  <h2>🎬 SESSÃO 99</h2>
+  <h1>🎬 SESSÃO 99</h1>
   <input id="search" placeholder="Buscar...">
 </header>
 
+<section class="hero" id="hero">
+  <div class="hero-content">
+    <h2 id="heroTitle"></h2>
+    <p id="heroDesc"></p>
+    <button onclick="assistirHero()">▶ Assistir</button>
+  </div>
+</section>
+
 <main>
-  <div id="status">⏳ Inicializando Supabase…</div>
-  <div class="grid" id="grid"></div>
+  <div id="status">Carregando filmes…</div>
+  <div id="content"></div>
 </main>
 
+<!-- PLAYER -->
+<div class="modal" id="playerModal">
+  <button class="close" onclick="fecharPlayer()">Fechar</button>
+  <div class="modal-content">
+    <iframe id="player" allowfullscreen></iframe>
+  </div>
+</div>
+
 <script>
+/* ================= SUPABASE ================= */
+const supabase = window.supabase.createClient(
+  "https://dxkszikemntfusfyrzos.supabase.co",
+  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+);
+
+const hero = document.getElementById("hero");
+const heroTitle = document.getElementById("heroTitle");
+const heroDesc = document.getElementById("heroDesc");
+const content = document.getElementById("content");
 const statusEl = document.getElementById("status");
-const grid = document.getElementById("grid");
 const search = document.getElementById("search");
+const playerModal = document.getElementById("playerModal");
+const player = document.getElementById("player");
 
-let supabaseClient = null;
 let filmes = [];
+let filmeHero = null;
 
-/* ===============================
-   ESPERAR SUPABASE EXISTIR
-================================ */
-function esperarSupabase(timeout = 5000){
-  return new Promise((resolve, reject) => {
-    const start = Date.now();
-    const timer = setInterval(() => {
-      if (window.supabase && window.supabase.createClient) {
-        clearInterval(timer);
-        resolve(window.supabase);
-      }
-      if (Date.now() - start > timeout) {
-        clearInterval(timer);
-        reject("Supabase não carregou (timeout)");
-      }
-    }, 50);
-  });
-}
-
-/* ===============================
-   INIT
-================================ */
-async function init(){
-  try{
-    const supabaseLib = await esperarSupabase();
-
-    statusEl.innerText = "🔌 Conectando ao Supabase…";
-
-    supabaseClient = supabaseLib.createClient(
-      "https://dxkszikemntfusfyrzos.supabase.co",
-      "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
-    );
-
-    carregarFilmes();
-
-  }catch(err){
-    statusEl.innerText = "❌ ERRO: " + err;
-    statusEl.className = "err";
-  }
-}
-
-/* ===============================
-   CARREGAR FILMES
-================================ */
-async function carregarFilmes(){
-  statusEl.innerText = "📡 Buscando filmes…";
-
-  const { data, error } = await supabaseClient
+/* ================= LOAD ================= */
+async function carregar(){
+  const { data, error } = await supabase
     .from("filmes")
     .select("*")
-    .eq("ativo", true);
+    .eq("ativo", true)
+    .order("created_at", { ascending:false });
 
   if(error){
-    statusEl.innerText = "❌ ERRO SUPABASE: " + error.message;
-    statusEl.className = "err";
+    statusEl.innerText = "Erro: " + error.message;
+    statusEl.className = "error";
     return;
   }
 
-  statusEl.innerText = `✅ ${data.length} filme(s) carregado(s)`;
-  statusEl.className = "ok";
-
   filmes = data || [];
-  render(filmes);
+  statusEl.innerText = `✅ ${filmes.length} filme(s) carregado(s)`;
+
+  if(filmes.length > 0){
+    montarHero(filmes[0]);
+    montarLinhas(filmes);
+  }
 }
 
-/* ===============================
-   RENDER
-================================ */
-function render(lista){
-  grid.innerHTML = "";
-  lista.forEach(f => {
-    if(!f.capa_url) return;
-    const c = document.createElement("div");
-    c.className = "card";
-    c.innerHTML = `<img src="${f.capa_url}">`;
-    c.onclick = () => window.open(f.video_url, "_blank");
-    grid.appendChild(c);
+/* ================= HERO ================= */
+function montarHero(f){
+  filmeHero = f;
+  hero.style.backgroundImage = `url('${f.capa_url}')`;
+  heroTitle.innerText = f.titulo;
+  heroDesc.innerText = f.descricao || "";
+}
+function assistirHero(){
+  if(filmeHero) abrirPlayer(filmeHero.video_url);
+}
+
+/* ================= ROWS ================= */
+function montarLinhas(lista){
+  content.innerHTML = "";
+  const categorias = [...new Set(lista.map(f => f.categoria || "Outros"))];
+
+  categorias.forEach(cat=>{
+    const row = document.createElement("div");
+    row.className = "row";
+    row.innerHTML = `<h3>${cat}</h3><div class="cards"></div>`;
+    const cards = row.querySelector(".cards");
+
+    lista
+      .filter(f => (f.categoria || "Outros") === cat)
+      .forEach(f=>{
+        const c = document.createElement("div");
+        c.className = "card";
+        c.innerHTML = `<img src="${f.capa_url}">`;
+        c.onclick = ()=>abrirPlayer(f.video_url);
+        cards.appendChild(c);
+      });
+
+    content.appendChild(row);
   });
 }
 
-/* ===============================
-   BUSCA
-================================ */
-search.oninput = () => {
+/* ================= PLAYER ================= */
+function abrirPlayer(url){
+  playerModal.style.display="flex";
+  player.src = url;
+}
+function fecharPlayer(){
+  playerModal.style.display="none";
+  player.src = "";
+}
+
+/* ================= SEARCH ================= */
+search.oninput = ()=>{
   const v = search.value.toLowerCase();
-  render(filmes.filter(f => f.titulo.toLowerCase().includes(v)));
+  montarLinhas(
+    filmes.filter(f => f.titulo.toLowerCase().includes(v))
+  );
 };
 
-init();
+carregar();
 </script>
 
 </body>
