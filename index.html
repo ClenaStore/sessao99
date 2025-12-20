@@ -4,142 +4,94 @@
 <meta charset="UTF-8">
 <title>SESSÃO 99</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 :root{
   --bg:#020617;
   --card:#0b1224;
-  --primary:#e11d48;
-  --text:#e5e7eb;
-  --muted:#94a3b8;
+  --primary:#e50914;
+  --text:#fff;
+  --muted:#9ca3af;
 }
 *{box-sizing:border-box}
 body{
   margin:0;
-  font-family:Inter, Arial, sans-serif;
+  font-family:Inter,Arial,sans-serif;
   background:var(--bg);
   color:var(--text);
-  overflow:hidden;
 }
 
-/* ===== SPLASH ===== */
-#splash{
-  position:fixed;
-  inset:0;
-  background:radial-gradient(circle at center,#12091c,#000);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  z-index:999;
-  animation:splashOut 1.4s ease forwards;
-  animation-delay:3s;
-}
-#splash h1{
-  font-size:72px;
-  letter-spacing:14px;
-  font-weight:800;
-  animation:logoIn 3s ease forwards;
-}
-@keyframes logoIn{
-  0%{opacity:0;transform:scale(.6);filter:blur(12px)}
-  40%{opacity:1;filter:blur(0)}
-  100%{
-    transform:scale(1.1);
-    text-shadow:0 0 40px #e11d48;
-  }
-}
-@keyframes splashOut{
-  to{opacity:0;visibility:hidden}
-}
-
-/* ===== HEADER ===== */
+/* HEADER */
 header{
-  padding:16px 24px;
+  position:sticky;
+  top:0;
+  z-index:20;
+  padding:16px 32px;
   display:flex;
   justify-content:space-between;
   align-items:center;
-  border-bottom:1px solid #111827;
-}
-#statusTitle{
-  margin:0;
-  cursor:pointer;
-  user-select:none;
+  background:linear-gradient(to bottom,#020617,rgba(2,6,23,.6));
 }
 #statusText{
-  font-weight:800;
+  font-weight:900;
   letter-spacing:1px;
+  cursor:pointer;
 }
-.status-ok{
-  color:#22c55e;
-  text-shadow:0 0 14px rgba(34,197,94,.6);
-}
-.status-erro{
-  color:#ef4444;
-  text-shadow:0 0 14px rgba(239,68,68,.6);
-}
+.status-ok{color:#22c55e}
+.status-erro{color:#ef4444}
 header input{
   width:260px;
   padding:10px;
-  border-radius:8px;
+  border-radius:6px;
   border:none;
   background:#020617;
   color:#fff;
 }
 
-/* ===== GRID ===== */
+/* CONTEÚDO */
 main{
-  padding:24px;
-  display:none;
-  animation:contentIn .8s ease forwards;
-}
-@keyframes contentIn{
-  from{opacity:0;transform:translateY(20px)}
-  to{opacity:1;transform:none}
-}
-.grid{
-  display:grid;
-  grid-template-columns:repeat(6,1fr);
-  gap:18px;
+  padding:20px 32px;
 }
 
-/* RESPONSIVO */
-@media(max-width:1400px){.grid{grid-template-columns:repeat(5,1fr)}}
-@media(max-width:1200px){.grid{grid-template-columns:repeat(4,1fr)}}
-@media(max-width:900px){.grid{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:600px){.grid{grid-template-columns:repeat(2,1fr)}}
+/* CATEGORIA */
+.categoria{
+  margin-bottom:34px;
+}
+.categoria h2{
+  margin:0 0 12px;
+  font-size:18px;
+}
 
-/* ===== CARD ===== */
+/* CARROSSEL */
+.row{
+  display:flex;
+  gap:14px;
+  overflow-x:auto;
+  scroll-behavior:smooth;
+}
+.row::-webkit-scrollbar{display:none}
+
+/* CARD */
 .card{
+  min-width:180px;
   background:var(--card);
-  border-radius:16px;
+  border-radius:12px;
   overflow:hidden;
   cursor:pointer;
   transition:.3s;
 }
 .card:hover{
-  transform:translateY(-6px) scale(1.05);
-  box-shadow:0 20px 40px rgba(225,29,72,.25);
+  transform:scale(1.15);
+  z-index:5;
 }
 .card img{
   width:100%;
-  height:280px;
+  height:260px;
   object-fit:cover;
 }
-.card div{
-  padding:12px;
-}
-.card h3{
-  margin:0;
-  font-size:14px;
-}
-.card span{
-  font-size:12px;
-  color:var(--muted);
-}
 
-/* ===== MODAL ===== */
+/* MODAL */
 .modal{
   position:fixed;
   inset:0;
@@ -151,68 +103,63 @@ main{
 }
 .modal-content{
   width:90%;
-  max-width:600px;
+  max-width:900px;
   background:#020617;
-  border-radius:16px;
-  padding:20px;
+  border-radius:14px;
+  overflow:hidden;
+}
+.modal iframe{
+  width:100%;
+  height:480px;
+}
+.modal-body{
+  padding:16px;
 }
 .close{
+  position:absolute;
+  top:20px;
+  right:20px;
   background:#dc2626;
   color:#fff;
   border:none;
   padding:8px 14px;
   border-radius:6px;
   cursor:pointer;
-  float:right;
-}
-pre{
-  white-space:pre-wrap;
-  color:#fca5a5;
 }
 
-/* PLAYER */
-.player iframe{
-  width:100%;
-  height:480px;
-  border:none;
-  border-radius:14px;
-}
+/* ERRO */
+pre{white-space:pre-wrap;color:#fca5a5}
 </style>
 </head>
 <body>
 
-<!-- SPLASH -->
-<div id="splash">
-  <h1>SESSÃO 99</h1>
-</div>
-
 <header>
-  <h2 id="statusTitle" ondblclick="mostrarErro()">
+  <h1 ondblclick="mostrarErro()">
     🎬 <span id="statusText">SESSÃO 99</span>
-  </h2>
+  </h1>
   <input id="search" placeholder="Buscar filmes...">
 </header>
 
-<main id="content">
-  <div class="grid" id="grid"></div>
-</main>
+<main id="content"></main>
 
-<!-- MODAL ERRO -->
-<div class="modal" id="erroModal">
+<!-- PLAYER -->
+<div class="modal" id="playerModal">
+  <button class="close" onclick="fecharPlayer()">Fechar</button>
   <div class="modal-content">
-    <button class="close" onclick="fecharErro()">Fechar</button>
-    <h3>Erro de Conexão Supabase</h3>
-    <pre id="erroTexto"></pre>
+    <iframe id="player"></iframe>
+    <div class="modal-body">
+      <h2 id="title"></h2>
+      <p id="description"></p>
+    </div>
   </div>
 </div>
 
-<!-- MODAL PLAYER -->
-<div class="modal" id="playerModal">
-  <div class="modal-content player">
-    <button class="close" onclick="fecharPlayer()">Fechar</button>
-    <iframe id="player"></iframe>
-    <h3 id="title"></h3>
-    <p id="description"></p>
+<!-- ERRO -->
+<div class="modal" id="erroModal">
+  <div class="modal-content" style="padding:20px">
+    <button class="close" onclick="fecharErro()">Fechar</button>
+    <h3>Erro Supabase</h3>
+    <pre id="erroTexto"></pre>
   </div>
 </div>
 
@@ -222,66 +169,56 @@ const supabase = supabaseJs.createClient(
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-const statusText = document.getElementById("statusText");
-const erroModal = document.getElementById("erroModal");
-const erroTexto = document.getElementById("erroTexto");
-const content = document.getElementById("content");
-const grid = document.getElementById("grid");
-const search = document.getElementById("search");
-
+const statusText=document.getElementById("statusText");
+const content=document.getElementById("content");
+const erroTexto=document.getElementById("erroTexto");
+let erroGlobal="Nenhum erro";
 let filmes=[];
-let ultimoErro="Nenhum erro capturado.";
-
-setTimeout(()=>{
-  document.body.style.overflow="auto";
-  content.style.display="block";
-},3200);
 
 async function carregar(){
-  const { data, error } = await supabase
+  const {data,error}=await supabase
     .from("filmes")
     .select("*")
-    .eq("ativo", true);
+    .eq("ativo",true);
 
   if(error){
     statusText.className="status-erro";
-    ultimoErro = JSON.stringify(error, null, 2);
-    console.error(error);
+    erroGlobal=JSON.stringify(error,null,2);
     return;
   }
 
   statusText.className="status-ok";
-  filmes=data || [];
-  render(filmes);
+  filmes=data||[];
+  montarNetflix(filmes);
 }
 
-function render(lista){
-  grid.innerHTML="";
-  lista.forEach(f=>{
-    const c=document.createElement("div");
-    c.className="card";
-    c.innerHTML=`
-      <img src="${f.capa_url}">
-      <div>
-        <h3>${f.titulo}</h3>
-        <span>${f.categoria || ""}</span>
-      </div>
-    `;
-    c.onclick=()=>abrirPlayer(f);
-    grid.appendChild(c);
+function montarNetflix(lista){
+  content.innerHTML="";
+  const categorias=[...new Set(lista.map(f=>f.categoria||"Outros"))];
+
+  categorias.forEach(cat=>{
+    const sec=document.createElement("div");
+    sec.className="categoria";
+    sec.innerHTML=`<h2>${cat}</h2><div class="row"></div>`;
+    const row=sec.querySelector(".row");
+
+    lista.filter(f=>f.categoria===cat).forEach(f=>{
+      const card=document.createElement("div");
+      card.className="card";
+      card.innerHTML=`<img src="${f.capa_url}">`;
+      card.onclick=()=>abrirPlayer(f);
+      row.appendChild(card);
+    });
+
+    content.appendChild(sec);
   });
 }
-
-search.oninput=()=>{
-  const v=search.value.toLowerCase();
-  render(filmes.filter(f=>f.titulo.toLowerCase().includes(v)));
-};
 
 function abrirPlayer(f){
   playerModal.style.display="flex";
   player.src=f.video_url;
   title.innerText=f.titulo;
-  description.innerText=f.descricao || "";
+  description.innerText=f.descricao||"";
 }
 function fecharPlayer(){
   playerModal.style.display="none";
@@ -289,7 +226,7 @@ function fecharPlayer(){
 }
 
 function mostrarErro(){
-  erroTexto.innerText=ultimoErro;
+  erroTexto.innerText=erroGlobal;
   erroModal.style.display="flex";
 }
 function fecharErro(){
