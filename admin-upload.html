@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>SESSÃO 99 • Upload de Filmes</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+<style>
+body{
+  margin:0;
+  background:#05070f;
+  color:#fff;
+  font-family:Inter,Arial,sans-serif;
+}
+main{
+  max-width:900px;
+  margin:40px auto;
+  background:#0b1020;
+  padding:32px;
+  border-radius:16px;
+}
+h2{
+  margin-top:0;
+}
+label{
+  display:block;
+  margin-top:16px;
+  font-weight:600;
+}
+input, textarea, select{
+  width:100%;
+  padding:12px;
+  margin-top:6px;
+  border-radius:8px;
+  border:none;
+  background:#020617;
+  color:#fff;
+}
+button{
+  margin-top:24px;
+  padding:14px;
+  width:100%;
+  border:none;
+  border-radius:10px;
+  background:#e50914;
+  color:#fff;
+  font-size:16px;
+  cursor:pointer;
+}
+#status{
+  margin-top:20px;
+  font-weight:600;
+}
+.ok{color:#22c55e}
+.err{color:#ef4444}
+</style>
+</head>
+<body>
+
+<main>
+  <h2>🎬 Upload de Filme — SESSÃO 99</h2>
+
+  <label>Título</label>
+  <input id="titulo">
+
+  <label>Descrição</label>
+  <textarea id="descricao"></textarea>
+
+  <label>Categoria</label>
+  <input id="categoria" placeholder="Ex: Ficção Científica">
+
+  <label>URL da capa (imagem)</label>
+  <input id="capa">
+
+  <label>Arquivo de vídeo</label>
+  <input type="file" id="video" accept="video/*">
+
+  <button onclick="upload()">Enviar Filme</button>
+
+  <div id="status"></div>
+</main>
+
+<script>
+/* ================= SUPABASE ================= */
+const supabase = window.supabase.createClient(
+  "https://dxkszikemntfusfyrzos.supabase.co",
+  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+);
+
+/* ================= BUNNY CONFIG ================= */
+const BUNNY_STORAGE_ZONE = "sessao99";
+const BUNNY_PASSWORD = "d498d56e-361b-4a1e-9edb9eb63e3b-2e6a-4c17"; // ⚠️ write password
+const BUNNY_REGION = "br";
+const BUNNY_CDN = "https://sessao99.b-cdn.net";
+
+/* ================= UPLOAD ================= */
+async function upload(){
+  const status = document.getElementById("status");
+  status.innerText = "⏳ Enviando vídeo…";
+
+  const file = document.getElementById("video").files[0];
+  if(!file){
+    status.innerText = "Selecione um vídeo";
+    status.className="err";
+    return;
+  }
+
+  const fileName = Date.now()+"_"+file.name.replace(/\s+/g,"_");
+  const uploadUrl = `https://${BUNNY_REGION}.storage.bunnycdn.com/${BUNNY_STORAGE_ZONE}/filmes/${fileName}`;
+
+  /* UPLOAD PARA BUNNY */
+  const res = await fetch(uploadUrl,{
+    method:"PUT",
+    headers:{
+      "AccessKey": BUNNY_PASSWORD,
+      "Content-Type": "application/octet-stream"
+    },
+    body:file
+  });
+
+  if(!res.ok){
+    status.innerText="❌ Erro no upload Bunny";
+    status.className="err";
+    return;
+  }
+
+  const videoUrl = `${BUNNY_CDN}/filmes/${fileName}`;
+
+  status.innerText="💾 Salvando no Supabase…";
+
+  /* SALVAR NO SUPABASE */
+  const { error } = await supabase.from("filmes").insert({
+    titulo: titulo.value,
+    descricao: descricao.value,
+    categoria: categoria.value,
+    capa_url: capa.value,
+    video_url: videoUrl,
+    ativo: true
+  });
+
+  if(error){
+    status.innerText="❌ Erro Supabase: "+error.message;
+    status.className="err";
+    return;
+  }
+
+  status.innerText="✅ Filme enviado com sucesso!";
+  status.className="ok";
+}
+</script>
+
+</body>
+</html>
