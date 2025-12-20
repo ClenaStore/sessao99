@@ -4,17 +4,15 @@
 <meta charset="UTF-8">
 <title>SESSÃO 99</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <style>
 :root{
   --bg:#05070f;
-  --panel:#0f1424;
-  --card:#141414;
+  --card:#141a2e;
   --accent:#e50914;
   --text:#ffffff;
-  --muted:#b3b3b3;
+  --muted:#9ca3af;
 }
 *{box-sizing:border-box}
 body{
@@ -26,131 +24,90 @@ body{
 
 /* HEADER */
 header{
-  position:fixed;
-  top:0;left:0;right:0;
-  z-index:1000;
   padding:16px 32px;
   display:flex;
   justify-content:space-between;
   align-items:center;
-  background:linear-gradient(to bottom,rgba(0,0,0,.9),transparent);
 }
 header h1{
   margin:0;
   color:var(--accent);
-  font-weight:900;
 }
 header input{
   background:#111;
   border:none;
-  border-radius:6px;
+  border-radius:8px;
   padding:10px 14px;
   color:#fff;
-  width:240px;
+  width:260px;
 }
 
-/* SECTIONS */
-section{
-  padding:120px 32px 32px;
-}
-.hidden{display:none}
+/* SEÇÕES */
+section{padding:16px 32px}
+section h2{margin:0 0 12px}
 
-/* HERO */
-#hero{
-  height:80vh;
-  background-size:cover;
-  background-position:center;
-  display:flex;
-  align-items:flex-end;
-}
-#heroContent{
-  max-width:600px;
-  padding:32px;
-  background:linear-gradient(to right,rgba(0,0,0,.8),transparent);
-}
-#heroContent h2{font-size:42px;margin:0}
-#heroContent p{color:var(--muted)}
-.heroBtns button{
-  margin-top:16px;
-  padding:12px 20px;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-  font-weight:700;
-}
-.play{background:var(--accent);color:#fff}
-.info{background:#333;color:#fff;margin-left:10px}
-
-/* ROWS */
-.row{margin-top:32px}
-.row h3{margin:0 0 12px}
-.rowList{
-  display:flex;
-  gap:12px;
-  overflow-x:auto;
+/* GRID */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+  gap:16px;
 }
 .card{
-  min-width:180px;
   cursor:pointer;
   transition:.2s;
 }
+.card:hover{transform:scale(1.06)}
 .card img{
   width:100%;
   height:260px;
   object-fit:cover;
-  border-radius:6px;
+  border-radius:8px;
 }
-.card:hover{transform:scale(1.1)}
 
-/* DETAIL */
-#detail{
-  padding-top:80px;
-}
-#detailHero{
-  height:70vh;
-  background-size:cover;
-  background-position:center;
-  display:flex;
-  align-items:flex-end;
-}
-#detailBox{
-  padding:32px;
-  background:linear-gradient(to right,rgba(0,0,0,.85),transparent);
-}
-#detailBox h2{font-size:40px;margin:0}
-#detailBox p{color:var(--muted);max-width:600px}
-.detailBtns button{
-  margin-top:16px;
-  padding:12px 20px;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-  font-weight:700;
-}
-.back{background:#333;color:#fff}
-
-/* PLAYER */
-#player{
+/* DETALHE */
+#detalhe{
   position:fixed;
   inset:0;
   background:#000;
   display:none;
-  z-index:2000;
+  flex-direction:column;
+  z-index:9999;
 }
-#player video{
+#detalhe header{
+  background:#000;
+}
+#detalhe main{
+  padding:24px 32px;
+  max-width:1100px;
+}
+#detalhe video{
   width:100%;
-  height:100%;
+  max-height:70vh;
+  border-radius:12px;
 }
-#closePlayer{
-  position:absolute;
-  top:20px;left:20px;
-  background:rgba(0,0,0,.6);
+.btn{
+  margin-top:14px;
+  background:var(--accent);
   border:none;
+  padding:12px 18px;
   color:#fff;
-  padding:10px 14px;
-  border-radius:6px;
+  border-radius:8px;
   cursor:pointer;
 }
+.episodios{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+  gap:12px;
+  margin-top:16px;
+}
+.ep{
+  background:#141414;
+  padding:10px;
+  border-radius:8px;
+  cursor:pointer;
+}
+.ep:hover{background:#1f1f1f}
+.small{color:var(--muted);font-size:13px}
 </style>
 </head>
 <body>
@@ -160,131 +117,118 @@ section{
   <input id="search" placeholder="Buscar...">
 </header>
 
-<!-- HOME -->
-<section id="home">
-  <div id="hero"></div>
-  <div id="rows"></div>
+<section>
+  <h2>Todos os títulos</h2>
+  <div class="grid" id="grid"></div>
 </section>
 
-<!-- DETAIL -->
-<section id="detail" class="hidden">
-  <div id="detailHero"></div>
-</section>
-
-<!-- PLAYER -->
-<div id="player">
-  <button id="closePlayer">Voltar</button>
-  <video id="video" controls autoplay></video>
+<!-- DETALHE -->
+<div id="detalhe">
+  <header>
+    <button class="btn" onclick="fechar()">⬅ Voltar</button>
+  </header>
+  <main>
+    <h2 id="dTitulo"></h2>
+    <p id="dDesc" class="small"></p>
+    <video id="player" controls autoplay></video>
+    <div id="episodios"></div>
+  </main>
 </div>
 
 <script>
-/* SUPABASE */
 const supabaseClient = supabase.createClient(
   "https://dxkszikemntfusfyrzos.supabase.co",
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-const home=document.getElementById("home");
-const detail=document.getElementById("detail");
-const hero=document.getElementById("hero");
-const rows=document.getElementById("rows");
-const detailHero=document.getElementById("detailHero");
-const player=document.getElementById("player");
-const video=document.getElementById("video");
+const grid=document.getElementById("grid");
 const search=document.getElementById("search");
+const detalhe=document.getElementById("detalhe");
+const player=document.getElementById("player");
+const dTitulo=document.getElementById("dTitulo");
+const dDesc=document.getElementById("dDesc");
+const episodiosDiv=document.getElementById("episodios");
 
-let filmes=[];
+let dados=[];
 
 /* LOAD */
-async function load(){
+async function carregar(){
   const { data } = await supabaseClient
     .from("filmes")
     .select("*")
-    .eq("ativo",true);
+    .eq("ativo",true)
+    .order("created_at",{ascending:false});
 
-  filmes=data||[];
-  buildHome(filmes);
+  dados=data||[];
+  render(dados);
 }
 
-/* HOME */
-function buildHome(lista){
-  rows.innerHTML="";
-  if(lista.length){
-    setHero(lista[0]);
-  }
-  const categorias=[...new Set(lista.map(f=>f.categoria||"Outros"))];
-  categorias.forEach(cat=>{
-    const row=document.createElement("div");
-    row.className="row";
-    row.innerHTML=`<h3>${cat}</h3><div class="rowList"></div>`;
-    const list=row.querySelector(".rowList");
-    lista.filter(f=>f.categoria===cat).forEach(f=>{
-      const c=document.createElement("div");
-      c.className="card";
-      c.innerHTML=`<img src="${f.capa_url}">`;
-      c.onclick=()=>openDetail(f);
-      list.appendChild(c);
-    });
-    rows.appendChild(row);
+/* GRID */
+function render(lista){
+  grid.innerHTML="";
+  lista.forEach(f=>{
+    const d=document.createElement("div");
+    d.className="card";
+    d.innerHTML=`<img src="${f.capa_url}">`;
+    d.onclick=()=>abrir(f);
+    grid.appendChild(d);
   });
 }
 
-function setHero(f){
-  hero.style.backgroundImage=`url(${f.capa_url})`;
-  hero.innerHTML=`
-    <div id="heroContent">
-      <h2>${f.titulo}</h2>
-      <p>${f.descricao||""}</p>
-      <div class="heroBtns">
-        <button class="play" onclick='play(${JSON.stringify(f)})'>Assistir</button>
-        <button class="info" onclick='openDetail(${JSON.stringify(f)})'>Mais informações</button>
-      </div>
-    </div>
-  `;
+/* ABRIR */
+function abrir(item){
+  detalhe.style.display="flex";
+  dTitulo.textContent=item.titulo;
+  dDesc.textContent=item.descricao||"";
+
+  if(item.tipo==="serie"){
+    carregarSerie(item.serie_nome,item.temporada,item.episodio);
+  }else{
+    episodiosDiv.innerHTML="";
+    player.src=item.video_url;
+  }
 }
 
-/* DETAIL */
-function openDetail(f){
-  home.classList.add("hidden");
-  detail.classList.remove("hidden");
-  detailHero.style.backgroundImage=`url(${f.capa_url})`;
-  detailHero.innerHTML=`
-    <div id="detailBox">
-      <h2>${f.titulo}</h2>
-      <p>${f.descricao||""}</p>
-      <p><b>Categoria:</b> ${f.categoria||"-"}</p>
-      <div class="detailBtns">
-        <button class="play" onclick='play(${JSON.stringify(f)})'>Assistir</button>
-        <button class="back" onclick="goHome()">Voltar</button>
-      </div>
-    </div>
-  `;
+/* SÉRIES */
+function carregarSerie(nome){
+  const eps=dados
+    .filter(d=>d.tipo==="serie" && d.serie_nome===nome)
+    .sort((a,b)=>a.temporada-b.temporada||a.episodio-b.episodio);
+
+  dTitulo.textContent=nome;
+  dDesc.textContent="Série";
+
+  episodiosDiv.innerHTML=`<h3>Episódios</h3><div class="episodios"></div>`;
+  const gridEp=episodiosDiv.querySelector(".episodios");
+
+  eps.forEach(ep=>{
+    const e=document.createElement("div");
+    e.className="ep";
+    e.innerHTML=`<strong>S${ep.temporada}E${ep.episodio}</strong><br><span class="small">${ep.titulo}</span>`;
+    e.onclick=()=>{
+      player.src=ep.video_url;
+      player.play();
+    };
+    gridEp.appendChild(e);
+  });
+
+  player.src=eps[0].video_url;
 }
 
-/* PLAYER */
-function play(f){
-  player.style.display="block";
-  video.src=f.video_url;
-}
-document.getElementById("closePlayer").onclick=()=>{
-  video.pause();
-  video.src="";
-  player.style.display="none";
-};
-
-/* NAV */
-function goHome(){
-  detail.classList.add("hidden");
-  home.classList.remove("hidden");
+/* FECHAR */
+function fechar(){
+  player.pause();
+  player.src="";
+  detalhe.style.display="none";
 }
 
-/* SEARCH */
+/* BUSCA */
 search.oninput=()=>{
   const v=search.value.toLowerCase();
-  buildHome(filmes.filter(f=>f.titulo.toLowerCase().includes(v)));
+  render(dados.filter(d=>d.titulo.toLowerCase().includes(v)));
 };
 
-load();
+carregar();
 </script>
 
 </body>
