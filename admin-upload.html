@@ -32,9 +32,6 @@ body{
   padding:24px;
 }
 header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
   margin-bottom:24px;
 }
 header h1{
@@ -106,7 +103,7 @@ button:disabled{opacity:.5}
 .item:hover{transform:scale(1.03)}
 .item img{
   width:100%;
-  height:220px;
+  height:240px;
   object-fit:cover;
 }
 .item div{
@@ -164,7 +161,7 @@ button:disabled{opacity:.5}
 <!-- OVERLAY -->
 <div id="overlay">
   <div id="modal">
-    <h3>Upload em andamento</h3>
+    <h3>🎬 Upload em andamento</h3>
     <div id="barWrap"><div id="bar"></div></div>
     <div id="msg" class="muted">Preparando…</div>
   </div>
@@ -227,21 +224,21 @@ const BUNNY = {
 };
 
 /* ================= ELEMENTOS ================= */
-const supabaseStatus=document.getElementById("supabaseStatus");
-const bunnyStatus=document.getElementById("bunnyStatus");
-const overlay=document.getElementById("overlay");
-const bar=document.getElementById("bar");
-const msg=document.getElementById("msg");
-const btn=document.getElementById("btnEnviar");
-const lista=document.getElementById("lista");
+const supabaseStatus = document.getElementById("supabaseStatus");
+const bunnyStatus = document.getElementById("bunnyStatus");
+const overlay = document.getElementById("overlay");
+const bar = document.getElementById("bar");
+const msg = document.getElementById("msg");
+const btn = document.getElementById("btnEnviar");
+const lista = document.getElementById("lista");
 
-const titulo=document.getElementById("titulo");
-const descricao=document.getElementById("descricao");
-const categoria=document.getElementById("categoria");
-const capa=document.getElementById("capa");
-const video=document.getElementById("video");
+const titulo = document.getElementById("titulo");
+const descricao = document.getElementById("descricao");
+const categoria = document.getElementById("categoria");
+const capa = document.getElementById("capa");
+const video = document.getElementById("video");
 
-/* ================= STATUS ================= */
+/* ================= STATUS SUPABASE ================= */
 (async()=>{
   try{
     const { error } = await supabase.from("filmes").select("id").limit(1);
@@ -249,17 +246,18 @@ const video=document.getElementById("video");
     supabaseStatus.textContent="🟢 Supabase conectado";
     supabaseStatus.className="status ok";
     carregarFilmes();
-  }catch{
-    supabaseStatus.textContent="🔴 Supabase erro de conexão ou RLS";
+  }catch(e){
+    supabaseStatus.textContent="🔴 Supabase erro (RLS ou conexão)";
     supabaseStatus.className="status err";
   }
 })();
 
+/* ================= STATUS BUNNY ================= */
 (async()=>{
   try{
     const r = await fetch(
       `https://${BUNNY.region}.storage.bunnycdn.com/${BUNNY.zone}/`,
-      {method:"HEAD",headers:{AccessKey:BUNNY.key}}
+      { method:"HEAD", headers:{ AccessKey:BUNNY.key } }
     );
     if(!r.ok) throw "";
     bunnyStatus.textContent="🟢 Bunny.net conectado";
@@ -270,18 +268,32 @@ const video=document.getElementById("video");
   }
 })();
 
-/* ================= LISTAGEM ================= */
+/* ================= LISTAR FILMES ================= */
 async function carregarFilmes(){
-  const { data } = await supabase.from("filmes").select("*").order("created_at",{ascending:false});
+  const { data, error } = await supabase
+    .from("filmes")
+    .select("*")
+    .order("created_at",{ascending:false});
+
+  if(error){
+    lista.innerHTML="<p class='muted'>Erro ao carregar</p>";
+    return;
+  }
+
   lista.innerHTML="";
-  (data||[]).forEach(f=>{
+  if(!data || data.length===0){
+    lista.innerHTML="<p class='muted'>Nenhum filme cadastrado</p>";
+    return;
+  }
+
+  data.forEach(f=>{
     const d=document.createElement("div");
     d.className="item";
     d.innerHTML=`
-      <img src="${f.capa_url||''}">
+      <img src="${f.capa_url || 'https://via.placeholder.com/300x450?text=Sem+Capa'}">
       <div>
         <h4>${f.titulo}</h4>
-        <span>${f.categoria||''}</span>
+        <span>${f.categoria || ''}</span>
       </div>
     `;
     lista.appendChild(d);
@@ -290,7 +302,7 @@ async function carregarFilmes(){
 
 /* ================= UPLOAD ================= */
 btn.onclick=()=>{
-  if(!titulo.value||!video.files[0]){
+  if(!titulo.value || !video.files[0]){
     alert("Título e vídeo são obrigatórios");
     return;
   }
@@ -343,7 +355,7 @@ async function salvar(videoUrl){
     ativo:true
   });
   if(error){erro(error.message);return;}
-  msg.textContent="✅ Sucesso!";
+  msg.textContent="✅ Filme cadastrado!";
   setTimeout(()=>location.reload(),1200);
 }
 
