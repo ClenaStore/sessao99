@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <title>SESSÃO 99 • Admin</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <style>
@@ -62,9 +61,7 @@ button:disabled{opacity:.6}
 .sugestoes{
   background:#0b1020;border-radius:8px;margin-top:6px;display:none
 }
-.sugestoes div{
-  padding:10px;cursor:pointer
-}
+.sugestoes div{padding:10px;cursor:pointer}
 .sugestoes div:hover{background:#1c2240}
 
 /* PROGRESSO */
@@ -73,7 +70,7 @@ button:disabled{opacity:.6}
   width:100%;height:10px;background:#111;border-radius:10px;overflow:hidden
 }
 .progressBar div{
-  height:100%;width:0%;background:var(--accent);transition:width .2s
+  height:100%;width:0%;background:var(--accent)
 }
 .progressText{margin-top:6px;font-size:13px;color:var(--muted)}
 
@@ -88,7 +85,6 @@ button:disabled{opacity:.6}
 </head>
 <body>
 
-<!-- BOOT -->
 <div id="boot">
   <div id="bootBox">
     <h2>SESSÃO 99</h2>
@@ -126,12 +122,10 @@ button:disabled{opacity:.6}
   <label>Categoria</label>
   <input id="categoria">
 
-  <label>URL da capa</label>
-  <input id="capa">
+  <label>Capa (imagem)</label>
+  <input type="file" id="capa" accept="image/*">
 
-  <!-- CAMPOS DE SÉRIE -->
   <div id="serieFields" style="display:none">
-
     <label>Nome da série</label>
     <input id="serie_nome" placeholder="Digite para buscar…">
     <div class="sugestoes" id="serieSugestoes"></div>
@@ -141,8 +135,6 @@ button:disabled{opacity:.6}
       <option value="1">Temporada 1</option>
       <option value="2">Temporada 2</option>
       <option value="3">Temporada 3</option>
-      <option value="4">Temporada 4</option>
-      <option value="5">Temporada 5</option>
     </select>
 
     <label>Episódio</label>
@@ -170,20 +162,17 @@ button:disabled{opacity:.6}
 </div>
 
 <script>
-/* SUPABASE */
 const supabaseClient = supabase.createClient(
   "https://dxkszikemntfusfyrzos.supabase.co",
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-/* BUNNY */
 const BUNNY={
   zone:"sessao99",
   key:"d498d56e-361b-4a1e-9edb9eb63e3b-2e6a-4c17",
   cdn:"https://sessao99.b-cdn.net"
 };
 
-/* ELEMENTOS */
 const boot=document.getElementById("boot");
 const app=document.getElementById("app");
 const statusEl=document.getElementById("status");
@@ -198,109 +187,76 @@ const serieFields=document.getElementById("serieFields");
 const serieNome=document.getElementById("serie_nome");
 const sugestoes=document.getElementById("serieSugestoes");
 
-let dados=[];
-
-/* INIT */
 async function init(){
   const { data } = await supabaseClient
     .from("filmes").select("*").order("created_at",{ascending:false});
-  dados=data||[];
-  render(dados);
-  statusEl.textContent=`🟢 ${dados.length} registros carregados`;
+  render(data||[]);
+  statusEl.textContent=`🟢 ${data.length} registros carregados`;
   statusEl.className="status ok";
   boot.style.display="none";
   app.style.display="block";
 }
 
-/* RENDER */
 function render(list){
   lista.innerHTML="";
   list.forEach(f=>{
-    if(!f.capa_url)return;
     lista.innerHTML+=`
       <div class="item">
         <img src="${f.capa_url}">
         <div>
           <h4>${f.titulo}</h4>
-          <span>${f.tipo==='serie'
-            ? `S${f.temporada}E${f.episodio}`
-            : 'Filme'}</span>
+          <span>${f.tipo==="serie" ? `S${f.temporada}E${f.episodio}` : "Filme"}</span>
         </div>
       </div>`;
   });
 }
 
-/* TOGGLE */
 function toggleSerie(){
   serieFields.style.display = tipo.value==="serie" ? "block" : "none";
 }
 
-/* AUTOCOMPLETE SÉRIES */
-serieNome.addEventListener("input", async ()=>{
-  const v=serieNome.value.trim();
-  if(v.length<2){sugestoes.style.display="none";return;}
-
-  const { data } = await supabaseClient
-    .from("filmes")
-    .select("serie_nome")
-    .eq("tipo","serie")
-    .ilike("serie_nome",`%${v}%`)
-    .limit(5);
-
-  if(!data||data.length===0){sugestoes.style.display="none";return;}
-
-  sugestoes.innerHTML="";
-  sugestoes.style.display="block";
-  [...new Set(data.map(d=>d.serie_nome))].forEach(n=>{
-    const div=document.createElement("div");
-    div.textContent=n;
-    div.onclick=()=>{serieNome.value=n;sugestoes.style.display="none";}
-    sugestoes.appendChild(div);
-  });
-});
-
-/* UPLOAD */
 function enviar(){
-  const file=video.files[0];
-  if(!titulo.value||!file){alert("Título e vídeo obrigatórios");return;}
+  const videoFile=video.files[0];
+  const capaFile=capa.files[0];
+  if(!titulo.value||!videoFile||!capaFile){alert("Preencha tudo");return;}
 
   btn.disabled=true;
   progress.style.display="block";
-  bar.style.width="0%";
 
-  const nome=Date.now()+"_"+file.name.replace(/\s+/g,"_");
-  const url=`https://br.storage.bunnycdn.com/${BUNNY.zone}/filmes/${nome}`;
+  const id=Date.now();
+  const capaName=`capas/${id}_${capaFile.name}`;
+  const videoName=`videos/${id}_${videoFile.name}`;
 
+  uploadBunny(capaFile,capaName,()=>{
+    uploadBunny(videoFile,videoName,async()=>{
+      await supabaseClient.from("filmes").insert({
+        titulo:titulo.value,
+        descricao:descricao.value,
+        categoria:categoria.value,
+        capa_url:`${BUNNY.cdn}/${capaName}`,
+        video_url:`${BUNNY.cdn}/${videoName}`,
+        tipo:tipo.value,
+        serie_nome:tipo.value==="serie"?serieNome.value:null,
+        temporada:tipo.value==="serie"?Number(temporada.value):null,
+        episodio:tipo.value==="serie"?Number(episodio.value):null,
+        ativo:true
+      });
+      alert("✅ Conteúdo publicado!");
+      location.reload();
+    });
+  });
+}
+
+function uploadBunny(file,path,cb){
   const xhr=new XMLHttpRequest();
-  xhr.open("PUT",url);
+  xhr.open("PUT",`https://br.storage.bunnycdn.com/${BUNNY.zone}/${path}`);
   xhr.setRequestHeader("AccessKey",BUNNY.key);
-  xhr.setRequestHeader("Content-Type","application/octet-stream");
-
   xhr.upload.onprogress=e=>{
     const pct=Math.round((e.loaded/e.total)*100);
-    const sent=(e.loaded/1024/1024).toFixed(1);
-    const tot=(e.total/1024/1024).toFixed(1);
     bar.style.width=pct+"%";
-    progressText.textContent=`${pct}% • ${sent} MB de ${tot} MB`;
+    progressText.textContent=`${pct}% • ${(e.loaded/1024/1024).toFixed(1)} MB`;
   };
-
-  xhr.onload=async()=>{
-    await supabaseClient.from("filmes").insert({
-      titulo:titulo.value,
-      descricao:descricao.value,
-      categoria:categoria.value,
-      capa_url:capa.value,
-      video_url:`${BUNNY.cdn}/filmes/${nome}`,
-      tipo:tipo.value,
-      serie_nome:tipo.value==="serie"?serieNome.value:null,
-      temporada:tipo.value==="serie"?Number(temporada.value):null,
-      episodio:tipo.value==="serie"?Number(episodio.value):null,
-      ativo:true
-    });
-    alert("✅ Upload concluído!");
-    location.reload();
-  };
-
+  xhr.onload=()=>cb();
   xhr.send(file);
 }
 
