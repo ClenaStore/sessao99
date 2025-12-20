@@ -250,10 +250,11 @@ async function salvarSupabase(videoUrl){
     ativo:true
   });
 
-  if(error){
-    falha("Supabase: "+error.message);
-    return;
-  }
+if(error){
+  falha("Supabase ("+error.code+"): "+error.message);
+  console.error(error);
+  return;
+}
 
   msg.innerText="✅ Filme enviado com sucesso!";
   setTimeout(()=>location.reload(),1500);
