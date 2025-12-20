@@ -2,285 +2,367 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>SESSÃO 99</title>
+<title>SESSÃO 99 • Admin</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- SUPABASE CDN (UMD) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <style>
 :root{
-  --bg:#05070f;
-  --card:#0b1020;
-  --red:#e50914;
-  --text:#ffffff;
+  --bg:#07090f;
+  --panel:#0f1424;
+  --card:#151a30;
+  --input:#0b1020;
+  --accent:#6366f1;
+  --danger:#ef4444;
+  --ok:#22c55e;
+  --text:#e5e7eb;
   --muted:#9ca3af;
 }
 *{box-sizing:border-box}
 body{
   margin:0;
-  background:var(--bg);
+  background:linear-gradient(180deg,#05060c,#07090f);
   color:var(--text);
-  font-family:Inter,system-ui,Arial,sans-serif;
+  font-family:Inter,Arial,sans-serif;
 }
-
-/* ===== HEADER ===== */
+.wrapper{
+  max-width:1200px;
+  margin:32px auto;
+  padding:24px;
+}
 header{
-  position:sticky;
-  top:0;
-  z-index:50;
-  padding:16px 40px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  backdrop-filter:blur(14px);
-  background:linear-gradient(to bottom,rgba(0,0,0,.85),rgba(0,0,0,.4));
-}
-header h2{
-  margin:0;
-  font-weight:900;
-  letter-spacing:2px;
-}
-header input{
-  width:260px;
-  padding:10px 14px;
-  border-radius:8px;
-  border:none;
-  background:#020617;
-  color:#fff;
-}
-
-/* ===== MAIN ===== */
-main{
-  padding:32px 40px;
-}
-
-/* ===== STATUS ===== */
-#status{
   margin-bottom:24px;
-  font-weight:600;
 }
-.ok{color:#22c55e}
-.err{color:#ef4444}
+header h1{
+  margin:0;
+  font-size:28px;
+}
 
-/* ===== GRID ===== */
+/* STATUS */
+.status{
+  padding:12px 16px;
+  border-radius:10px;
+  background:var(--input);
+  font-weight:600;
+  margin-bottom:10px;
+}
+.ok{color:var(--ok)}
+.err{color:var(--danger)}
+.muted{color:var(--muted)}
+
+/* GRID */
 .grid{
   display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
-  gap:22px;
+  grid-template-columns:380px 1fr;
+  gap:24px;
+}
+.panel{
+  background:var(--panel);
+  border-radius:18px;
+  padding:24px;
 }
 
-/* ===== CARD ===== */
-.card{
+/* FORM */
+label{display:block;margin-top:16px;font-weight:600}
+input,textarea{
+  width:100%;
+  padding:12px;
+  margin-top:6px;
+  border-radius:10px;
+  border:none;
+  background:var(--input);
+  color:var(--text);
+}
+textarea{resize:vertical}
+button{
+  margin-top:20px;
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  background:var(--accent);
+  color:#fff;
+  font-size:15px;
+  cursor:pointer;
+}
+button:disabled{opacity:.5}
+
+/* LIST */
+.list{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+  gap:16px;
+}
+.item{
   background:var(--card);
   border-radius:14px;
   overflow:hidden;
-  cursor:pointer;
-  position:relative;
-  transition:.35s;
+  transition:.2s;
 }
-.card img{
+.item:hover{transform:scale(1.03)}
+.item img{
   width:100%;
-  height:270px;
+  height:240px;
   object-fit:cover;
-  display:block;
 }
-.card::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  background:linear-gradient(to top,rgba(0,0,0,.85),transparent 60%);
-  opacity:0;
-  transition:.3s;
+.item div{
+  padding:12px;
 }
-.card:hover{
-  transform:scale(1.08);
-  z-index:10;
-  box-shadow:0 20px 60px rgba(0,0,0,.7);
-}
-.card:hover::after{
-  opacity:1;
-}
-.card-title{
-  position:absolute;
-  bottom:12px;
-  left:12px;
-  right:12px;
+.item h4{
+  margin:0 0 6px;
   font-size:14px;
-  font-weight:600;
-  opacity:0;
-  transition:.3s;
 }
-.card:hover .card-title{
-  opacity:1;
+.item span{
+  font-size:12px;
+  color:var(--muted);
 }
 
-/* ===== MODAL ===== */
-.modal{
+/* OVERLAY */
+#overlay{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.85);
+  background:rgba(0,0,0,.9);
   display:none;
   align-items:center;
   justify-content:center;
-  z-index:100;
+  z-index:9999;
 }
-.modal-box{
+#modal{
+  background:var(--panel);
+  padding:28px;
+  border-radius:18px;
   width:90%;
-  max-width:900px;
-  background:#020617;
-  border-radius:16px;
-  overflow:hidden;
+  max-width:420px;
+  text-align:center;
 }
-.modal iframe{
+#barWrap{
   width:100%;
-  height:480px;
+  height:12px;
+  background:#111;
+  border-radius:12px;
+  overflow:hidden;
+  margin-top:16px;
 }
-.modal-info{
-  padding:18px;
+#bar{
+  height:100%;
+  width:0%;
+  background:var(--accent);
 }
-.modal-info h3{
-  margin:0 0 10px;
-}
-.close{
-  position:absolute;
-  top:20px;
-  right:20px;
-  background:#dc2626;
-  color:#fff;
-  border:none;
-  padding:8px 14px;
-  border-radius:8px;
-  cursor:pointer;
+#msg{
+  margin-top:14px;
+  font-weight:600;
+  min-height:22px;
 }
 </style>
 </head>
 <body>
 
-<header>
-  <h2>🎬 SESSÃO 99</h2>
-  <input id="search" placeholder="Buscar filmes...">
-</header>
-
-<main>
-  <div id="status">⏳ Inicializando Supabase…</div>
-  <div class="grid" id="grid"></div>
-</main>
-
-<!-- MODAL PLAYER -->
-<div class="modal" id="modal">
-  <button class="close" onclick="fecharModal()">Fechar</button>
-  <div class="modal-box">
-    <iframe id="player" allowfullscreen></iframe>
-    <div class="modal-info">
-      <h3 id="modalTitle"></h3>
-      <p id="modalDesc"></p>
-    </div>
+<!-- OVERLAY -->
+<div id="overlay">
+  <div id="modal">
+    <h3>🎬 Upload em andamento</h3>
+    <div id="barWrap"><div id="bar"></div></div>
+    <div id="msg" class="muted">Preparando…</div>
   </div>
 </div>
 
+<div class="wrapper">
+
+<header>
+  <h1>SESSÃO 99 — Admin</h1>
+</header>
+
+<div id="supabaseStatus" class="status muted">Supabase: verificando…</div>
+<div id="bunnyStatus" class="status muted">Bunny.net: verificando…</div>
+
+<div class="grid">
+
+  <!-- FORM -->
+  <div class="panel">
+    <h3>Novo Filme</h3>
+
+    <label>Título *</label>
+    <input id="titulo">
+
+    <label>Descrição</label>
+    <textarea id="descricao"></textarea>
+
+    <label>Categoria</label>
+    <input id="categoria">
+
+    <label>URL da capa</label>
+    <input id="capa">
+
+    <label>Arquivo de vídeo *</label>
+    <input type="file" id="video" accept="video/*">
+
+    <button id="btnEnviar">Enviar Filme</button>
+  </div>
+
+  <!-- LIST -->
+  <div class="panel">
+    <h3>Filmes cadastrados</h3>
+    <div id="lista" class="list"></div>
+  </div>
+
+</div>
+</div>
+
 <script>
-const statusEl = document.getElementById("status");
-const grid = document.getElementById("grid");
-const search = document.getElementById("search");
-const modal = document.getElementById("modal");
-const player = document.getElementById("player");
-const modalTitle = document.getElementById("modalTitle");
-const modalDesc = document.getElementById("modalDesc");
+/* ================= CONFIG ================= */
+const supabase = window.supabase.createClient(
+  "https://dxkszikemntfusfyrzos.supabase.co",
+  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+);
 
-let supabaseClient = null;
-let filmes = [];
+const BUNNY = {
+  zone:"sessao99",
+  region:"br",
+  key:"d498d56e-361b-4a1e-9edb9eb63e3b-2e6a-4c17",
+  cdn:"https://sessao99.b-cdn.net"
+};
 
-/* ===== ESPERAR SUPABASE ===== */
-function esperarSupabase(timeout = 5000){
-  return new Promise((resolve, reject)=>{
-    const start = Date.now();
-    const t = setInterval(()=>{
-      if(window.supabase?.createClient){
-        clearInterval(t);
-        resolve(window.supabase);
-      }
-      if(Date.now()-start>timeout){
-        clearInterval(t);
-        reject("Supabase não carregou");
-      }
-    },50);
-  });
-}
+/* ================= ELEMENTOS ================= */
+const supabaseStatus = document.getElementById("supabaseStatus");
+const bunnyStatus = document.getElementById("bunnyStatus");
+const overlay = document.getElementById("overlay");
+const bar = document.getElementById("bar");
+const msg = document.getElementById("msg");
+const btn = document.getElementById("btnEnviar");
+const lista = document.getElementById("lista");
 
-/* ===== INIT ===== */
-async function init(){
+const titulo = document.getElementById("titulo");
+const descricao = document.getElementById("descricao");
+const categoria = document.getElementById("categoria");
+const capa = document.getElementById("capa");
+const video = document.getElementById("video");
+
+/* ================= STATUS SUPABASE ================= */
+(async()=>{
   try{
-    const supabaseLib = await esperarSupabase();
-    statusEl.innerText = "🔌 Conectando ao Supabase…";
-
-    supabaseClient = supabaseLib.createClient(
-      "https://dxkszikemntfusfyrzos.supabase.co",
-      "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
-    );
-
+    const { error } = await supabase.from("filmes").select("id").limit(1);
+    if(error) throw error;
+    supabaseStatus.textContent="🟢 Supabase conectado";
+    supabaseStatus.className="status ok";
     carregarFilmes();
   }catch(e){
-    statusEl.innerText = "❌ " + e;
-    statusEl.className = "err";
+    supabaseStatus.textContent="🔴 Supabase erro (RLS ou conexão)";
+    supabaseStatus.className="status err";
   }
-}
+})();
 
-/* ===== LOAD FILMES ===== */
+/* ================= STATUS BUNNY ================= */
+(async()=>{
+  try{
+    const r = await fetch(
+      `https://${BUNNY.region}.storage.bunnycdn.com/${BUNNY.zone}/`,
+      { method:"HEAD", headers:{ AccessKey:BUNNY.key } }
+    );
+    if(!r.ok) throw "";
+    bunnyStatus.textContent="🟢 Bunny.net conectado";
+    bunnyStatus.className="status ok";
+  }catch{
+    bunnyStatus.textContent="🔴 Bunny erro de conexão";
+    bunnyStatus.className="status err";
+  }
+})();
+
+/* ================= LISTAR FILMES ================= */
 async function carregarFilmes(){
-  statusEl.innerText = "📡 Buscando filmes…";
-
-  const {data,error} = await supabaseClient
+  const { data, error } = await supabase
     .from("filmes")
     .select("*")
-    .eq("ativo",true);
+    .order("created_at",{ascending:false});
 
   if(error){
-    statusEl.innerText = "❌ " + error.message;
-    statusEl.className = "err";
+    lista.innerHTML="<p class='muted'>Erro ao carregar</p>";
     return;
   }
 
-  filmes = data || [];
-  statusEl.innerText = `✅ ${filmes.length} filme(s) carregado(s)`;
-  statusEl.className = "ok";
-  render(filmes);
-}
+  lista.innerHTML="";
+  if(!data || data.length===0){
+    lista.innerHTML="<p class='muted'>Nenhum filme cadastrado</p>";
+    return;
+  }
 
-/* ===== RENDER ===== */
-function render(lista){
-  grid.innerHTML="";
-  lista.forEach(f=>{
-    const c=document.createElement("div");
-    c.className="card";
-    c.innerHTML=`
-      <img src="${f.capa_url}">
-      <div class="card-title">${f.titulo}</div>
+  data.forEach(f=>{
+    const d=document.createElement("div");
+    d.className="item";
+    d.innerHTML=`
+      <img src="${f.capa_url || 'https://via.placeholder.com/300x450?text=Sem+Capa'}">
+      <div>
+        <h4>${f.titulo}</h4>
+        <span>${f.categoria || ''}</span>
+      </div>
     `;
-    c.onclick=()=>abrirModal(f);
-    grid.appendChild(c);
+    lista.appendChild(d);
   });
 }
 
-/* ===== MODAL ===== */
-function abrirModal(f){
-  modal.style.display="flex";
-  player.src=f.video_url;
-  modalTitle.innerText=f.titulo;
-  modalDesc.innerText=f.descricao||"";
-}
-function fecharModal(){
-  modal.style.display="none";
-  player.src="";
-}
-
-/* ===== SEARCH ===== */
-search.oninput=()=>{
-  const v=search.value.toLowerCase();
-  render(filmes.filter(f=>f.titulo.toLowerCase().includes(v)));
+/* ================= UPLOAD ================= */
+btn.onclick=()=>{
+  if(!titulo.value || !video.files[0]){
+    alert("Título e vídeo são obrigatórios");
+    return;
+  }
+  enviar();
 };
 
-init();
+function enviar(){
+  btn.disabled=true;
+  overlay.style.display="flex";
+  bar.style.width="0%";
+  msg.textContent="Upload para Bunny…";
+
+  const file=video.files[0];
+  const name=Date.now()+"_"+file.name.replace(/\s+/g,"_");
+  const url=`https://${BUNNY.region}.storage.bunnycdn.com/${BUNNY.zone}/filmes/${name}`;
+
+  const xhr=new XMLHttpRequest();
+  xhr.open("PUT",url);
+  xhr.setRequestHeader("AccessKey",BUNNY.key);
+  xhr.setRequestHeader("Content-Type","application/octet-stream");
+
+  xhr.upload.onprogress=e=>{
+    if(e.lengthComputable){
+      const p=Math.round((e.loaded/e.total)*100);
+      bar.style.width=p+"%";
+      msg.textContent=`Upload ${p}%`;
+    }
+  };
+
+  xhr.onerror=()=>erro("Erro de rede");
+  xhr.onload=()=>{
+    if(xhr.status!==201){
+      erro("Bunny recusou "+xhr.status);
+      return;
+    }
+    salvar(`${BUNNY.cdn}/filmes/${name}`);
+  };
+
+  xhr.send(file);
+}
+
+async function salvar(videoUrl){
+  msg.textContent="Salvando no Supabase…";
+  const { error } = await supabase.from("filmes").insert({
+    titulo:titulo.value,
+    descricao:descricao.value,
+    categoria:categoria.value,
+    capa_url:capa.value,
+    video_url:videoUrl,
+    ativo:true
+  });
+  if(error){erro(error.message);return;}
+  msg.textContent="✅ Filme cadastrado!";
+  setTimeout(()=>location.reload(),1200);
+}
+
+function erro(t){
+  msg.textContent="❌ "+t;
+  btn.disabled=false;
+}
 </script>
 
 </body>
