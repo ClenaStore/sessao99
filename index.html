@@ -24,7 +24,7 @@ body{
   overflow:hidden;
 }
 
-/* ===== SPLASH CINEMA ===== */
+/* ===== SPLASH ===== */
 #splash{
   position:fixed;
   inset:0;
@@ -34,40 +34,24 @@ body{
   justify-content:center;
   z-index:999;
   animation:splashOut 1.4s ease forwards;
-  animation-delay:3.2s;
+  animation-delay:3s;
 }
 #splash h1{
   font-size:72px;
-  letter-spacing:12px;
+  letter-spacing:14px;
   font-weight:800;
-  color:#fff;
-  animation:cinemaLogo 3.2s ease forwards;
+  animation:logoIn 3s ease forwards;
 }
-
-@keyframes cinemaLogo{
-  0%{
-    opacity:0;
-    transform:scale(.5) translateY(40px);
-    letter-spacing:2px;
-    filter:blur(10px);
-  }
-  40%{
-    opacity:1;
-    filter:blur(0);
-  }
+@keyframes logoIn{
+  0%{opacity:0;transform:scale(.6);filter:blur(12px)}
+  40%{opacity:1;filter:blur(0)}
   100%{
-    transform:scale(1.1) translateY(0);
-    letter-spacing:14px;
-    text-shadow:
-      0 0 20px #e11d48,
-      0 0 60px rgba(225,29,72,.6);
+    transform:scale(1.1);
+    text-shadow:0 0 40px #e11d48;
   }
 }
 @keyframes splashOut{
-  to{
-    opacity:0;
-    visibility:hidden;
-  }
+  to{opacity:0;visibility:hidden}
 }
 
 /* ===== HEADER ===== */
@@ -77,18 +61,29 @@ header{
   justify-content:space-between;
   align-items:center;
   border-bottom:1px solid #111827;
-  backdrop-filter:blur(10px);
 }
-header h2{
+#statusTitle{
   margin:0;
+  cursor:pointer;
+  user-select:none;
+}
+#statusText{
   font-weight:800;
   letter-spacing:1px;
 }
+.status-ok{
+  color:#22c55e;
+  text-shadow:0 0 14px rgba(34,197,94,.6);
+}
+.status-erro{
+  color:#ef4444;
+  text-shadow:0 0 14px rgba(239,68,68,.6);
+}
 header input{
   width:260px;
-  padding:10px 12px;
-  border-radius:10px;
-  border:1px solid #111827;
+  padding:10px;
+  border-radius:8px;
+  border:none;
   background:#020617;
   color:#fff;
 }
@@ -121,12 +116,11 @@ main{
   border-radius:16px;
   overflow:hidden;
   cursor:pointer;
-  transition:.35s;
-  box-shadow:0 10px 30px rgba(0,0,0,.4);
+  transition:.3s;
 }
 .card:hover{
   transform:translateY(-6px) scale(1.05);
-  box-shadow:0 20px 50px rgba(225,29,72,.25);
+  box-shadow:0 20px 40px rgba(225,29,72,.25);
 }
 .card img{
   width:100%;
@@ -139,7 +133,6 @@ main{
 .card h3{
   margin:0;
   font-size:14px;
-  font-weight:600;
 }
 .card span{
   font-size:12px;
@@ -158,28 +151,31 @@ main{
 }
 .modal-content{
   width:90%;
-  max-width:900px;
+  max-width:600px;
   background:#020617;
-  border-radius:18px;
-  overflow:hidden;
-}
-.modal iframe{
-  width:100%;
-  height:480px;
-}
-.modal-body{
-  padding:18px;
+  border-radius:16px;
+  padding:20px;
 }
 .close{
-  position:absolute;
-  top:20px;
-  right:20px;
   background:#dc2626;
-  border:none;
   color:#fff;
-  padding:8px 16px;
-  border-radius:8px;
+  border:none;
+  padding:8px 14px;
+  border-radius:6px;
   cursor:pointer;
+  float:right;
+}
+pre{
+  white-space:pre-wrap;
+  color:#fca5a5;
+}
+
+/* PLAYER */
+.player iframe{
+  width:100%;
+  height:480px;
+  border:none;
+  border-radius:14px;
 }
 </style>
 </head>
@@ -191,7 +187,9 @@ main{
 </div>
 
 <header>
-  <h2>🎬 SESSÃO 99</h2>
+  <h2 id="statusTitle" ondblclick="mostrarErro()">
+    🎬 <span id="statusText">SESSÃO 99</span>
+  </h2>
   <input id="search" placeholder="Buscar filmes...">
 </header>
 
@@ -199,14 +197,22 @@ main{
   <div class="grid" id="grid"></div>
 </main>
 
-<div class="modal" id="modal">
-  <button class="close" onclick="closeModal()">Fechar</button>
+<!-- MODAL ERRO -->
+<div class="modal" id="erroModal">
   <div class="modal-content">
-    <iframe id="player" allowfullscreen></iframe>
-    <div class="modal-body">
-      <h2 id="title"></h2>
-      <p id="description"></p>
-    </div>
+    <button class="close" onclick="fecharErro()">Fechar</button>
+    <h3>Erro de Conexão Supabase</h3>
+    <pre id="erroTexto"></pre>
+  </div>
+</div>
+
+<!-- MODAL PLAYER -->
+<div class="modal" id="playerModal">
+  <div class="modal-content player">
+    <button class="close" onclick="fecharPlayer()">Fechar</button>
+    <iframe id="player"></iframe>
+    <h3 id="title"></h3>
+    <p id="description"></p>
   </div>
 </div>
 
@@ -216,31 +222,36 @@ const supabase = supabaseJs.createClient(
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
+const statusText = document.getElementById("statusText");
+const erroModal = document.getElementById("erroModal");
+const erroTexto = document.getElementById("erroTexto");
+const content = document.getElementById("content");
 const grid = document.getElementById("grid");
 const search = document.getElementById("search");
-const content = document.getElementById("content");
 
 let filmes=[];
+let ultimoErro="Nenhum erro capturado.";
 
-// Mostrar conteúdo após splash
 setTimeout(()=>{
   document.body.style.overflow="auto";
   content.style.display="block";
-},3400);
+},3200);
 
 async function carregar(){
   const { data, error } = await supabase
     .from("filmes")
     .select("*")
-    .eq("ativo", true)
-    .order("created_at",{ascending:false});
+    .eq("ativo", true);
 
   if(error){
+    statusText.className="status-erro";
+    ultimoErro = JSON.stringify(error, null, 2);
     console.error(error);
     return;
   }
 
-  filmes = data || [];
+  statusText.className="status-ok";
+  filmes=data || [];
   render(filmes);
 }
 
@@ -253,10 +264,10 @@ function render(lista){
       <img src="${f.capa_url}">
       <div>
         <h3>${f.titulo}</h3>
-        <span>${f.categoria}</span>
+        <span>${f.categoria || ""}</span>
       </div>
     `;
-    c.onclick=()=>openModal(f);
+    c.onclick=()=>abrirPlayer(f);
     grid.appendChild(c);
   });
 }
@@ -264,17 +275,25 @@ function render(lista){
 search.oninput=()=>{
   const v=search.value.toLowerCase();
   render(filmes.filter(f=>f.titulo.toLowerCase().includes(v)));
-}
+};
 
-function openModal(f){
-  modal.style.display="flex";
+function abrirPlayer(f){
+  playerModal.style.display="flex";
   player.src=f.video_url;
   title.innerText=f.titulo;
   description.innerText=f.descricao || "";
 }
-function closeModal(){
-  modal.style.display="none";
+function fecharPlayer(){
+  playerModal.style.display="none";
   player.src="";
+}
+
+function mostrarErro(){
+  erroTexto.innerText=ultimoErro;
+  erroModal.style.display="flex";
+}
+function fecharErro(){
+  erroModal.style.display="none";
 }
 
 carregar();
