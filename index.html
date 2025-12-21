@@ -234,6 +234,30 @@ section{padding:20px 14px}
 #playerLayout{grid-template-columns:1fr}
 #sideInfo{padding:16px}
 }
+
+.perfil-info{
+  margin:16px 0;
+  text-align:left;
+  font-size:14px;
+}
+.perfil-info div{
+  margin-bottom:6px;
+}
+
+#pixBox{
+  background:#111;
+  border:1px solid #333;
+  border-radius:8px;
+  padding:12px;
+  margin-bottom:12px;
+  text-align:center;
+}
+#perfilPix{
+  margin-top:6px;
+  font-weight:700;
+  color:#00ff99;
+}
+
 </style>
 </head>
 
@@ -284,12 +308,24 @@ section{padding:20px 14px}
 
 <!-- PERFIL -->
 <div id="perfilOverlay">
-  <div id="perfilPopup">
-    <h3 id="perfilNome"></h3>
-    <p id="perfilEmail"></p>
-    <button id="sair" onclick="logout()">Sair</button>
-    <button id="fecharPerfil" onclick="fecharPerfil()">Fechar</button>
+<div id="perfilPopup">
+  <h3 id="perfilNome"></h3>
+  <p id="perfilEmail"></p>
+
+  <div class="perfil-info">
+    <div><strong>Plano:</strong> <span id="perfilPlano"></span></div>
+    <div><strong>Valor:</strong> <span id="perfilValor"></span></div>
+    <div><strong>Vencimento:</strong> <span id="perfilVencimento"></span></div>
   </div>
+
+  <div id="pixBox" style="display:none">
+    <p><strong>Pagamento via PIX</strong></p>
+    <div id="perfilPix"></div>
+  </div>
+
+  <button id="sair" onclick="logout()">Sair</button>
+  <button id="fecharPerfil" onclick="fecharPerfil()">Fechar</button>
+</div>
 </div>
 
 <script>
@@ -328,6 +364,18 @@ function setFiltro(f){
   render(busca.value.toLowerCase());
 }
 
+function card(i){
+  return `
+    <div class="card" onclick='abrirPlayer(${JSON.stringify(i)})'>
+      <img src="${i.capa_url}">
+      <div class="title">
+        ${i.titulo || i.serie_nome}
+      </div>
+    </div>
+  `;
+}
+
+
 function render(buscaTxt = "") {
   grid.innerHTML = "";
 
@@ -359,6 +407,56 @@ function render(buscaTxt = "") {
   }
 }
 
+async function carregarPerfil(){
+  const { data: user } = await sb
+    .from("usuarios")
+    .select(`
+      nome,
+      email,
+      tipo_assinatura,
+      valor_assinatura,
+      vencimento_assinatura,
+      chave_pix
+    `)
+    .eq("id", usuario.id)
+    .single();
+
+  if(!user) return;
+
+  perfilNome.textContent = user.nome || "Usuário";
+  perfilEmail.textContent = user.email;
+
+  perfilPlano.textContent = user.tipo_assinatura || "-";
+  perfilValor.textContent = formatarReal(user.valor_assinatura);
+  perfilVencimento.textContent = formatarData(user.vencimento_assinatura);
+
+  // REGRA DO PIX (2 DIAS)
+  if(user.vencimento_assinatura){
+    const hoje = new Date();
+    const venc = new Date(user.vencimento_assinatura);
+    const diffDias = Math.ceil((venc - hoje) / (1000 * 60 * 60 * 24));
+
+    if(diffDias <= 2 && user.chave_pix){
+      pixBox.style.display = "block";
+      perfilPix.textContent = user.chave_pix;
+    }else{
+      pixBox.style.display = "none";
+    }
+  }
+}
+
+function formatarReal(valor){
+  if(valor == null) return "-";
+  return valor.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL"
+  });
+}
+
+function formatarData(data){
+  if(!data) return "-";
+  return new Date(data).toLocaleDateString("pt-BR");
+}
 
 function abrirPlayer(item){
   document.getElementById("perfilBtn").style.display="none";
@@ -397,7 +495,11 @@ function fechar(){
   document.getElementById("perfilBtn").style.display="block";
 }
 
-function abrirPerfil(){perfilOverlay.style.display="flex";}
+function abrirPerfil(){
+  carregarPerfil();
+  perfilOverlay.style.display="flex";
+}
+
 function fecharPerfil(){perfilOverlay.style.display="none";}
 function logout(){localStorage.clear();location.href="login.html";}
 </script>
