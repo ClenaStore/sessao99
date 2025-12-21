@@ -20,20 +20,27 @@
 *{box-sizing:border-box}
 body{
   margin:0;
-  background:var(--bg);
+  background:
+    radial-gradient(1200px 600px at 50% -200px, #11183a, transparent),
+    var(--bg);
   color:var(--text);
   font-family:Inter,Arial,sans-serif;
 }
+
 header{
   padding:18px 32px;
   display:flex;
   justify-content:space-between;
   align-items:center;
-  background:#000;
+  background:rgba(0,0,0,.8);
+  backdrop-filter:blur(10px);
+  position:sticky;
+  top:0;
+  z-index:10;
 }
 header h1{color:var(--accent);margin:0}
 
-main{padding:24px 32px;display:grid;gap:20px}
+main{padding:24px 32px;display:grid;gap:22px}
 
 .kpis{
   display:grid;
@@ -41,26 +48,64 @@ main{padding:24px 32px;display:grid;gap:20px}
   gap:16px;
 }
 .kpi{
-  background:var(--panel);
+  background:linear-gradient(180deg,#0f1533,#090d1f);
   padding:18px;
-  border-radius:14px;
+  border-radius:16px;
 }
 .kpi span{color:var(--muted);font-size:13px}
 .kpi strong{font-size:30px}
 
 .panel{
-  background:var(--panel);
+  background:linear-gradient(180deg,#0f1533,#090d1f);
   padding:18px;
-  border-radius:14px;
+  border-radius:16px;
 }
-.panel h2{margin:0 0 12px;font-size:16px}
+.panel h2{margin:0 0 14px;font-size:16px}
 
 table{width:100%;border-collapse:collapse}
 th,td{padding:10px;border-bottom:1px solid #1f243d}
 th{color:var(--muted);text-align:left}
 
-.grid{display:grid;grid-template-columns:2fr 1fr;gap:20px}
+.grid{
+  display:grid;
+  grid-template-columns:2fr 1fr;
+  gap:20px;
+}
+
 canvas{height:260px!important}
+
+/* TOP CARD */
+.top-card{
+  display:flex;
+  gap:14px;
+  align-items:center;
+  padding:12px;
+  border-radius:14px;
+  background:#0c122b;
+  margin-bottom:10px;
+}
+.top-card img{
+  width:80px;
+  height:120px;
+  object-fit:cover;
+  border-radius:10px;
+}
+.top-info{
+  flex:1;
+}
+.top-info strong{
+  display:block;
+  font-size:15px;
+}
+.top-info span{
+  display:block;
+  font-size:12px;
+  color:var(--muted);
+}
+.progress{
+  margin-top:6px;
+  font-size:12px;
+}
 
 .filter{
   display:flex;
@@ -72,7 +117,7 @@ input[type=date]{
   border:none;
   color:#fff;
   padding:8px 12px;
-  border-radius:8px;
+  border-radius:999px;
 }
 </style>
 </head>
@@ -124,16 +169,12 @@ input[type=date]{
 
 <div class="panel">
   <h2>🔥 Top 10 do Momento (30 min)</h2>
-  <table>
-    <tbody id="topAgora"></tbody>
-  </table>
+  <div id="topAgora"></div>
 </div>
 
 <div class="panel">
   <h2>🏆 Top 10 do Dia</h2>
-  <table>
-    <tbody id="topDia"></tbody>
-  </table>
+  <div id="topDia"></div>
 </div>
 
 </main>
@@ -144,8 +185,12 @@ const supabaseClient = supabase.createClient(
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
+/* DATA LOCAL BR */
+const hojeBR = new Date(new Date().getTime() - new Date().getTimezoneOffset()*60000)
+  .toISOString().slice(0,10);
+
 const dataFiltro = document.getElementById("dataFiltro");
-dataFiltro.value = new Date().toISOString().slice(0,10);
+dataFiltro.value = hojeBR;
 
 let chartHoras, chartTipos;
 
@@ -156,70 +201,76 @@ async function loadDashboard(){
   const { data: online } = await supabaseClient
     .from("rs_sessions")
     .select("*")
-    .in("status",["playing","paused"]);
+    .gte("last_ping", new Date(Date.now()-30000).toISOString());
 
-  document.getElementById("kpiOnline").textContent = online.length;
-
-  onlineList.innerHTML="";
+  kpiOnline.textContent = online.length;
+  onlineList.innerHTML = "";
   online.forEach(u=>{
-    onlineList.innerHTML+=`
+    onlineList.innerHTML += `
       <tr>
         <td>${u.user_id.slice(0,8)}</td>
         <td>${u.serie_nome || "-"}</td>
         <td>${u.content_tipo}</td>
-        <td>${u.status}</td>
+        <td>playing</td>
       </tr>`;
   });
 
-  /* EVENTS DO DIA */
+  /* EVENTS */
   const { data: events } = await supabaseClient
     .from("rs_play_events")
     .select("*")
     .gte("created_at", data+"T00:00:00")
     .lte("created_at", data+"T23:59:59");
 
-  document.getElementById("kpiPlays").textContent =
-    events.filter(e=>e.acao==="play").length;
+  kpiPlays.textContent = events.filter(e=>e.acao==="play").length;
+  kpi50.textContent = new Set(events.filter(e=>e.progress_percent>=50).map(e=>e.user_id)).size;
+  kpiFinish.textContent = new Set(events.filter(e=>e.progress_percent>=95).map(e=>e.user_id)).size;
 
-  document.getElementById("kpi50").textContent =
-    new Set(events.filter(e=>e.progress_percent>=50).map(e=>e.user_id)).size;
+  /* FILMES (CAPAS) */
+  const { data: filmes } = await supabaseClient.from("filmes").select("*");
 
-  document.getElementById("kpiFinish").textContent =
-    new Set(events.filter(e=>e.progress_percent>=95).map(e=>e.user_id)).size;
-
-  /* TOP DIA */
-  const mapDia = {};
-  events.forEach(e=>{
-    if(e.acao==="play"){
-      mapDia[e.titulo]=(mapDia[e.titulo]||0)+1;
-    }
-  });
-
-  topDia.innerHTML="";
-  Object.entries(mapDia).sort((a,b)=>b[1]-a[1]).slice(0,10)
-    .forEach(([t,c])=>{
-      topDia.innerHTML+=`<tr><td>${t}</td><td>${c}</td></tr>`;
+  function renderTop(container, map){
+    container.innerHTML="";
+    Object.entries(map).slice(0,10).forEach(([titulo,info])=>{
+      const filme = filmes.find(f=>f.titulo===titulo || f.serie_nome===titulo);
+      container.innerHTML += `
+        <div class="top-card">
+          <img src="${filme?.capa_url || ''}">
+          <div class="top-info">
+            <strong>${titulo}</strong>
+            <span>👁 ${info.total} visualizações</span>
+            <div class="progress">✅ ${info.finish}% | ▶ ${info.mid}%</div>
+          </div>
+        </div>`;
     });
+  }
 
-  /* TOP AGORA */
+  function buildMap(list){
+    const map={};
+    list.forEach(e=>{
+      if(!map[e.titulo]) map[e.titulo]={users:new Set(),mid:new Set(),finish:new Set()};
+      map[e.titulo].users.add(e.user_id);
+      if(e.progress_percent>=50) map[e.titulo].mid.add(e.user_id);
+      if(e.progress_percent>=95) map[e.titulo].finish.add(e.user_id);
+    });
+    return Object.fromEntries(
+      Object.entries(map).map(([k,v])=>[
+        k,{
+          total:v.users.size,
+          mid:Math.round(v.mid.size/v.users.size*100)||0,
+          finish:Math.round(v.finish.size/v.users.size*100)||0
+        }
+      ]).sort((a,b)=>b[1].total-a[1].total)
+    );
+  }
+
+  renderTop(topDia, buildMap(events));
+
   const limite = new Date(Date.now()-30*60000).toISOString();
-  const recentes = events.filter(e=>e.created_at>=limite);
+  renderTop(topAgora, buildMap(events.filter(e=>e.created_at>=limite)));
 
-  const mapAgora = {};
-  recentes.forEach(e=>{
-    if(e.acao==="play"){
-      mapAgora[e.titulo]=(mapAgora[e.titulo]||0)+1;
-    }
-  });
-
-  topAgora.innerHTML="";
-  Object.entries(mapAgora).sort((a,b)=>b[1]-a[1]).slice(0,10)
-    .forEach(([t,c])=>{
-      topAgora.innerHTML+=`<tr><td>${t}</td><td>${c}</td></tr>`;
-    });
-
-  /* CHART HORAS */
-  const horas = {};
+  /* CHARTS */
+  const horas={};
   events.forEach(e=>{
     const h=new Date(e.created_at).getHours();
     horas[h]=(horas[h]||0)+1;
@@ -231,14 +282,13 @@ async function loadDashboard(){
     data:{labels:Object.keys(horas),datasets:[{data:Object.values(horas),borderColor:"#e50914"}]}
   });
 
-  /* TIPOS */
-  const filmes=events.filter(e=>e.tipo==="filme").length;
-  const series=events.filter(e=>e.tipo==="serie").length;
+  const filmesCount=events.filter(e=>e.tipo==="filme").length;
+  const seriesCount=events.filter(e=>e.tipo==="serie").length;
 
   if(chartTipos) chartTipos.destroy();
   chartTipos=new Chart(chartTiposCtx,{
     type:"doughnut",
-    data:{labels:["Filmes","Séries"],datasets:[{data:[filmes,series],backgroundColor:["#e50914","#6366f1"]}]}
+    data:{labels:["Filmes","Séries"],datasets:[{data:[filmesCount,seriesCount],backgroundColor:["#e50914","#6366f1"]}]}
   });
 }
 
