@@ -469,6 +469,28 @@ html, body {
     display:block;
   }
 }
+/* 🔍 BUSCA MOBILE INPUT */
+#searchMobileBox{
+  position:fixed;
+  top:56px;
+  left:0;
+  right:0;
+  padding:12px;
+  background:rgba(0,0,0,.95);
+  display:none;
+  z-index:300;
+}
+
+#buscaMobile{
+  width:100%;
+  padding:14px 16px;
+  border-radius:999px;
+  border:none;
+  font-size:15px;
+  background:#2b2b2b;
+  color:#fff;
+}
+
 
 </style>
 </head>
@@ -476,6 +498,15 @@ html, body {
 <body>
 
 <header>
+  <!-- 🔍 BUSCA MOBILE -->
+<div id="searchMobileBox">
+  <input
+    id="buscaMobile"
+    placeholder="Buscar filmes e séries..."
+    autocomplete="off"
+  >
+</div>
+
   <h1>SESSÃO 99</h1>
   <input id="busca" placeholder="Buscar...">
   <div id="perfilBtn" onclick="abrirPerfil()"><span>US</span></div>
@@ -651,6 +682,41 @@ render();
 const searchResults = document.getElementById("searchResults");
 const searchGrid = document.getElementById("searchGrid");
 const buscaMobile = document.getElementById("buscaMobile");
+const searchMobileBox = document.getElementById("searchMobileBox");
+
+buscaMobile.oninput = () => {
+  const q = buscaMobile.value.trim().toLowerCase();
+
+  if(q.length < 2){
+    searchGrid.innerHTML = "";
+    return;
+  }
+
+  const resultados = dados.filter(d =>
+    (d.titulo || d.serie_nome || "")
+      .toLowerCase()
+      .includes(q)
+  );
+
+  searchGrid.innerHTML = "";
+
+  if(!resultados.length){
+    searchGrid.innerHTML =
+      "<p style='color:#777'>Nenhum resultado encontrado</p>";
+  }else{
+    resultados.forEach(r => {
+      searchGrid.innerHTML += `
+        <div class="search-card" onclick='abrirPlayer(${JSON.stringify(r)})'>
+          <img src="${r.capa_url}">
+          <span>${r.titulo || r.serie_nome}</span>
+        </div>
+      `;
+    });
+  }
+
+  searchResults.style.display = "block";
+};
+
 
 buscaMobile.oninput = () => {
   const q = buscaMobile.value.trim().toLowerCase();
@@ -947,7 +1013,11 @@ if ("serviceWorker" in navigator) {
     .catch(err => console.error("SW erro", err));
 }
 function toggleSearch(){
+  searchMobileBox.style.display = "block";
   searchResults.style.display = "block";
+  buscaMobile.value = "";
+  buscaMobile.focus();
+}
 
   if(window.innerWidth <= 768){
     buscaMobile.value = "";
