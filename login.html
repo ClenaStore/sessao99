@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Login | Sessão 99</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  height:100vh;
+  font-family:Inter,Arial,sans-serif;
+  background:
+    linear-gradient(to right,rgba(0,0,0,.9) 40%,rgba(0,0,0,.4)),
+    url("https://images.unsplash.com/photo-1501785888041-af3ef285b470") center/cover;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.container{
+  width:420px;
+}
+
+h1{
+  font-size:42px;
+  margin-bottom:30px;
+}
+h1 span{color:#a855f7}
+
+label{
+  display:block;
+  margin-bottom:6px;
+  font-size:14px;
+}
+
+input{
+  width:100%;
+  padding:14px;
+  margin-bottom:18px;
+  border-radius:10px;
+  border:1px solid #333;
+  background:#0b0b0b;
+  color:#fff;
+}
+
+button{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  background:linear-gradient(90deg,#7c3aed,#ec4899);
+  color:#fff;
+  font-size:16px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.link{
+  margin-top:16px;
+  text-align:center;
+  cursor:pointer;
+  text-decoration:underline;
+  color:#ddd;
+}
+
+.msg{
+  margin-top:14px;
+  color:#facc15;
+}
+
+/* MODAL */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.8);
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+.modal-content{
+  width:420px;
+  background:#0b0b0b;
+  padding:30px;
+  border-radius:14px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h1>Faça seu Login<span>.</span></h1>
+
+  <label>Email</label>
+  <input id="email" type="email">
+
+  <label>Senha</label>
+  <input id="senha" type="password">
+
+  <button onclick="login()">Entrar</button>
+
+  <div class="link" onclick="abrirCadastro()">Ainda não tenho uma conta</div>
+
+  <div class="msg" id="msg"></div>
+</div>
+
+<!-- MODAL CADASTRO -->
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <h2>Criar conta</h2>
+
+    <input id="c_email" placeholder="Email">
+    <input id="c_cpf" placeholder="CPF">
+    <input id="c_whats" placeholder="WhatsApp">
+    <input id="c_senha" type="password" placeholder="Senha">
+    <input id="c_confirma" type="password" placeholder="Confirmar senha">
+
+    <button onclick="cadastrar()">Cadastrar</button>
+    <div class="link" onclick="fecharCadastro()">Cancelar</div>
+  </div>
+</div>
+
+<script>
+const supabase = supabase.createClient(
+  "https://dxkszikemntfusfyrzos.supabase.co",
+  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+);
+
+const msg = document.getElementById("msg");
+
+/* LOGIN */
+async function login(){
+  msg.textContent="";
+
+  const email = email.value;
+  const senha = senha.value;
+
+  const { data } = await supabase
+    .from("usuarios")
+    .select("*")
+    .eq("email", email)
+    .eq("senha", senha)
+    .single();
+
+  if(!data){
+    msg.textContent="Usuário ou senha inválidos";
+    return;
+  }
+
+  const agora = new Date();
+
+  if(data.status === "aprovado"){
+    localStorage.usuario = JSON.stringify(data);
+    window.location.href = "index.html";
+    return;
+  }
+
+  const expira = new Date(data.trial_expires_at);
+
+  if(agora <= expira){
+    alert("Conta pendente. Você está usando o teste grátis de 1 dia.");
+    localStorage.usuario = JSON.stringify(data);
+    window.location.href = "index.html";
+  }else{
+    msg.textContent="Seu teste expirou. Aguarde aprovação.";
+  }
+}
+
+/* CADASTRO */
+function abrirCadastro(){
+  modal.style.display="flex";
+}
+function fecharCadastro(){
+  modal.style.display="none";
+}
+
+async function cadastrar(){
+  const email = c_email.value;
+  const cpf = c_cpf.value;
+  const whatsapp = c_whats.value;
+  const senha = c_senha.value;
+  const confirma = c_confirma.value;
+
+  if(senha !== confirma){
+    alert("Senhas não conferem");
+    return;
+  }
+
+  const agora = new Date();
+  const trial = new Date(agora.getTime() + 24*60*60*1000);
+
+  const { error } = await supabase
+    .from("usuarios")
+    .insert({
+      email,
+      cpf,
+      whatsapp,
+      senha,
+      status:"pendente",
+      trial_expires_at: trial.toISOString()
+    });
+
+  if(error){
+    alert("Erro ao cadastrar. Email ou CPF já existe.");
+    return;
+  }
+
+  alert("Cadastro realizado! Você tem 1 dia de teste.");
+  fecharCadastro();
+}
+</script>
+
+</body>
+</html>
