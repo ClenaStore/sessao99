@@ -8,55 +8,107 @@
 
 <style>
 :root{
-  --bg:#05070f;
+  --bg:#040714;
   --panel:#0b1020;
   --card:#141a2e;
   --accent:#e50914;
   --text:#ffffff;
   --muted:#9ca3af;
-  --radius:14px;
+  --radius:16px;
 }
 *{box-sizing:border-box}
 body{
   margin:0;
-  background:
-    radial-gradient(1200px 600px at 50% -200px, #11183a, transparent),
-    var(--bg);
+  background:linear-gradient(180deg,#0a0f2a 0%,#040714 40%);
   color:var(--text);
   font-family:Inter,Arial,sans-serif;
 }
+
+/* ================= HEADER ================= */
 header{
   position:sticky;
   top:0;
   z-index:100;
-  padding:16px 32px;
   display:flex;
   justify-content:space-between;
   align-items:center;
-  background:rgba(5,7,15,.75);
-  backdrop-filter:blur(10px);
-  border-bottom:1px solid rgba(255,255,255,.05);
+  padding:18px 32px;
+  background:rgba(4,7,20,.85);
+  backdrop-filter:blur(12px);
 }
-header h1{color:var(--accent);margin:0;font-size:22px}
+header .logo{
+  font-size:26px;
+  font-weight:800;
+  letter-spacing:1px;
+}
+header .logo span{color:var(--accent)}
 header input{
-  background:#0f1326;
-  border:1px solid rgba(255,255,255,.08);
+  width:320px;
+  max-width:50vw;
+  padding:12px 18px;
   border-radius:999px;
-  padding:10px 16px;
+  border:1px solid rgba(255,255,255,.12);
+  background:#0e1430;
   color:#fff;
-  width:280px;
+  font-size:15px;
 }
-section{padding:24px 32px}
-.row{display:flex;gap:16px;overflow-x:auto}
+
+/* ================= HOME ================= */
+main{padding:30px 0 90px}
+section{margin-bottom:46px}
+section h2{
+  margin:0 0 14px 32px;
+  font-size:22px;
+  font-weight:700;
+}
+
+/* ================= ROW ================= */
+.row{
+  display:flex;
+  gap:18px;
+  padding:0 32px;
+  overflow-x:auto;
+  scroll-behavior:smooth;
+}
+.row::-webkit-scrollbar{display:none}
+
+/* ================= CARD ================= */
 .card{
-  min-width:180px;
-  border-radius:14px;
+  min-width:220px;
+  max-width:220px;
+  border-radius:var(--radius);
   overflow:hidden;
+  background:var(--card);
   cursor:pointer;
-  background:#141a2e;
+  transition:.35s ease;
+  position:relative;
 }
-.card img{width:100%;height:260px;object-fit:cover}
-.card span{position:absolute;bottom:12px;left:12px;font-weight:600}
+.card img{
+  width:100%;
+  height:320px;
+  object-fit:cover;
+}
+.card::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(to top,rgba(0,0,0,.85),transparent 50%);
+}
+.card span{
+  position:absolute;
+  bottom:14px;
+  left:14px;
+  right:14px;
+  font-size:15px;
+  font-weight:600;
+  z-index:2;
+}
+.card:hover{
+  transform:scale(1.08);
+  z-index:10;
+}
+
+/* ================= PLAYER ================= */
 #player{
   position:fixed;
   inset:0;
@@ -65,26 +117,73 @@ section{padding:24px 32px}
   flex-direction:column;
   z-index:9999;
 }
-.top{padding:14px 20px;display:flex;gap:14px}
-.cover{width:100%;max-height:420px;object-fit:cover}
-.selects{display:flex;gap:12px;padding:14px 20px}
-video{width:100%;height:calc(100vh - 320px)}
+.player-top{
+  display:flex;
+  align-items:center;
+  gap:18px;
+  padding:18px 26px;
+  background:linear-gradient(to bottom,rgba(0,0,0,.85),transparent);
+}
+.player-top button{
+  background:none;
+  border:none;
+  color:#fff;
+  font-size:20px;
+  cursor:pointer;
+}
+.player-title{
+  font-size:20px;
+  font-weight:600;
+}
+.cover{
+  width:100%;
+  max-height:420px;
+  object-fit:cover;
+}
+.selects{
+  display:flex;
+  gap:14px;
+  padding:16px 26px;
+}
+.selects select{
+  background:#0e1430;
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:10px;
+  padding:10px 14px;
+  color:#fff;
+  font-size:14px;
+}
+video{
+  width:100%;
+  height:calc(100vh - 320px);
+  background:#000;
+}
+
+/* ================= MOBILE ================= */
+@media(max-width:768px){
+  header{padding:14px 18px}
+  header .logo{font-size:20px}
+  section h2{margin-left:18px;font-size:18px}
+  .row{padding:0 18px}
+  .card{min-width:160px;max-width:160px}
+  .card img{height:240px}
+}
 </style>
 </head>
 
 <body>
 
 <header>
-  <h1>SESSÃO 99</h1>
-  <input id="search" placeholder="Buscar filmes ou séries...">
+  <div class="logo">SESSÃO <span>99</span></div>
+  <input id="search" placeholder="Buscar filmes ou séries">
 </header>
 
-<div id="home"></div>
+<main id="home"></main>
 
 <div id="player">
-  <div class="top">
-    <button onclick="fechar()">⬅ Voltar</button>
-    <strong id="tituloPlayer"></strong>
+  <div class="player-top">
+    <button onclick="fechar()">⬅</button>
+    <div class="player-title" id="tituloPlayer"></div>
   </div>
   <img id="capaPlayer" class="cover">
   <div class="selects">
@@ -217,20 +316,17 @@ function playFilme(f){
   abrirPlayer(f.titulo,f.capa_url);
   tocar(f);
 }
-
 function abrirSerie(nome){
   serieAtual=dados.filter(d=>d.serie_nome===nome)
     .sort((a,b)=>a.temporada-b.temporada||a.episodio-b.episodio);
   abrirPlayer(nome,serieAtual[0].capa_url);
   montarTemporadas();
 }
-
 function abrirPlayer(titulo,capa){
   tituloPlayer.textContent=titulo;
   capaPlayer.src=capa;
   player.style.display="flex";
 }
-
 function montarTemporadas(){
   const temps=[...new Set(serieAtual.map(e=>e.temporada))];
   selTemporada.innerHTML="";
@@ -238,7 +334,6 @@ function montarTemporadas(){
   selTemporada.onchange=montarEpisodios;
   montarEpisodios();
 }
-
 function montarEpisodios(){
   const t=Number(selTemporada.value);
   const eps=serieAtual.filter(e=>e.temporada===t);
@@ -247,7 +342,6 @@ function montarEpisodios(){
   selEpisodio.onchange=()=>tocar(eps[selEpisodio.value]);
   tocar(eps[0]);
 }
-
 function tocar(ep){
   if(lastContentId && lastContentId!==ep.id) registrar("stop");
   episodioAtual=ep;
@@ -260,20 +354,17 @@ function tocar(ep){
 
 /* ================= EVENTS ================= */
 video.addEventListener("loadedmetadata",()=>video.play());
-
 video.addEventListener("play",async()=>{
   if(isPlaying) return;
   isPlaying=true;
   await registrar("play");
   pingTimer=setInterval(()=>registrar("ping"),15000);
 });
-
 video.addEventListener("pause",()=>{
   isPlaying=false;
   clearInterval(pingTimer);
   registrar("pause");
 });
-
 function fechar(){
   isPlaying=false;
   clearInterval(pingTimer);
@@ -282,9 +373,7 @@ function fechar(){
   video.src="";
   player.style.display="none";
 }
-
 window.addEventListener("beforeunload",()=>registrar("stop"));
-
 search.oninput=()=>{
   const v=search.value.toLowerCase();
   renderHome(dados.filter(d =>
@@ -292,7 +381,6 @@ search.oninput=()=>{
     d.serie_nome?.toLowerCase().includes(v)
   ));
 };
-
 load();
 </script>
 
