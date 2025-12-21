@@ -8,102 +8,43 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;scrollbar-width:none}
-*::-webkit-scrollbar{display:none}
-
-:root{
-  --bg:#0f0f10;
-  --surface:#1b1b1e;
-  --card:#232326;
-  --accent:#e50914;
-  --text:#fff;
-  --muted:#b5b5b5;
-}
-
+*{margin:0;padding:0;box-sizing:border-box}
 body{
+  background:#0f0f10;
+  color:#fff;
   font-family:Inter,Arial,sans-serif;
-  background:var(--bg);
-  color:var(--text);
 }
-
-/* HEADER */
 header{
   height:64px;
   padding:0 40px;
   display:flex;
-  justify-content:space-between;
   align-items:center;
-  background:rgba(0,0,0,.85);
-  position:fixed;
-  top:0;left:0;right:0;
-  z-index:100;
+  background:#000;
 }
-header h1{color:var(--accent)}
-header input{
-  width:320px;
-  padding:10px 16px;
-  border-radius:999px;
-  background:#2b2b2b;
-  border:none;
-  color:#fff;
-}
+header h1{color:#e50914}
 
-/* HERO */
 .hero{
-  height:85vh;
-  padding:0 40px 80px;
+  height:70vh;
+  padding:40px;
   display:flex;
   align-items:flex-end;
   background-size:cover;
   background-position:center;
-  position:relative;
 }
-.hero::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  background:
-    linear-gradient(to right,rgba(0,0,0,.85) 35%,transparent 65%),
-    linear-gradient(to top,#0f0f10 15%,transparent 60%);
-}
-.hero-content{
-  position:relative;
-  max-width:560px;
-}
-.hero-content h2{font-size:52px;margin-bottom:12px}
-.hero-content .meta{color:var(--muted);margin-bottom:12px}
-.hero-content p{line-height:1.6;margin-bottom:22px}
-.hero-content button{
-  padding:14px 32px;
-  font-size:16px;
-  font-weight:700;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-  background:var(--accent);
-  color:#fff;
-}
+.hero h2{font-size:48px}
+.hero p{max-width:500px;margin:10px 0 20px}
 
-/* SECTIONS */
-section{padding:40px}
-section h3{margin-bottom:16px}
-
-/* GRID */
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
   gap:20px;
+  padding:40px;
 }
 .card{
-  background:var(--card);
+  background:#232326;
   border-radius:12px;
-  overflow:hidden;
   cursor:pointer;
-  transition:.25s;
-}
-.card:hover{
-  transform:scale(1.06);
-  box-shadow:0 20px 40px rgba(0,0,0,.6);
+  overflow:hidden;
 }
 .card img{
   width:100%;
@@ -115,47 +56,26 @@ section h3{margin-bottom:16px}
   font-weight:600;
 }
 
-/* PLAYER */
 #player{
   position:fixed;
   inset:0;
   background:#000;
   display:none;
-  z-index:5000;
+  z-index:999;
 }
 #close{
   position:absolute;
-  top:20px;left:20px;
+  top:20px;
+  left:20px;
   padding:10px 16px;
+  border:none;
   background:rgba(0,0,0,.6);
   color:#fff;
-  border:none;
-  border-radius:999px;
   cursor:pointer;
-  z-index:10;
 }
-#playerLayout{
-  display:grid;
-  grid-template-columns:3fr 1.4fr;
-  height:100%;
-}
-video{width:100%;height:100%}
-#sideInfo{
-  background:#111;
-  padding:32px;
-}
-#sideInfo h2{font-size:28px;margin-bottom:6px}
-#sideInfo .meta{color:var(--muted);margin-bottom:14px}
-#sideInfo p{line-height:1.6;margin-bottom:20px}
-
-select{
+video{
   width:100%;
-  padding:12px;
-  margin-bottom:12px;
-  background:#1f1f1f;
-  border:1px solid #333;
-  color:#fff;
-  border-radius:8px;
+  height:100%;
 }
 </style>
 </head>
@@ -164,108 +84,84 @@ select{
 
 <header>
   <h1>SESSÃO 99</h1>
-  <input placeholder="Buscar...">
 </header>
 
 <div class="hero" id="hero">
-  <div class="hero-content">
+  <div>
     <h2 id="heroTitle"></h2>
-    <div class="meta" id="heroMeta"></div>
     <p id="heroDesc"></p>
     <button onclick="abrirPlayer(heroItem)">▶ Assistir</button>
   </div>
 </div>
 
-<section>
-  <h3>Filmes</h3>
-  <div class="grid" id="gridFilmes"></div>
-</section>
-
-<section>
-  <h3>Séries</h3>
-  <div class="grid" id="gridSeries"></div>
-</section>
+<div class="grid" id="grid"></div>
 
 <div id="player">
-  <button id="close" onclick="fechar()">←</button>
-  <div id="playerLayout">
-    <video id="video" controls autoplay></video>
-    <div id="sideInfo">
-      <h2 id="pTitle"></h2>
-      <div class="meta" id="pMeta"></div>
-      <p id="pDesc"></p>
-      <div id="serieControls">
-        <select id="selTemporada"></select>
-        <select id="selEpisodio"></select>
-      </div>
-    </div>
-  </div>
+  <button id="close" onclick="fechar()">← Voltar</button>
+  <video id="video" controls autoplay></video>
 </div>
 
 <script>
+/* ================= SUPABASE ================= */
 const sb = supabase.createClient(
   "https://dxkszikemntfusfyrzos.supabase.co",
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-let dados=[], heroItem=null, usuario=null;
-let serieAtual=[], filmeAtual=null, pingInterval=null;
+/* ================= VARIÁVEIS ================= */
+let usuario = JSON.parse(localStorage.usuario);
+let filmes = [];
+let heroItem = null;
+let filmeAtual = null;
+let inicioTempo = null;
+let visualizacaoContada = false;
+let pingInterval = null;
 
-/* INIT */
+/* ================= INIT ================= */
 (async()=>{
-  if(!localStorage.usuario){
+  if(!usuario){
     location.href="login.html";
     return;
   }
 
-  usuario = JSON.parse(localStorage.usuario);
+  const { data } = await sb
+    .from("filmes")
+    .select("*")
+    .order("titulo");
 
-  const { data } = await sb.from("filmes").select("*").eq("ativo",true);
-  dados = data || [];
+  filmes = data || [];
 
-  heroItem = dados.find(d=>d.destaque) || dados[0];
+  heroItem = filmes[0];
   hero.style.backgroundImage = `url(${heroItem.capa_url})`;
-  heroTitle.textContent = heroItem.titulo || heroItem.serie_nome;
-  heroMeta.textContent = `${heroItem.genero} • ${heroItem.tipo}`;
+  heroTitle.textContent = heroItem.titulo;
   heroDesc.textContent = heroItem.descricao || "";
 
   render();
 })();
 
-/* RENDER */
+/* ================= RENDER ================= */
 function render(){
-  gridFilmes.innerHTML="";
-  gridSeries.innerHTML="";
-
-  dados.filter(d=>d.tipo==="filme")
-    .forEach(f=>gridFilmes.innerHTML+=card(f));
-
-  [...new Map(
-    dados.filter(d=>d.tipo==="serie")
-      .map(s=>[s.serie_nome,s])
-  ).values()]
-    .forEach(s=>gridSeries.innerHTML+=card(s));
+  grid.innerHTML = "";
+  filmes.forEach(f=>{
+    grid.innerHTML += `
+      <div class="card" onclick='abrirPlayer(${JSON.stringify(f)})'>
+        <img src="${f.capa_url}">
+        <div class="title">${f.titulo}</div>
+      </div>
+    `;
+  });
 }
 
-function card(i){
-  return `
-  <div class="card" onclick='abrirPlayer(${JSON.stringify(i)})'>
-    <img src="${i.capa_url}">
-    <div class="title">${i.titulo||i.serie_nome}</div>
-  </div>`;
-}
-
-/* PLAYER + MÉTRICAS */
+/* ================= PLAYER ================= */
 async function abrirPlayer(item){
-  player.style.display="block";
-  filmeAtual = item.id;
+  filmeAtual = item;
+  inicioTempo = Date.now();
+  visualizacaoContada = false;
 
-  // 1️⃣ incrementa total de visualizações
-  await sb.from("filmes")
-    .update({ total_visualizacoes:(item.total_visualizacoes||0)+1 })
-    .eq("id", item.id);
+  player.style.display = "block";
+  video.src = item.video_url;
 
-  // 2️⃣ marca como assistindo agora
+  /* ASSISTINDO AGORA */
   await sb.from("assistindo_agora").upsert({
     usuario_id: usuario.id,
     filme_id: item.id,
@@ -275,55 +171,58 @@ async function abrirPlayer(item){
   pingInterval = setInterval(()=>{
     sb.from("assistindo_agora")
       .update({ last_ping:new Date().toISOString() })
-      .eq("usuario_id", usuario.id)
-      .eq("filme_id", filmeAtual);
+      .eq("usuario_id",usuario.id)
+      .eq("filme_id",item.id);
   },30000);
+}
 
-  if(item.tipo==="filme"){
-    video.src=item.video_url;
-    pTitle.textContent=item.titulo;
-    pMeta.textContent=`${item.genero} • Filme`;
-    pDesc.textContent=item.descricao||"";
-    serieControls.style.display="none";
-  }else{
-    serieAtual=dados.filter(d=>d.serie_nome===item.serie_nome)
-      .sort((a,b)=>a.temporada-b.temporada||a.episodio-b.episodio);
-    serieControls.style.display="block";
-    montarSerie();
+/* ================= CONTA VISUALIZAÇÃO (2 MIN) ================= */
+setInterval(async()=>{
+  if(!inicioTempo || visualizacaoContada || !filmeAtual) return;
+
+  const segundos = Math.floor((Date.now() - inicioTempo) / 1000);
+
+  if(segundos >= 120){
+    visualizacaoContada = true;
+
+    /* EVITA DUPLICAR */
+    const { data: jaViu } = await sb
+      .from("visualizacoes")
+      .select("id")
+      .eq("usuario_id", usuario.id)
+      .eq("filme_id", filmeAtual.id)
+      .limit(1);
+
+    if(jaViu.length === 0){
+      await sb.from("visualizacoes").insert({
+        usuario_id: usuario.id,
+        filme_id: filmeAtual.id
+      });
+
+      await sb.from("filmes")
+        .update({
+          total_visualizacoes: (filmeAtual.total_visualizacoes || 0) + 1
+        })
+        .eq("id", filmeAtual.id);
+    }
   }
-}
+},5000);
 
-function montarSerie(){
-  const temps=[...new Set(serieAtual.map(e=>e.temporada))];
-  selTemporada.innerHTML=temps.map(t=>`<option>${t}</option>`).join("");
-  selTemporada.onchange=montarEpisodios;
-  montarEpisodios();
-}
-function montarEpisodios(){
-  const eps=serieAtual.filter(e=>e.temporada==selTemporada.value);
-  selEpisodio.innerHTML=eps.map((e,i)=>`<option value="${i}">Episódio ${e.episodio}</option>`).join("");
-  selEpisodio.onchange=()=>tocar(eps[selEpisodio.value]);
-  tocar(eps[0]);
-}
-function tocar(ep){
-  video.src=ep.video_url;
-  pTitle.textContent=ep.serie_nome;
-  pMeta.textContent=`Temporada ${ep.temporada} • Episódio ${ep.episodio}`;
-  pDesc.textContent=ep.descricao||"";
-}
-
+/* ================= FECHAR ================= */
 async function fechar(){
   clearInterval(pingInterval);
+  inicioTempo = null;
+
   if(filmeAtual){
     await sb.from("assistindo_agora")
       .delete()
-      .eq("usuario_id", usuario.id)
-      .eq("filme_id", filmeAtual);
+      .eq("usuario_id",usuario.id)
+      .eq("filme_id",filmeAtual.id);
   }
-  filmeAtual=null;
+
   video.pause();
-  video.src="";
-  player.style.display="none";
+  video.src = "";
+  player.style.display = "none";
 }
 </script>
 
