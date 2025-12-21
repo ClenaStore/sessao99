@@ -3,25 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <title>Login | Sessão 99</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-*{box-sizing:border-box}
+*{
+  box-sizing:border-box;
+  font-family:Inter,Arial,sans-serif;
+}
+
 body{
   margin:0;
   height:100vh;
-  font-family:Inter,Arial,sans-serif;
-  color:#fff;
-  display:flex;
-  align-items:center;
-  justify-content:center;
   overflow:hidden;
+  color:#fff;
 }
 
-/* VIDEO FUNDO */
-#bgVideo{
+/* ===== VIDEO FUNDO ===== */
+video{
   position:fixed;
   inset:0;
   width:100%;
@@ -29,71 +29,108 @@ body{
   object-fit:cover;
   z-index:-2;
 }
-#bgOverlay{
+
+.bg{
   position:fixed;
   inset:0;
-  background:linear-gradient(to right,rgba(0,0,0,.9) 40%,rgba(0,0,0,.5));
+  background:linear-gradient(90deg,rgba(0,0,0,.85) 40%,rgba(0,0,0,.4));
   z-index:-1;
 }
 
-/* CONTAINER */
+/* ===== CONTAINER ===== */
 .container{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
   width:420px;
   background:rgba(0,0,0,.55);
-  padding:36px;
-  border-radius:16px;
-  backdrop-filter:blur(10px);
+  backdrop-filter:blur(12px);
+  padding:40px;
+  border-radius:18px;
 }
 
+/* ===== FORM ===== */
 h1{
-  font-size:40px;
-  margin:0 0 26px;
+  margin:0 0 30px;
+  font-size:38px;
 }
 h1 span{color:#a855f7}
 
+.group{
+  margin-bottom:22px;
+}
+
 label{
-  display:block;
-  margin-bottom:6px;
   font-size:14px;
+  color:#cbd5f5;
+  margin-bottom:6px;
+  display:block;
 }
 
 input{
   width:100%;
-  padding:14px;
-  margin-bottom:16px;
-  border-radius:10px;
-  border:1px solid #333;
-  background:#0b0b0b;
+  padding:14px 16px;
+  font-size:15px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.15);
+  background:rgba(0,0,0,.4);
   color:#fff;
 }
 
-button{
+input:focus{
+  outline:none;
+  border-color:#a855f7;
+}
+
+/* ===== BOTÃO ===== */
+.btn{
+  margin-top:10px;
   width:100%;
-  padding:14px;
-  border:none;
-  border-radius:12px;
-  background:linear-gradient(90deg,#7c3aed,#ec4899);
-  color:#fff;
+  padding:15px;
   font-size:16px;
+  border:none;
+  border-radius:14px;
+  background:linear-gradient(135deg,#7c3aed,#ec4899);
+  color:white;
   font-weight:700;
   cursor:pointer;
+  position:relative;
 }
 
+/* Loading local (IGUAL AO INDEX QUE FUNCIONA) */
+.btn.loading{
+  pointer-events:none;
+  opacity:.85;
+}
+.btn.loading::after{
+  content:"Aguarde...";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(135deg,#7c3aed,#ec4899);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:14px;
+}
+
+/* ===== LINKS ===== */
 .link{
-  margin-top:16px;
+  margin-top:18px;
   text-align:center;
+  font-size:14px;
+  color:#ddd;
   cursor:pointer;
   text-decoration:underline;
-  color:#ddd;
 }
 
 .msg{
   margin-top:14px;
-  color:#facc15;
   min-height:18px;
+  color:#facc15;
 }
 
-/* MODAL */
+/* ===== MODAL ===== */
 .modal{
   position:fixed;
   inset:0;
@@ -102,11 +139,12 @@ button{
   align-items:center;
   justify-content:center;
 }
+
 .modal-box{
   width:420px;
   background:#0b0b0b;
-  padding:30px;
-  border-radius:16px;
+  padding:34px;
+  border-radius:18px;
 }
 .modal-box h2{margin-top:0}
 </style>
@@ -114,25 +152,29 @@ button{
 
 <body>
 
-<!-- VIDEO FUNDO -->
-<video id="bgVideo" autoplay muted loop playsinline>
-  <source src="SEU_VIDEO_AQUI.mp4" type="video/mp4">
+<!-- VIDEO -->
+<video autoplay muted loop playsinline>
+  <source src="SEU_VIDEO.mp4" type="video/mp4">
 </video>
-<div id="bgOverlay"></div>
+<div class="bg"></div>
 
+<!-- LOGIN -->
 <div class="container">
   <h1>Sessão <span>99</span></h1>
 
-  <label>Email</label>
-  <input id="email" type="email">
+  <div class="group">
+    <label>Email</label>
+    <input id="email" type="email">
+  </div>
 
-  <label>Senha</label>
-  <input id="senha" type="password">
+  <div class="group">
+    <label>Senha</label>
+    <input id="senha" type="password">
+  </div>
 
-  <button id="btnLogin">Entrar</button>
+  <button id="btnLogin" class="btn">Entrar</button>
 
   <div class="link" id="abrirCadastro">Ainda não tenho uma conta</div>
-
   <div class="msg" id="msg"></div>
 </div>
 
@@ -141,78 +183,99 @@ button{
   <div class="modal-box">
     <h2>Criar conta</h2>
 
-    <input id="c_email" placeholder="Email">
-    <input id="c_cpf" placeholder="CPF">
-    <input id="c_whats" placeholder="WhatsApp">
-    <input id="c_senha" type="password" placeholder="Senha">
-    <input id="c_confirma" type="password" placeholder="Confirmar senha">
+    <div class="group">
+      <label>Email</label>
+      <input id="c_email">
+    </div>
 
-    <button id="btnCadastro">Cadastrar</button>
+    <div class="group">
+      <label>CPF</label>
+      <input id="c_cpf">
+    </div>
+
+    <div class="group">
+      <label>WhatsApp</label>
+      <input id="c_whats">
+    </div>
+
+    <div class="group">
+      <label>Senha</label>
+      <input id="c_senha" type="password">
+    </div>
+
+    <div class="group">
+      <label>Confirmar senha</label>
+      <input id="c_confirma" type="password">
+    </div>
+
+    <button id="btnCadastro" class="btn">Cadastrar</button>
     <div class="link" id="fecharCadastro">Cancelar</div>
   </div>
 </div>
 
 <script>
-/* SUPABASE */
-const supabase = supabase.createClient(
+const sb = supabase.createClient(
   "https://dxkszikemntfusfyrzos.supabase.co",
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-/* ELEMENTOS */
-const modal = document.getElementById("modal");
-const msg = document.getElementById("msg");
-
 /* MODAL */
-abrirCadastro.onclick = ()=> modal.style.display="flex";
-fecharCadastro.onclick = ()=> modal.style.display="none";
-modal.onclick = e=>{ if(e.target===modal) modal.style.display="none"; };
+abrirCadastro.onclick = () => modal.style.display="flex";
+fecharCadastro.onclick = () => modal.style.display="none";
+modal.onclick = e => { if(e.target === modal) modal.style.display="none"; };
 
 /* LOGIN */
-btnLogin.onclick = async ()=>{
-  msg.textContent="";
+btnLogin.onclick = async () => {
+  msg.textContent = "";
+  btnLogin.classList.add("loading");
 
   const e = email.value.trim();
   const s = senha.value;
 
   if(!e || !s){
-    msg.textContent="Preencha email e senha";
+    msg.textContent = "Preencha email e senha";
+    btnLogin.classList.remove("loading");
     return;
   }
 
-  const { data, error } = await supabase
+  const { data } = await sb
     .from("usuarios")
     .select("*")
     .eq("email", e)
     .eq("senha", s)
     .single();
 
-  if(error || !data){
-    msg.textContent="Usuário ou senha inválidos";
+  btnLogin.classList.remove("loading");
+
+  if(!data){
+    msg.textContent = "Usuário ou senha inválidos";
     return;
   }
 
   const agora = new Date();
   const expira = new Date(data.trial_expires_at);
 
-  if(data.status==="aprovado" || agora <= expira){
+  if(data.status === "aprovado" || agora <= expira){
     localStorage.usuario = JSON.stringify(data);
     window.location.href = "index.html";
   }else{
-    msg.textContent="Seu teste expirou. Aguarde aprovação.";
+    msg.textContent = "Seu teste expirou. Aguarde aprovação.";
   }
 };
 
 /* CADASTRO */
-btnCadastro.onclick = async ()=>{
+btnCadastro.onclick = async () => {
+  btnCadastro.classList.add("loading");
+
   if(c_senha.value !== c_confirma.value){
     alert("Senhas não conferem");
+    btnCadastro.classList.remove("loading");
     return;
   }
 
   const trial = new Date(Date.now() + 86400000);
 
-  const { error } = await supabase.from("usuarios").insert({
+  const { error } = await sb.from("usuarios").insert({
     email: c_email.value.trim(),
     cpf: c_cpf.value.trim(),
     whatsapp: c_whats.value.trim(),
@@ -221,12 +284,14 @@ btnCadastro.onclick = async ()=>{
     trial_expires_at: trial.toISOString()
   });
 
+  btnCadastro.classList.remove("loading");
+
   if(error){
     alert("Erro ao cadastrar. Email ou CPF já existe.");
     return;
   }
 
-  alert("Cadastro criado! Você tem 1 dia de teste.");
+  alert("Cadastro criado! Teste grátis liberado.");
   modal.style.display="none";
 };
 </script>
