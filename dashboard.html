@@ -15,24 +15,22 @@
   --accent:#e50914;
   --text:#fff;
   --muted:#aaa;
-  --green:#22c55e;
 }
-*{box-sizing:border-box}
+
 body{
   margin:0;
   font-family:Inter,Arial,sans-serif;
   background:var(--bg);
   color:var(--text);
 }
+
 header{
   padding:20px 32px;
   background:#000;
   position:sticky;
   top:0;
-  z-index:10;
 }
 header h1{margin:0;color:var(--accent)}
-header small{color:var(--muted)}
 
 main{
   padding:32px;
@@ -40,7 +38,6 @@ main{
   gap:32px;
 }
 
-/* KPIs */
 .kpis{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
@@ -54,27 +51,14 @@ main{
 .kpi span{color:var(--muted);font-size:13px}
 .kpi strong{font-size:34px;display:block;margin-top:6px}
 
-/* ONLINE */
-.online-user{
-  background:var(--card);
-  padding:12px 16px;
-  border-radius:12px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  font-size:14px;
-}
-.dot{
-  width:10px;height:10px;border-radius:50%;
-  background:var(--green);
-}
+.section h2{margin:0 0 14px;font-size:20px}
 
-/* GRID */
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
   gap:18px;
 }
+
 .card{
   background:var(--card);
   border-radius:14px;
@@ -90,10 +74,13 @@ main{
 }
 .card-info strong{display:block}
 .card-info span{font-size:12px;color:var(--muted)}
-.badge{margin-top:6px;font-size:12px}
 
-/* SECTIONS */
-.section h2{margin:0 0 14px;font-size:20px}
+footer{
+  text-align:right;
+  font-size:12px;
+  color:var(--muted);
+}
+
 canvas{
   background:var(--card);
   border-radius:14px;
@@ -106,40 +93,58 @@ canvas{
 
 <header>
   <h1>📊 Dashboard • Sessão 99</h1>
-  <small>Última atualização: <span id="lastUpdate">--</span></small>
 </header>
 
 <main>
 
 <!-- KPIs -->
 <div class="kpis">
-  <div class="kpi"><span>👀 Online agora</span><strong id="kpiOnline">0</strong></div>
-  <div class="kpi"><span>▶ Hoje</span><strong id="kpiHoje">0</strong></div>
-  <div class="kpi"><span>📅 Semana</span><strong id="kpiSemana">0</strong></div>
-</div>
-
-<!-- ONLINE -->
-<div class="section">
-  <h2>🟢 Usuários online</h2>
-  <div id="listaOnline"></div>
+  <div class="kpi">
+    <span>👀 Online agora</span>
+    <strong id="kpiOnline">0</strong>
+  </div>
+  <div class="kpi">
+    <span>▶ Visualizações hoje</span>
+    <strong id="kpiHoje">0</strong>
+  </div>
+  <div class="kpi">
+    <span>📅 Visualizações semana</span>
+    <strong id="kpiSemana">0</strong>
+  </div>
 </div>
 
 <!-- TOP AGORA -->
 <div class="section">
-  <h2>🔥 Mais assistidos agora</h2>
+  <h2>🔥 Top 10 assistindo agora</h2>
   <div class="grid" id="topAgora"></div>
+</div>
+
+<!-- TOP DIA -->
+<div class="section">
+  <h2>🏆 Top do dia</h2>
+  <div class="grid" id="topDia"></div>
+</div>
+
+<!-- TOP SEMANA -->
+<div class="section">
+  <h2>📅 Top da semana</h2>
+  <div class="grid" id="topSemana"></div>
 </div>
 
 <!-- GRÁFICOS -->
 <div class="section">
   <h2>📊 Categorias mais assistidas</h2>
-  <canvas id="chartCategoria" height="140"></canvas>
+  <canvas id="chartCategorias"></canvas>
 </div>
 
 <div class="section">
   <h2>🎭 Gêneros mais assistidos</h2>
-  <canvas id="chartGenero" height="140"></canvas>
+  <canvas id="chartGeneros"></canvas>
 </div>
+
+<footer>
+  Última atualização: <span id="lastUpdate">--</span>
+</footer>
 
 </main>
 
@@ -151,68 +156,91 @@ const sb = supabase.createClient(
 
 let chartCat, chartGen;
 
-/* DASHBOARD */
 async function loadDashboard(){
-  lastUpdate.textContent = new Date().toLocaleTimeString();
-
-  /* ONLINE */
-  const { data: online } = await sb
-    .from("assistindo_agora")
-    .select("usuario_id, filme_id")
-    .gte("last_ping", new Date(Date.now()-30000).toISOString());
-
-  kpiOnline.textContent = online.length;
-  listaOnline.innerHTML = "";
-  online.forEach(u=>{
-    listaOnline.innerHTML+=`
-      <div class="online-user">
-        <span>${u.usuario_id.slice(0,8)}...</span>
-        <span class="dot"></span>
-      </div>`;
-  });
-
-  /* VISUALIZAÇÕES */
+  const now = new Date();
   const hoje = new Date(); hoje.setHours(0,0,0,0);
   const semana = new Date(); semana.setDate(semana.getDate()-7);
 
-  const { data: vis } = await sb
-    .from("visualizacoes")
-    .select("filme_id, created_at");
+  document.getElementById("lastUpdate").textContent =
+    new Date().toLocaleString();
 
-  kpiHoje.textContent = vis.filter(v=>new Date(v.created_at)>=hoje).length;
-  kpiSemana.textContent = vis.filter(v=>new Date(v.created_at)>=semana).length;
+  /* ONLINE AGORA */
+  const { data: online } = await sb
+    .from("assistindo_agora")
+    .select("usuario_id, filme_id, last_ping")
+    .gte("last_ping", new Date(Date.now()-30000).toISOString());
+
+  document.getElementById("kpiOnline").textContent = online.length;
 
   /* FILMES */
   const { data: filmes } = await sb.from("filmes").select("*");
 
-  /* TOP AGORA */
+  /* TOP AGORA (assistindo_agora) */
   const mapAgora = {};
   online.forEach(o=>{
-    if(!mapAgora[o.filme_id]) mapAgora[o.filme_id]=new Set();
-    mapAgora[o.filme_id].add(o.usuario_id);
+    mapAgora[o.filme_id]=(mapAgora[o.filme_id]||0)+1;
   });
 
-  topAgora.innerHTML="";
-  Object.entries(mapAgora)
-    .map(([id,users])=>({id,total:users.size}))
-    .sort((a,b)=>b.total-a.total)
+  renderTop(
+    "topAgora",
+    mapAgora,
+    filmes,
+    "👀 assistindo agora"
+  );
+
+  /* VISUALIZAÇÕES */
+  const { data: vis } = await sb
+    .from("visualizacoes")
+    .select("filme_id, created_at");
+
+  document.getElementById("kpiHoje").textContent =
+    vis.filter(v=>new Date(v.created_at)>=hoje).length;
+
+  document.getElementById("kpiSemana").textContent =
+    vis.filter(v=>new Date(v.created_at)>=semana).length;
+
+  renderTop(
+    "topDia",
+    countBy(vis.filter(v=>new Date(v.created_at)>=hoje)),
+    filmes,
+    "👁 hoje"
+  );
+
+  renderTop(
+    "topSemana",
+    countBy(vis.filter(v=>new Date(v.created_at)>=semana)),
+    filmes,
+    "👁 semana"
+  );
+
+  renderCharts(vis, filmes);
+}
+
+function countBy(list){
+  const map={};
+  list.forEach(v=>map[v.filme_id]=(map[v.filme_id]||0)+1);
+  return map;
+}
+
+function renderTop(containerId, map, filmes, label){
+  const container = document.getElementById(containerId);
+  container.innerHTML="";
+  Object.entries(map)
+    .sort((a,b)=>b[1]-a[1])
     .slice(0,10)
-    .forEach(r=>{
-      const f = filmes.find(x=>x.id===r.id);
+    .forEach(([id,total])=>{
+      const f = filmes.find(x=>x.id===id);
       if(!f) return;
-      topAgora.innerHTML+=`
+      container.innerHTML+=`
         <div class="card">
           <img src="${f.capa_url}">
           <div class="card-info">
-            <strong>${f.titulo||f.serie_nome}</strong>
-            <span>${f.genero} • ${f.tipo}</span>
-            <div class="badge">👀 ${r.total} agora</div>
+            <strong>${f.titulo}</strong>
+            <span>${f.categoria}</span>
+            <div>${label}: ${total}</div>
           </div>
         </div>`;
     });
-
-  /* GRÁFICOS */
-  renderCharts(vis, filmes);
 }
 
 function renderCharts(vis, filmes){
@@ -221,26 +249,28 @@ function renderCharts(vis, filmes){
   vis.forEach(v=>{
     const f = filmes.find(x=>x.id===v.filme_id);
     if(!f) return;
-    cat[f.tipo]=(cat[f.tipo]||0)+1;
-    gen[f.genero]=(gen[f.genero]||0)+1;
+    if(f.categoria) cat[f.categoria]=(cat[f.categoria]||0)+1;
+    if(f.genero) gen[f.genero]=(gen[f.genero]||0)+1;
   });
 
   if(chartCat) chartCat.destroy();
-  chartCat = new Chart(chartCategoria,{
-    type:"doughnut",
-    data:{labels:Object.keys(cat),datasets:[{data:Object.values(cat)}]}
+  if(chartGen) chartGen.destroy();
+
+  chartCat = new Chart(chartCategorias,{
+    type:"bar",
+    data:{labels:Object.keys(cat),datasets:[{data:Object.values(cat),backgroundColor:"#e50914"}]},
+    options:{plugins:{legend:{display:false}}}
   });
 
-  if(chartGen) chartGen.destroy();
-  chartGen = new Chart(chartGenero,{
-    type:"bar",
-    data:{labels:Object.keys(gen),datasets:[{data:Object.values(gen),backgroundColor:"#e50914"}]},
-    options:{plugins:{legend:{display:false}}}
+  chartGen = new Chart(chartGeneros,{
+    type:"doughnut",
+    data:{labels:Object.keys(gen),datasets:[{data:Object.values(gen)}]},
+    options:{plugins:{legend:{position:"bottom"}}}
   });
 }
 
 /* REALTIME */
-sb.channel("dashboard-live")
+sb.channel("dashboard-realtime")
   .on("postgres_changes",{event:"*",schema:"public",table:"assistindo_agora"},loadDashboard)
   .on("postgres_changes",{event:"*",schema:"public",table:"visualizacoes"},loadDashboard)
   .subscribe();
