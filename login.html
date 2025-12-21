@@ -78,35 +78,39 @@ button:disabled{
 .msg{
   margin-top:14px;
   color:#facc15;
+  min-height:18px;
 }
 
-/* OVERLAY LOADING */
-#loading{
+/* OVERLAY GLOBAL */
+#overlay{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.75);
+  background:rgba(0,0,0,.78);
   display:none;
   align-items:center;
   justify-content:center;
-  z-index:20;
-}
-#loading span{
-  padding:20px 26px;
-  background:#0b0b0b;
-  border-radius:14px;
-  font-weight:700;
+  z-index:50;
 }
 
-/* MODAL */
+#overlay .box{
+  background:#0b0b0b;
+  padding:24px 30px;
+  border-radius:14px;
+  font-weight:700;
+  text-align:center;
+}
+
+/* MODAL CADASTRO */
 .modal{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.8);
+  background:rgba(0,0,0,.85);
   display:none;
   align-items:center;
   justify-content:center;
-  z-index:10;
+  z-index:40;
 }
+
 .modal-content{
   width:420px;
   background:#0b0b0b;
@@ -119,8 +123,10 @@ button:disabled{
 
 <body>
 
-<!-- LOADING -->
-<div id="loading"><span>Aguarde...</span></div>
+<!-- OVERLAY GLOBAL -->
+<div id="overlay">
+  <div class="box" id="overlayText">Aguarde...</div>
+</div>
 
 <div class="container">
   <h1>Faça seu Login<span>.</span></h1>
@@ -160,47 +166,55 @@ const supabase = supabase.createClient(
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
+/* ELEMENTOS */
+const overlay = document.getElementById("overlay");
+const overlayText = document.getElementById("overlayText");
 const modal = document.getElementById("modal");
-const loading = document.getElementById("loading");
 const msg = document.getElementById("msg");
+const btnLogin = document.getElementById("btnLogin");
+const btnCadastro = document.getElementById("btnCadastro");
 
 /* HELPERS */
-const showLoading = () => loading.style.display="flex";
-const hideLoading = () => loading.style.display="none";
+function showOverlay(text="Aguarde..."){
+  overlayText.textContent = text;
+  overlay.style.display = "flex";
+}
+function hideOverlay(){
+  overlay.style.display = "none";
+}
+function showMsg(text){
+  msg.textContent = text;
+}
 
 /* ABRIR / FECHAR CADASTRO */
-document.getElementById("linkCadastro").onclick = () => {
-  modal.style.display="flex";
-};
-
-document.getElementById("cancelar").onclick = () => {
-  modal.style.display="none";
-};
-
-modal.onclick = (e) => {
-  if(e.target === modal) modal.style.display="none";
-};
+document.getElementById("linkCadastro").onclick = () => modal.style.display="flex";
+document.getElementById("cancelar").onclick = () => modal.style.display="none";
+modal.onclick = e => { if(e.target === modal) modal.style.display="none"; };
 
 /* LOGIN */
-document.getElementById("btnLogin").onclick = login;
-
-async function login(){
-  msg.textContent="";
-  showLoading();
+btnLogin.onclick = async () => {
+  showMsg("");
+  btnLogin.disabled = true;
+  showOverlay("Verificando acesso...");
 
   try{
     const emailVal = email.value.trim();
     const senhaVal = senha.value;
 
-    const { data } = await supabase
+    if(!emailVal || !senhaVal){
+      showMsg("Preencha email e senha");
+      return;
+    }
+
+    const { data, error } = await supabase
       .from("usuarios")
       .select("*")
       .eq("email", emailVal)
       .eq("senha", senhaVal)
       .single();
 
-    if(!data){
-      msg.textContent="Usuário ou senha inválidos";
+    if(error || !data){
+      showMsg("Usuário ou senha inválidos");
       return;
     }
 
@@ -213,26 +227,33 @@ async function login(){
     }
 
     const expira = new Date(data.trial_expires_at);
-
     if(agora <= expira){
-      alert("Conta pendente. Você está usando o teste grátis.");
+      alert("Conta pendente. Teste grátis ativo.");
       localStorage.usuario = JSON.stringify(data);
       window.location.href = "index.html";
     }else{
-      msg.textContent="Seu teste expirou. Aguarde aprovação.";
+      showMsg("Seu teste expirou. Aguarde aprovação.");
     }
+
+  }catch(e){
+    showMsg("Erro de conexão. Tente novamente.");
   }finally{
-    hideLoading();
+    hideOverlay();
+    btnLogin.disabled = false;
   }
-}
+};
 
 /* CADASTRO */
-document.getElementById("btnCadastro").onclick = cadastrar;
-
-async function cadastrar(){
-  showLoading();
+btnCadastro.onclick = async () => {
+  btnCadastro.disabled = true;
+  showOverlay("Criando conta...");
 
   try{
+    if(!c_email.value || !c_cpf.value || !c_whats.value || !c_senha.value){
+      alert("Preencha todos os campos");
+      return;
+    }
+
     if(c_senha.value !== c_confirma.value){
       alert("Senhas não conferem");
       return;
@@ -243,9 +264,9 @@ async function cadastrar(){
     const { error } = await supabase
       .from("usuarios")
       .insert({
-        email: c_email.value,
-        cpf: c_cpf.value,
-        whatsapp: c_whats.value,
+        email: c_email.value.trim(),
+        cpf: c_cpf.value.trim(),
+        whatsapp: c_whats.value.trim(),
         senha: c_senha.value,
         status: "pendente",
         trial_expires_at: trial.toISOString()
@@ -257,11 +278,15 @@ async function cadastrar(){
     }
 
     alert("Cadastro realizado! Você tem 1 dia de teste.");
-    modal.style.display="none";
+    modal.style.display = "none";
+
+  }catch(e){
+    alert("Erro ao registrar. Tente novamente.");
   }finally{
-    hideLoading();
+    hideOverlay();
+    btnCadastro.disabled = false;
   }
-}
+};
 </script>
 
 </body>
