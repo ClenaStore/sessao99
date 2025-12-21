@@ -9,11 +9,13 @@
 <style>
 :root{
   --bg:#000;
+  --panel:#111;
   --text:#fff;
-  --muted:#bbb;
+  --muted:#b3b3b3;
   --accent:#e50914;
 }
 *{box-sizing:border-box}
+
 body{
   margin:0;
   background:var(--bg);
@@ -26,16 +28,21 @@ header{
   position:fixed;
   top:0;left:0;right:0;
   z-index:100;
-  padding:18px 40px;
+  padding:18px 48px;
   display:flex;
   justify-content:space-between;
-  background:linear-gradient(to bottom,rgba(0,0,0,.85),transparent);
+  align-items:center;
+  background:linear-gradient(to bottom,rgba(0,0,0,.9),rgba(0,0,0,.4),transparent);
 }
-.logo{font-size:26px;font-weight:800}
+.logo{
+  font-size:26px;
+  font-weight:900;
+  letter-spacing:1px;
+}
 .logo span{color:var(--accent)}
 header input{
-  width:280px;
-  padding:10px 16px;
+  width:300px;
+  padding:12px 18px;
   border-radius:999px;
   border:none;
   background:#111;
@@ -43,13 +50,21 @@ header input{
 }
 
 /* HOME */
-#home{padding:100px 0 80px}
-section{margin-bottom:40px}
-section h2{margin:0 0 14px 40px;font-size:22px}
+#home{
+  padding-top:100px;
+  padding-bottom:80px;
+}
+.section{
+  margin-bottom:46px;
+}
+.section h2{
+  margin:0 0 16px 48px;
+  font-size:22px;
+}
 .row{
   display:flex;
   gap:16px;
-  padding:0 40px;
+  padding:0 48px;
   overflow-x:auto;
 }
 .row::-webkit-scrollbar{display:none}
@@ -59,6 +74,7 @@ section h2{margin:0 0 14px 40px;font-size:22px}
   min-width:200px;
   cursor:pointer;
   transition:.3s;
+  position:relative;
 }
 .card img{
   width:100%;
@@ -66,53 +82,59 @@ section h2{margin:0 0 14px 40px;font-size:22px}
   object-fit:cover;
   border-radius:4px;
 }
-.card:hover{transform:scale(1.1)}
+.card:hover{
+  transform:scale(1.1);
+  z-index:10;
+}
 
 /* DETAILS */
 #details{
   display:none;
   position:fixed;
   inset:0;
-  background:#000;
   z-index:200;
-  overflow:hidden;
+  background:#000;
 }
 
-/* BACKGROUND VIDEO */
-.details-video{
+/* VIDEO BACKGROUND */
+.details-bg{
   position:absolute;
   inset:0;
   z-index:1;
 }
-.details-video video{
+.details-bg video{
   width:100%;
   height:100%;
   object-fit:cover;
 }
 
-/* DEGRADE */
-.details-video::after{
+/* DEGRADÊ */
+.details-bg::after{
   content:"";
   position:absolute;
   inset:0;
   background:
-    linear-gradient(to right,rgba(0,0,0,.9) 15%,rgba(0,0,0,.5) 45%,transparent),
-    linear-gradient(to top,rgba(0,0,0,.8) 10%,transparent 40%);
+    linear-gradient(to right,rgba(0,0,0,.95) 15%,rgba(0,0,0,.6) 45%,transparent),
+    linear-gradient(to top,rgba(0,0,0,.9) 10%,transparent 45%);
 }
 
-/* CONTENT */
-.details-content{
+/* INFO */
+.details-info{
   position:relative;
   z-index:2;
-  height:100%;
   padding:120px 60px;
-  max-width:600px;
+  max-width:620px;
 }
-.details-content h1{
+.details-info h1{
   font-size:42px;
   margin:0 0 16px;
 }
-.details-content p{
+.meta{
+  color:#46d369;
+  font-weight:600;
+  margin-bottom:12px;
+}
+.details-info p{
   color:var(--muted);
   line-height:1.5;
   font-size:16px;
@@ -121,8 +143,8 @@ section h2{margin:0 0 14px 40px;font-size:22px}
 /* CLOSE */
 .close{
   position:absolute;
-  top:20px;
-  left:20px;
+  top:24px;
+  left:24px;
   z-index:3;
   background:rgba(0,0,0,.6);
   border:none;
@@ -133,13 +155,29 @@ section h2{margin:0 0 14px 40px;font-size:22px}
   cursor:pointer;
 }
 
+/* RECOMENDAÇÕES */
+.reco{
+  position:absolute;
+  bottom:0;
+  left:0;
+  right:0;
+  padding:0 0 40px;
+}
+.reco h2{
+  margin:0 0 12px 48px;
+}
+.reco .row{padding:0 48px}
+
 /* MOBILE */
 @media(max-width:900px){
-  .details-content{
+  header{padding:14px 20px}
+  .details-info{
     padding:100px 20px;
     max-width:100%;
   }
-  .details-content h1{font-size:28px}
+  .details-info h1{font-size:28px}
+  .row{padding:0 20px}
+  .section h2,.reco h2{margin-left:20px}
 }
 </style>
 </head>
@@ -148,7 +186,7 @@ section h2{margin:0 0 14px 40px;font-size:22px}
 
 <header>
   <div class="logo">SESSÃO <span>99</span></div>
-  <input id="search" placeholder="Buscar">
+  <input id="search" placeholder="Buscar filmes ou séries">
 </header>
 
 <div id="home"></div>
@@ -157,17 +195,30 @@ section h2{margin:0 0 14px 40px;font-size:22px}
 <div id="details">
   <button class="close" onclick="fecharDetails()">⬅</button>
 
-  <div class="details-video">
-    <video id="previewVideo" muted autoplay loop playsinline></video>
+  <div class="details-bg">
+    <video id="previewVideo"
+      muted
+      autoplay
+      loop
+      playsinline
+      preload="auto">
+    </video>
   </div>
 
-  <div class="details-content">
+  <div class="details-info">
+    <div class="meta" id="detailsMeta"></div>
     <h1 id="detailsTitulo"></h1>
     <p id="detailsDesc"></p>
+  </div>
+
+  <div class="reco">
+    <h2>Recomendações</h2>
+    <div class="row" id="recoRow"></div>
   </div>
 </div>
 
 <script>
+/* SUPABASE */
 const supabaseClient = supabase.createClient(
   "https://dxkszikemntfusfyrzos.supabase.co",
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
@@ -181,7 +232,11 @@ let dados=[], atual=null;
 
 /* LOAD */
 async function load(){
-  const {data}=await supabaseClient.from("filmes").select("*").eq("ativo",true);
+  const {data}=await supabaseClient
+    .from("filmes")
+    .select("*")
+    .eq("ativo",true);
+
   dados=data||[];
   renderHome(dados);
 }
@@ -190,21 +245,30 @@ async function load(){
 function renderHome(list){
   home.innerHTML="";
   const filmes=list.filter(i=>i.tipo==="filme");
-  renderRow("Filmes",filmes,abrirDetails);
+  const series=[...new Map(
+    list.filter(i=>i.tipo==="serie").map(s=>[s.serie_nome,s])
+  ).values()];
+
+  renderSection("Filmes",filmes);
+  renderSection("Séries",series);
 }
 
-function renderRow(titulo,itens,click){
-  const sec=document.createElement("section");
+function renderSection(titulo,itens){
+  if(!itens.length)return;
+  const sec=document.createElement("div");
+  sec.className="section";
   sec.innerHTML=`<h2>${titulo}</h2>`;
   const row=document.createElement("div");
   row.className="row";
+
   itens.forEach(i=>{
     const c=document.createElement("div");
     c.className="card";
     c.innerHTML=`<img src="${i.capa_url}">`;
-    c.onclick=()=>click(i);
+    c.onclick=()=>abrirDetails(i);
     row.appendChild(c);
   });
+
   sec.appendChild(row);
   home.appendChild(sec);
 }
@@ -212,10 +276,23 @@ function renderRow(titulo,itens,click){
 /* DETAILS */
 function abrirDetails(item){
   atual=item;
-  document.getElementById("detailsTitulo").textContent=item.titulo;
-  document.getElementById("detailsDesc").textContent=item.descricao||"";
+
+  document.getElementById("detailsTitulo").textContent =
+    item.titulo || item.serie_nome;
+
+  document.getElementById("detailsDesc").textContent =
+    item.descricao || "Sem descrição disponível.";
+
+  document.getElementById("detailsMeta").textContent =
+    item.tipo==="serie" ? "Série" : "Filme";
+
+  previewVideo.pause();
   previewVideo.src=item.video_url;
-  previewVideo.play();
+  previewVideo.load();
+
+  previewVideo.play().catch(()=>{});
+
+  renderRecomendacoes(item);
   details.style.display="block";
 }
 
@@ -223,6 +300,21 @@ function fecharDetails(){
   previewVideo.pause();
   previewVideo.src="";
   details.style.display="none";
+}
+
+function renderRecomendacoes(item){
+  const row=document.getElementById("recoRow");
+  row.innerHTML="";
+  dados
+    .filter(d=>d.id!==item.id)
+    .slice(0,10)
+    .forEach(r=>{
+      const c=document.createElement("div");
+      c.className="card";
+      c.innerHTML=`<img src="${r.capa_url}">`;
+      c.onclick=()=>abrirDetails(r);
+      row.appendChild(c);
+    });
 }
 
 load();
