@@ -93,12 +93,28 @@ body{
 
 .actions{
   margin-top:16px;
+  display:flex;
+  gap:10px;
 }
 .actions button{
   padding:12px 22px;
   font-weight:700;
   border:none;
   cursor:pointer;
+}
+
+/* ATIVAR SOM */
+#soundUnlock{
+  position:absolute;
+  right:30px;
+  bottom:140px;
+  padding:12px 18px;
+  font-weight:700;
+  background:#fff;
+  color:#000;
+  border:none;
+  cursor:pointer;
+  display:none;
 }
 
 /* SERIES CONTROLS */
@@ -154,8 +170,9 @@ body{
 <div id="home"></div>
 
 <div id="player">
-  <!-- CONTROLES NATIVOS ATIVOS -->
   <video id="video" controls autoplay playsinline></video>
+
+  <button id="soundUnlock" onclick="ativarSom()">🔊 Ativar som</button>
 
   <div id="overlay">
     <div id="info">
@@ -188,10 +205,13 @@ const supabaseClient = supabase.createClient(
 const home=document.getElementById("home");
 const player=document.getElementById("player");
 const video=document.getElementById("video");
+const soundBtn=document.getElementById("soundUnlock");
+
 const tipoBadge=document.getElementById("tipoBadge");
 const seriesControls=document.getElementById("seriesControls");
 const selTemporada=document.getElementById("selTemporada");
 const selEpisodio=document.getElementById("selEpisodio");
+
 const suggestions=document.getElementById("suggestions");
 const sugRow=document.getElementById("sugRow");
 
@@ -204,8 +224,6 @@ async function load(){
  dados=data||[];
  renderHome();
 }
-
-/* HOME */
 function renderHome(){
  home.innerHTML="";
  renderSection("Filmes",dados.filter(d=>d.tipo==="filme"));
@@ -254,8 +272,26 @@ function abrir(item){
  }
 
  video.src=item.video_url;
+
+ if(localStorage.getItem("audioUnlocked")){
+   video.muted=false;
+   soundBtn.style.display="none";
+ }else{
+   video.muted=true;
+   soundBtn.style.display="block";
+ }
+
  video.play();
  iniciarTimer();
+}
+
+/* ATIVAR SOM */
+function ativarSom(){
+ video.muted=false;
+ video.volume=1;
+ video.play();
+ localStorage.setItem("audioUnlocked","1");
+ soundBtn.style.display="none";
 }
 
 /* SERIES */
@@ -281,11 +317,12 @@ function trocarEpisodio(eps,i){
  atual=eps[i];
  video.pause();
  video.src=atual.video_url;
+ if(localStorage.getItem("audioUnlocked")) video.muted=false;
  video.play();
  iniciarTimer();
 }
 
-/* AUTOPLAY PRÓXIMO EPISÓDIO */
+/* AUTO NEXT */
 video.addEventListener("ended",()=>{
  if(atual.tipo==="serie"){
   const t=Number(selTemporada.value);
@@ -302,8 +339,6 @@ function iniciarTimer(){
  clearTimeout(hideTimer);
  hideTimer=setTimeout(()=>document.body.classList.add("hide-ui"),30000);
 }
-
-/* ASSISTIR */
 function assistir(){
  document.body.classList.add("hide-ui");
  clearTimeout(hideTimer);
