@@ -32,7 +32,7 @@ header{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  background:rgba(0,0,0,.8);
+  background:rgba(0,0,0,.85);
   backdrop-filter:blur(10px);
   position:sticky;
   top:0;
@@ -74,7 +74,6 @@ th{color:var(--muted);text-align:left}
 
 canvas{height:260px!important}
 
-/* TOP CARD */
 .top-card{
   display:flex;
   gap:14px;
@@ -90,22 +89,8 @@ canvas{height:260px!important}
   object-fit:cover;
   border-radius:10px;
 }
-.top-info{
-  flex:1;
-}
-.top-info strong{
-  display:block;
-  font-size:15px;
-}
-.top-info span{
-  display:block;
-  font-size:12px;
-  color:var(--muted);
-}
-.progress{
-  margin-top:6px;
-  font-size:12px;
-}
+.top-info strong{display:block}
+.top-info span{font-size:12px;color:var(--muted)}
 
 .filter{
   display:flex;
@@ -137,12 +122,12 @@ input[type=date]{
 <div class="kpis">
   <div class="kpi"><span>👥 Assistindo agora</span><strong id="kpiOnline">0</strong></div>
   <div class="kpi"><span>▶ Plays no dia</span><strong id="kpiPlays">0</strong></div>
-  <div class="kpi"><span>✅ +50%</span><strong id="kpi50">0</strong></div>
+  <div class="kpi"><span>⏱ +50% assistido</span><strong id="kpi50">0</strong></div>
   <div class="kpi"><span>🏁 Concluídos</span><strong id="kpiFinish">0</strong></div>
 </div>
 
 <div class="panel">
-  <h2>👀 Quem está assistindo agora</h2>
+  <h2>👀 Usuários assistindo agora</h2>
   <table>
     <thead>
       <tr>
@@ -168,127 +153,121 @@ input[type=date]{
 </div>
 
 <div class="panel">
-  <h2>🔥 Top 10 do Momento (30 min)</h2>
+  <h2>🔥 Top 10 (últimos 30 min)</h2>
   <div id="topAgora"></div>
 </div>
 
 <div class="panel">
-  <h2>🏆 Top 10 do Dia</h2>
+  <h2>🏆 Top 10 do dia</h2>
   <div id="topDia"></div>
 </div>
 
 </main>
 
 <script>
-const supabaseClient = supabase.createClient(
+const sb = supabase.createClient(
   "https://dxkszikemntfusfyrzos.supabase.co",
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-/* DATA LOCAL BR */
-const hojeBR = new Date(new Date().getTime() - new Date().getTimezoneOffset()*60000)
+const hoje = new Date(new Date().getTime() - new Date().getTimezoneOffset()*60000)
   .toISOString().slice(0,10);
-
-const dataFiltro = document.getElementById("dataFiltro");
-dataFiltro.value = hojeBR;
+dataFiltro.value = hoje;
 
 let chartHoras, chartTipos;
 
 async function loadDashboard(){
-  const data = dataFiltro.value;
+  const dia = dataFiltro.value;
 
-  /* ONLINE */
-  const { data: online } = await supabaseClient
-    .from("rs_sessions")
-    .select("*")
-    .gte("last_ping", new Date(Date.now()-30000).toISOString());
+  /* ONLINE AGORA */
+  const { data: online } = await sb
+    .from("usuarios_online")
+    .select("usuario_id, ultimo_ping")
+    .gte("ultimo_ping", new Date(Date.now()-30000).toISOString());
 
   kpiOnline.textContent = online.length;
   onlineList.innerHTML = "";
-  online.forEach(u=>{
+  online.forEach(o=>{
     onlineList.innerHTML += `
       <tr>
-        <td>${u.user_id.slice(0,8)}</td>
-        <td>${u.serie_nome || "-"}</td>
-        <td>${u.content_tipo}</td>
-        <td>playing</td>
+        <td>${o.usuario_id.slice(0,8)}</td>
+        <td>Assistindo</td>
+        <td>-</td>
+        <td>▶ ativo</td>
       </tr>`;
   });
 
-  /* EVENTS */
-  const { data: events } = await supabaseClient
-    .from("rs_play_events")
-    .select("*")
-    .gte("created_at", data+"T00:00:00")
-    .lte("created_at", data+"T23:59:59");
+  /* VISUALIZAÇÕES DO DIA */
+  const { data: views } = await sb
+    .from("visualizacoes")
+    .select("*, filmes(titulo,capa_url)")
+    .gte("created_at", dia+"T00:00:00")
+    .lte("created_at", dia+"T23:59:59");
 
-  kpiPlays.textContent = events.filter(e=>e.acao==="play").length;
-  kpi50.textContent = new Set(events.filter(e=>e.progress_percent>=50).map(e=>e.user_id)).size;
-  kpiFinish.textContent = new Set(events.filter(e=>e.progress_percent>=95).map(e=>e.user_id)).size;
+  kpiPlays.textContent = views.length;
+  kpi50.textContent = views.filter(v=>v.segundos_assistidos>=((v.duracao_segundos||3600)*0.5)).length;
+  kpiFinish.textContent = views.filter(v=>v.segundos_assistidos>=((v.duracao_segundos||3600)*0.95)).length;
 
-  /* FILMES (CAPAS) */
-  const { data: filmes } = await supabaseClient.from("filmes").select("*");
+  /* MAPA TOP */
+  function buildMap(lista){
+    const map={};
+    lista.forEach(v=>{
+      const t=v.filmes?.titulo||"Sem título";
+      if(!map[t]) map[t]={total:0,img:v.filmes?.capa_url};
+      map[t].total++;
+    });
+    return Object.entries(map).sort((a,b)=>b[1].total-a[1].total);
+  }
 
-  function renderTop(container, map){
-    container.innerHTML="";
-    Object.entries(map).slice(0,10).forEach(([titulo,info])=>{
-      const filme = filmes.find(f=>f.titulo===titulo || f.serie_nome===titulo);
-      container.innerHTML += `
+  function renderTop(el,map){
+    el.innerHTML="";
+    map.slice(0,10).forEach(([titulo,info])=>{
+      el.innerHTML+=`
         <div class="top-card">
-          <img src="${filme?.capa_url || ''}">
+          <img src="${info.img||''}">
           <div class="top-info">
             <strong>${titulo}</strong>
             <span>👁 ${info.total} visualizações</span>
-            <div class="progress">✅ ${info.finish}% | ▶ ${info.mid}%</div>
           </div>
         </div>`;
     });
   }
 
-  function buildMap(list){
-    const map={};
-    list.forEach(e=>{
-      if(!map[e.titulo]) map[e.titulo]={users:new Set(),mid:new Set(),finish:new Set()};
-      map[e.titulo].users.add(e.user_id);
-      if(e.progress_percent>=50) map[e.titulo].mid.add(e.user_id);
-      if(e.progress_percent>=95) map[e.titulo].finish.add(e.user_id);
-    });
-    return Object.fromEntries(
-      Object.entries(map).map(([k,v])=>[
-        k,{
-          total:v.users.size,
-          mid:Math.round(v.mid.size/v.users.size*100)||0,
-          finish:Math.round(v.finish.size/v.users.size*100)||0
-        }
-      ]).sort((a,b)=>b[1].total-a[1].total)
-    );
-  }
-
-  renderTop(topDia, buildMap(events));
+  renderTop(topDia, buildMap(views));
 
   const limite = new Date(Date.now()-30*60000).toISOString();
-  renderTop(topAgora, buildMap(events.filter(e=>e.created_at>=limite)));
+  renderTop(topAgora, buildMap(views.filter(v=>v.created_at>=limite)));
 
-  /* CHARTS */
+  /* CHART HORAS */
   const horas={};
-  events.forEach(e=>{
-    const h=new Date(e.created_at).getHours();
+  views.forEach(v=>{
+    const h=new Date(v.created_at).getHours();
     horas[h]=(horas[h]||0)+1;
   });
 
   if(chartHoras) chartHoras.destroy();
   chartHoras=new Chart(chartHorasCtx,{
     type:"line",
-    data:{labels:Object.keys(horas),datasets:[{data:Object.values(horas),borderColor:"#e50914"}]}
+    data:{
+      labels:Object.keys(horas),
+      datasets:[{data:Object.values(horas),borderColor:"#e50914"}]
+    }
   });
 
-  const filmesCount=events.filter(e=>e.tipo==="filme").length;
-  const seriesCount=events.filter(e=>e.tipo==="serie").length;
+  /* FILMES x SERIES */
+  const filmesCount = views.filter(v=>v.tipo==="filme").length;
+  const seriesCount = views.filter(v=>v.tipo==="serie").length;
 
   if(chartTipos) chartTipos.destroy();
   chartTipos=new Chart(chartTiposCtx,{
     type:"doughnut",
-    data:{labels:["Filmes","Séries"],datasets:[{data:[filmesCount,seriesCount],backgroundColor:["#e50914","#6366f1"]}]}
+    data:{
+      labels:["Filmes","Séries"],
+      datasets:[{
+        data:[filmesCount,seriesCount],
+        backgroundColor:["#e50914","#6366f1"]
+      }]
+    }
   });
 }
 
