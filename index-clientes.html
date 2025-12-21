@@ -18,13 +18,13 @@
 *{box-sizing:border-box}
 body{
   margin:0;
-  background:var(--bg);
-  color:var(--text);
+  background:#000;
+  color:#fff;
   font-family:Inter,Arial,sans-serif;
   overflow:hidden;
 }
 
-/* HOME */
+/* ================= HOME ================= */
 #home{
   position:absolute;
   inset:0;
@@ -32,7 +32,10 @@ body{
   overflow-y:auto;
 }
 .section{margin-bottom:46px}
-.section h2{margin:0 0 16px 48px;font-size:22px}
+.section h2{
+  margin:0 0 16px 48px;
+  font-size:22px;
+}
 .row{
   display:flex;
   gap:16px;
@@ -50,7 +53,7 @@ body{
   border-radius:4px;
 }
 
-/* PLAYER */
+/* ================= PLAYER ================= */
 #player{
   position:fixed;
   inset:0;
@@ -63,7 +66,7 @@ body{
   object-fit:cover;
 }
 
-/* OVERLAY */
+/* ================= OVERLAY ================= */
 #overlay{
   position:absolute;
   inset:0;
@@ -92,13 +95,15 @@ body{
   font-size:12px;
   margin-bottom:8px;
 }
-#info h1{font-size:42px;margin:0 0 12px}
-#info p{color:var(--muted)}
-
+#info h1{
+  font-size:42px;
+  margin:0 0 12px;
+}
+#info p{
+  color:var(--muted);
+}
 .actions{
   margin-top:18px;
-  display:flex;
-  gap:10px;
 }
 .actions button{
   padding:12px 22px;
@@ -109,9 +114,9 @@ body{
 
 /* SERIES CONTROLS */
 .series-controls{
-  margin-top:14px;
   display:none;
   gap:10px;
+  margin-top:14px;
 }
 .series-controls select{
   padding:10px;
@@ -186,142 +191,178 @@ body{
 </div>
 
 <script>
-/* SUPABASE */
 const supabaseClient = supabase.createClient(
  "https://dxkszikemntfusfyrzos.supabase.co",
  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
 const home = document.getElementById("home");
-const video = document.getElementById("video");
 const player = document.getElementById("player");
-const suggestions = document.getElementById("suggestions");
-const sugRow = document.getElementById("sugRow");
+const video = document.getElementById("video");
 
 const tipoBadge = document.getElementById("tipoBadge");
 const seriesControls = document.getElementById("seriesControls");
 const selTemporada = document.getElementById("selTemporada");
 const selEpisodio = document.getElementById("selEpisodio");
 
-let dados=[], atual=null, serieAtual=[];
-let hideTimer=null;
+const suggestions = document.getElementById("suggestions");
+const sugRow = document.getElementById("sugRow");
+
+let dados = [];
+let atual = null;
+let serieAtual = [];
+let hideTimer = null;
 
 /* LOAD */
 async function load(){
- const {data}=await supabaseClient.from("filmes").select("*").eq("ativo",true);
- dados=data||[];
- renderHome();
+  const { data } = await supabaseClient
+    .from("filmes")
+    .select("*")
+    .eq("ativo", true);
+
+  dados = data || [];
+  renderHome();
 }
 
 /* HOME */
 function renderHome(){
- home.innerHTML="";
- renderSection("Filmes",dados.filter(d=>d.tipo==="filme"));
- renderSection("Séries",[...new Map(dados.filter(d=>d.tipo==="serie").map(s=>[s.serie_nome,s])).values()]);
+  home.innerHTML = "";
+  renderSection("Filmes", dados.filter(d => d.tipo === "filme"));
+  renderSection(
+    "Séries",
+    [...new Map(dados.filter(d => d.tipo === "serie").map(s => [s.serie_nome, s])).values()]
+  );
 }
-function renderSection(titulo,itens){
- const sec=document.createElement("div");
- sec.className="section";
- sec.innerHTML=`<h2>${titulo}</h2>`;
- const row=document.createElement("div");
- row.className="row";
- itens.forEach(i=>{
-  const c=document.createElement("div");
-  c.className="card";
-  c.innerHTML=`<img src="${i.capa_url}">`;
-  c.onclick=()=>abrir(i);
-  row.appendChild(c);
- });
- sec.appendChild(row);
- home.appendChild(sec);
+
+function renderSection(titulo, itens){
+  const sec = document.createElement("div");
+  sec.className = "section";
+  sec.innerHTML = `<h2>${titulo}</h2>`;
+  const row = document.createElement("div");
+  row.className = "row";
+
+  itens.forEach(i => {
+    const c = document.createElement("div");
+    c.className = "card";
+    c.innerHTML = `<img src="${i.capa_url}">`;
+    c.onclick = () => abrir(i);
+    row.appendChild(c);
+  });
+
+  sec.appendChild(row);
+  home.appendChild(sec);
 }
 
 /* ABRIR */
 function abrir(item){
- // PARA QUALQUER VÍDEO ATUAL
- video.pause();
- video.src="";
+  clearTimeout(hideTimer);
 
- atual=item;
- player.style.display="block";
- document.getElementById("titulo").textContent=item.titulo||item.serie_nome;
- document.getElementById("descricao").textContent=item.descricao||"";
+  // PARA E LIMPA O PLAYER SEMPRE
+  video.pause();
+  video.removeAttribute("src");
+  video.load();
 
- if(item.tipo==="serie"){
-  tipoBadge.textContent="📺 Série";
-  montarSerie(item.serie_nome);
-  seriesControls.style.display="flex";
- }else{
-  tipoBadge.textContent="🎬 Filme";
-  seriesControls.style.display="none";
- }
+  atual = item;
+  player.style.display = "block";
 
- video.src=item.video_url;
- video.play();
+  document.getElementById("titulo").textContent = item.titulo || item.serie_nome;
+  document.getElementById("descricao").textContent = item.descricao || "";
 
- document.body.classList.remove("hide-ui");
- suggestions.style.display="none";
- iniciarTimer();
+  if(item.tipo === "serie"){
+    tipoBadge.textContent = "📺 Série";
+    montarSerie(item.serie_nome);
+    seriesControls.style.display = "flex";
+  }else{
+    tipoBadge.textContent = "🎬 Filme";
+    seriesControls.style.display = "none";
+  }
+
+  video.src = item.video_url;
+  video.muted = false;
+  video.play();
+
+  document.body.classList.remove("hide-ui");
+  suggestions.style.display = "none";
+
+  iniciarTimer();
 }
 
 /* SERIES */
 function montarSerie(nome){
- serieAtual=dados.filter(d=>d.serie_nome===nome)
-  .sort((a,b)=>a.temporada-b.temporada||a.episodio-b.episodio);
- const temps=[...new Set(serieAtual.map(e=>e.temporada))];
- selTemporada.innerHTML="";
- temps.forEach(t=>selTemporada.innerHTML+=`<option value="${t}">Temporada ${t}</option>`);
- selTemporada.onchange=montarEpisodios;
- montarEpisodios();
+  serieAtual = dados
+    .filter(d => d.serie_nome === nome)
+    .sort((a,b)=>a.temporada-b.temporada || a.episodio-b.episodio);
+
+  const temps = [...new Set(serieAtual.map(e=>e.temporada))];
+  selTemporada.innerHTML = "";
+  temps.forEach(t => {
+    selTemporada.innerHTML += `<option value="${t}">Temporada ${t}</option>`;
+  });
+
+  selTemporada.onchange = montarEpisodios;
+  montarEpisodios();
 }
+
 function montarEpisodios(){
- const t=Number(selTemporada.value);
- const eps=serieAtual.filter(e=>e.temporada===t);
- selEpisodio.innerHTML="";
- eps.forEach((e,i)=>selEpisodio.innerHTML+=`<option value="${i}">Episódio ${e.episodio}</option>`);
- selEpisodio.onchange=()=>trocarEpisodio(eps[selEpisodio.value]);
- trocarEpisodio(eps[0]);
+  const t = Number(selTemporada.value);
+  const eps = serieAtual.filter(e => e.temporada === t);
+
+  selEpisodio.innerHTML = "";
+  eps.forEach((e,i)=>{
+    selEpisodio.innerHTML += `<option value="${i}">Episódio ${e.episodio}</option>`;
+  });
+
+  selEpisodio.onchange = ()=> trocarEpisodio(eps[selEpisodio.value]);
+  trocarEpisodio(eps[0]);
 }
+
 function trocarEpisodio(ep){
- atual=ep;
- video.pause();
- video.src=ep.video_url;
- video.play();
+  clearTimeout(hideTimer);
+  video.pause();
+  video.removeAttribute("src");
+  video.load();
+
+  atual = ep;
+  video.src = ep.video_url;
+  video.play();
+  iniciarTimer();
 }
 
 /* TIMER */
 function iniciarTimer(){
- clearTimeout(hideTimer);
- hideTimer=setTimeout(()=>document.body.classList.add("hide-ui"),30000);
+  clearTimeout(hideTimer);
+  hideTimer = setTimeout(()=>{
+    document.body.classList.add("hide-ui");
+  },30000);
 }
 
 /* ASSISTIR */
 function assistir(){
- document.body.classList.add("hide-ui");
- clearTimeout(hideTimer);
+  document.body.classList.add("hide-ui");
+  clearTimeout(hideTimer);
 }
 
 /* PLAY / PAUSE */
 video.addEventListener("pause",()=>{
- clearTimeout(hideTimer);
- document.body.classList.remove("hide-ui");
- mostrarSugestoes();
+  clearTimeout(hideTimer);
+  document.body.classList.remove("hide-ui");
+  mostrarSugestoes();
 });
 video.addEventListener("play",()=>{
- suggestions.style.display="none";
- iniciarTimer();
+  suggestions.style.display="none";
+  iniciarTimer();
 });
 
 /* SUGESTÕES */
 function mostrarSugestoes(){
- sugRow.innerHTML="";
- dados.filter(d=>d.id!==atual.id).slice(0,6).forEach(s=>{
-  const img=document.createElement("img");
-  img.src=s.capa_url;
-  img.onclick=()=>abrir(s);
-  sugRow.appendChild(img);
- });
- suggestions.style.display="block";
+  sugRow.innerHTML="";
+  dados.filter(d=>d.id!==atual.id).slice(0,6).forEach(s=>{
+    const img=document.createElement("img");
+    img.src=s.capa_url;
+    img.onclick=()=>abrir(s);
+    sugRow.appendChild(img);
+  });
+  suggestions.style.display="block";
 }
 
 load();
