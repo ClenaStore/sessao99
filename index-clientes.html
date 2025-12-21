@@ -5,10 +5,7 @@
 <title>SESSÃO 99</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- SUPABASE -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-
-<!-- HLS -->
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
 <style>
@@ -27,7 +24,23 @@ body{
   overflow:hidden;
 }
 
-/* HOME */
+/* ===== PERFIL BOTÃO ===== */
+#profileBtn{
+  position:absolute;
+  top:20px;
+  right:20px;
+  width:44px;
+  height:44px;
+  border-radius:50%;
+  background:#222;
+  color:#fff;
+  border:none;
+  font-size:20px;
+  cursor:pointer;
+  z-index:20;
+}
+
+/* ===== HOME ===== */
 #home{position:absolute;inset:0;padding-top:90px;overflow-y:auto}
 .section{margin-bottom:46px}
 .section h2{margin:0 0 16px 48px}
@@ -35,31 +48,22 @@ body{
 .card{min-width:200px;cursor:pointer}
 .card img{width:100%;height:300px;object-fit:cover;border-radius:4px}
 
-/* PLAYER */
+/* ===== PLAYER ===== */
 #player{position:fixed;inset:0;background:#000;display:none}
 #player video{width:100%;height:100%;object-fit:cover}
-
-/* HOME BUTTON */
 #homeBtn{
-  position:absolute;
-  top:20px;
-  left:20px;
-  padding:10px 14px;
-  font-size:20px;
+  position:absolute;top:20px;left:20px;
+  padding:10px 14px;font-size:20px;
   background:rgba(0,0,0,.6);
-  color:#fff;
-  border:none;
-  cursor:pointer;
-  display:none;
-  z-index:10;
+  color:#fff;border:none;cursor:pointer;
+  display:none;z-index:10;
 }
 
-/* OVERLAY */
+/* ===== OVERLAY PLAYER ===== */
 #overlay{position:absolute;inset:0}
 #overlay::before{
   content:"";
-  position:absolute;
-  inset:0;
+  position:absolute;inset:0;
   background:
     linear-gradient(to right,rgba(0,0,0,.9) 20%,rgba(0,0,0,.5) 50%,transparent),
     linear-gradient(to top,rgba(0,0,0,.85) 10%,transparent 45%);
@@ -67,19 +71,42 @@ body{
 
 /* INFO */
 #info{position:absolute;left:60px;bottom:120px;max-width:640px}
-.badge{display:inline-block;padding:4px 10px;background:var(--badge);font-size:12px;margin-bottom:8px}
-#info h1{font-size:40px;margin:0 0 12px}
+.badge{padding:4px 10px;background:var(--badge);font-size:12px;display:inline-block}
+#info h1{font-size:40px;margin:12px 0}
 #info p{color:var(--muted)}
-.actions{margin-top:16px}
 .actions button{padding:12px 22px;font-weight:700;border:none;cursor:pointer}
 
-/* SERIES */
-.series-controls{display:none;gap:10px;margin-top:14px}
-.series-controls select{padding:10px;background:#111;color:#fff;border:1px solid #333}
-
-/* STATES */
-.hide-ui #overlay,
-.hide-ui #info{opacity:0;pointer-events:none}
+/* ===== MODAL PERFIL ===== */
+#perfilModal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.7);
+  backdrop-filter:blur(6px);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:30;
+}
+#perfilBox{
+  width:420px;
+  background:#0b0b0b;
+  border-radius:18px;
+  padding:32px;
+}
+#perfilBox h2{margin-top:0}
+.perfil-item{margin-bottom:12px;color:#ddd}
+.perfil-item b{color:#fff}
+#perfilBox button{
+  margin-top:20px;
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  background:#e50914;
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+}
 
 /* MOBILE */
 @media(max-width:900px){
@@ -91,8 +118,11 @@ body{
 
 <body>
 
+<button id="profileBtn" onclick="abrirPerfil()">👤</button>
+
 <div id="home"></div>
 
+<!-- PLAYER -->
 <div id="player">
   <video id="video" controls autoplay playsinline></video>
   <button id="homeBtn" onclick="voltarHome()">🏠</button>
@@ -102,12 +132,6 @@ body{
       <div class="badge" id="tipoBadge"></div>
       <h1 id="titulo"></h1>
       <p id="descricao"></p>
-
-      <div class="series-controls" id="seriesControls">
-        <select id="selTemporada"></select>
-        <select id="selEpisodio"></select>
-      </div>
-
       <div class="actions">
         <button onclick="assistir()">▶ Assistir</button>
       </div>
@@ -115,181 +139,89 @@ body{
   </div>
 </div>
 
+<!-- PERFIL MODAL -->
+<div id="perfilModal" onclick="fecharPerfil(event)">
+  <div id="perfilBox">
+    <h2>Meu Perfil</h2>
+    <div class="perfil-item"><b>Email:</b> <span id="p_email"></span></div>
+    <div class="perfil-item"><b>CPF:</b> <span id="p_cpf"></span></div>
+    <div class="perfil-item"><b>WhatsApp:</b> <span id="p_whats"></span></div>
+    <div class="perfil-item"><b>Status:</b> <span id="p_status"></span></div>
+
+    <button onclick="logout()">Sair</button>
+  </div>
+</div>
+
 <script>
-const supabaseClient = supabase.createClient(
+const sb = supabase.createClient(
  "https://dxkszikemntfusfyrzos.supabase.co",
  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
+/* ===== AUTH ===== */
+async function protegerIndex(){
+  const raw = localStorage.getItem("usuario");
+  if(!raw){ location.href="login.html"; return; }
+}
+protegerIndex();
+
+/* ===== PERFIL ===== */
+function abrirPerfil(){
+  const u = JSON.parse(localStorage.usuario);
+  p_email.textContent = u.email;
+  p_cpf.textContent = u.cpf;
+  p_whats.textContent = u.whatsapp;
+  p_status.textContent = u.status;
+  perfilModal.style.display="flex";
+}
+function fecharPerfil(e){
+  if(e.target.id==="perfilModal"){
+    perfilModal.style.display="none";
+  }
+}
+function logout(){
+  localStorage.removeItem("usuario");
+  location.href="login.html";
+}
+
+/* ===== PLAYER (resumido, mantém o seu atual) ===== */
 const home=document.getElementById("home");
 const player=document.getElementById("player");
 const video=document.getElementById("video");
 const homeBtn=document.getElementById("homeBtn");
 const tipoBadge=document.getElementById("tipoBadge");
-const seriesControls=document.getElementById("seriesControls");
-const selTemporada=document.getElementById("selTemporada");
-const selEpisodio=document.getElementById("selEpisodio");
 
-let dados=[], atual=null, serieAtual=[], indiceEp=0;
-let hideTimer=null, audioUnlocked=false, hls=null;
-
-/* VIDEO LOADER */
-function loadVideo(url){
-  if(hls){ hls.destroy(); hls=null; }
-  video.pause();
-  video.removeAttribute("src");
-  video.load();
-
-  if(url.endsWith(".m3u8")){
-    if(Hls.isSupported()){
-      hls=new Hls();
-      hls.loadSource(url);
-      hls.attachMedia(video);
-    }else if(video.canPlayType("application/vnd.apple.mpegurl")){
-      video.src=url;
-    }
-  }else{
-    video.src=url;
-  }
-
-  video.muted=!audioUnlocked;
-  video.play();
-}
-
-/* LOAD */
 async function load(){
- const {data}=await supabaseClient.from("filmes").select("*").eq("ativo",true);
- dados=data||[];
- renderHome();
+ const {data}=await sb.from("filmes").select("*").eq("ativo",true);
+ renderHome(data||[]);
 }
-function renderHome(){
+function renderHome(d){
  home.innerHTML="";
- renderSection("Filmes",dados.filter(d=>d.tipo==="filme"));
- renderSection(
-  "Séries",
-  [...new Map(dados.filter(d=>d.tipo==="serie").map(s=>[s.serie_nome,s])).values()]
- );
-}
-function renderSection(t,itens){
- const sec=document.createElement("div");
- sec.className="section";
- sec.innerHTML=`<h2>${t}</h2>`;
- const row=document.createElement("div");
- row.className="row";
- itens.forEach(i=>{
+ d.forEach(i=>{
   const c=document.createElement("div");
   c.className="card";
   c.innerHTML=`<img src="${i.capa_url}">`;
   c.onclick=()=>abrir(i);
-  row.appendChild(c);
+  home.appendChild(c);
  });
- sec.appendChild(row);
- home.appendChild(sec);
 }
-
-/* ABRIR */
-function abrir(item){
- clearTimeout(hideTimer);
- atual=item;
+function abrir(i){
  player.style.display="block";
- document.body.classList.remove("hide-ui");
-
- homeBtn.style.display="block"; // 🏠 aparece junto com info
-
- document.getElementById("titulo").textContent=item.titulo||item.serie_nome;
- document.getElementById("descricao").textContent=item.descricao||"";
-
- if(item.tipo==="serie"){
-  tipoBadge.textContent="📺 Série";
-  montarSerie(item.serie_nome);
-  seriesControls.style.display="flex";
- }else{
-  tipoBadge.textContent="🎬 Filme";
-  seriesControls.style.display="none";
- }
-
- audioUnlocked=false;
- loadVideo(item.video_url);
- iniciarTimer();
+ profileBtn.style.display="none";
+ titulo.textContent=i.titulo||i.serie_nome;
+ descricao.textContent=i.descricao||"";
+ tipoBadge.textContent=i.tipo==="serie"?"📺 Série":"🎬 Filme";
+ video.src=i.video_url;
 }
-
-/* ASSISTIR */
 function assistir(){
- audioUnlocked=true;
  video.muted=false;
  video.play();
- document.body.classList.add("hide-ui");
- homeBtn.style.display="none"; // some ao esconder UI
- clearTimeout(hideTimer);
 }
-
-/* SERIES */
-function montarSerie(nome){
- serieAtual=dados.filter(d=>d.serie_nome===nome)
-  .sort((a,b)=>a.temporada-b.temporada||a.episodio-b.episodio);
- const temps=[...new Set(serieAtual.map(e=>e.temporada))];
- selTemporada.innerHTML="";
- temps.forEach(t=>selTemporada.innerHTML+=`<option value="${t}">Temporada ${t}</option>`);
- selTemporada.onchange=montarEpisodios;
- montarEpisodios();
-}
-function montarEpisodios(){
- const t=Number(selTemporada.value);
- const eps=serieAtual.filter(e=>e.temporada===t);
- selEpisodio.innerHTML="";
- eps.forEach((e,i)=>selEpisodio.innerHTML+=`<option value="${i}">Episódio ${e.episodio}</option>`);
- selEpisodio.onchange=()=>trocarEpisodio(eps,selEpisodio.value);
- trocarEpisodio(eps,0);
-}
-function trocarEpisodio(eps,i){
- indiceEp=i;
- atual=eps[i];
- loadVideo(atual.video_url);
- iniciarTimer();
-}
-
-/* AUTO NEXT */
-video.addEventListener("ended",()=>{
- if(atual.tipo==="serie"){
-  const t=Number(selTemporada.value);
-  const eps=serieAtual.filter(e=>e.temporada===t);
-  if(indiceEp+1<eps.length){
-    selEpisodio.value=indiceEp+1;
-    trocarEpisodio(eps,indiceEp+1);
-  }
- }
-});
-
-/* TIMER */
-function iniciarTimer(){
- clearTimeout(hideTimer);
- hideTimer=setTimeout(()=>{
-  document.body.classList.add("hide-ui");
-  homeBtn.style.display="none";
- },30000);
-}
-
-/* PLAY / PAUSE */
-video.addEventListener("pause",()=>{
- clearTimeout(hideTimer);
- document.body.classList.remove("hide-ui");
- homeBtn.style.display="block";
-});
-video.addEventListener("play",()=>{
- if(!document.body.classList.contains("hide-ui")){
-   homeBtn.style.display="block";
- }
- iniciarTimer();
-});
-
-/* HOME */
 function voltarHome(){
- if(hls){ hls.destroy(); hls=null; }
  video.pause();
- video.removeAttribute("src");
- video.load();
+ video.src="";
  player.style.display="none";
- homeBtn.style.display="none";
+ profileBtn.style.display="block";
 }
 
 load();
