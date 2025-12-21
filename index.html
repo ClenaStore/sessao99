@@ -408,7 +408,9 @@ function render(buscaTxt = "") {
 }
 
 async function carregarPerfil(){
-  const { data: user } = await sb
+  console.log("EMAIL USADO:", usuario.email);
+
+  const { data: user, error } = await sb
     .from("usuarios")
     .select(`
       nome,
@@ -418,10 +420,18 @@ async function carregarPerfil(){
       vencimento_assinatura,
       chave_pix
     `)
-    .eq("id", usuario.id)
+    .eq("email", usuario.email)
     .single();
 
-  if(!user) return;
+  console.log("RETORNO SUPABASE:", user, error);
+
+  if(!user){
+    perfilPlano.textContent = "-";
+    perfilValor.textContent = "-";
+    perfilVencimento.textContent = "-";
+    pixBox.style.display = "none";
+    return;
+  }
 
   perfilNome.textContent = user.nome || "Usuário";
   perfilEmail.textContent = user.email;
@@ -444,6 +454,7 @@ async function carregarPerfil(){
     }
   }
 }
+
 
 function formatarReal(valor){
   if(valor == null) return "-";
