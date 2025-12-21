@@ -33,8 +33,27 @@ header{
 }
 header h1{color:var(--accent);margin:0}
 
-main{padding:24px 32px;display:grid;gap:20px}
+main{
+  padding:24px 32px;
+  display:grid;
+  gap:20px;
+}
 
+/* FILTER */
+.filter{
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+input[type="date"]{
+  background:#111;
+  border:none;
+  color:#fff;
+  padding:8px 12px;
+  border-radius:8px;
+}
+
+/* KPIs */
 .kpis{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
@@ -48,32 +67,36 @@ main{padding:24px 32px;display:grid;gap:20px}
 .kpi span{color:var(--muted);font-size:13px}
 .kpi strong{font-size:30px}
 
+/* PANELS */
 .panel{
   background:var(--panel);
   padding:18px;
   border-radius:14px;
 }
-.panel h2{margin:0 0 12px;font-size:16px}
+.panel h2{
+  margin:0 0 12px;
+  font-size:16px;
+}
 
-table{width:100%;border-collapse:collapse}
-th,td{padding:10px;border-bottom:1px solid #1f243d}
-th{color:var(--muted);text-align:left}
+/* TABLE */
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+th,td{
+  padding:10px;
+  text-align:left;
+  border-bottom:1px solid #1f243d;
+}
+th{color:var(--muted);font-weight:500}
 
-.grid{display:grid;grid-template-columns:2fr 1fr;gap:20px}
+/* GRID */
+.grid{
+  display:grid;
+  grid-template-columns:2fr 1fr;
+  gap:20px;
+}
 canvas{height:260px!important}
-
-.filter{
-  display:flex;
-  gap:10px;
-  align-items:center;
-}
-input[type=date]{
-  background:#111;
-  border:none;
-  color:#fff;
-  padding:8px 12px;
-  border-radius:8px;
-}
 </style>
 </head>
 
@@ -83,58 +106,60 @@ input[type=date]{
   <h1>📊 Dashboard • SESSÃO 99</h1>
   <div class="filter">
     <span>📅 Data:</span>
-    <input type="date" id="dataFiltro">
+    <input type="date" id="filterDate">
   </div>
 </header>
 
 <main>
 
-<div class="kpis">
-  <div class="kpi"><span>👥 Assistindo agora</span><strong id="kpiOnline">0</strong></div>
-  <div class="kpi"><span>▶ Plays no dia</span><strong id="kpiPlays">0</strong></div>
-  <div class="kpi"><span>✅ +50%</span><strong id="kpi50">0</strong></div>
-  <div class="kpi"><span>🏁 Concluídos</span><strong id="kpiFinish">0</strong></div>
-</div>
-
-<div class="panel">
-  <h2>👀 Quem está assistindo agora</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Usuário</th>
-        <th>Conteúdo</th>
-        <th>Tipo</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody id="onlineList"></tbody>
-  </table>
-</div>
-
-<div class="grid">
-  <div class="panel">
-    <h2>📈 Plays por hora</h2>
-    <canvas id="chartHoras"></canvas>
+  <!-- KPIs -->
+  <div class="kpis">
+    <div class="kpi"><span>👥 Assistindo agora</span><strong id="kpiOnline">0</strong></div>
+    <div class="kpi"><span>▶ Plays no dia</span><strong id="kpiPlays">0</strong></div>
+    <div class="kpi"><span>✅ +50% assistido</span><strong id="kpi50">0</strong></div>
+    <div class="kpi"><span>🏁 Concluídos</span><strong id="kpiFinish">0</strong></div>
   </div>
+
+  <!-- ONLINE -->
   <div class="panel">
-    <h2>🎬 Filmes x Séries</h2>
-    <canvas id="chartTipos"></canvas>
+    <h2>👀 Quem está assistindo agora</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Usuário</th>
+          <th>Conteúdo</th>
+          <th>Tipo</th>
+        </tr>
+      </thead>
+      <tbody id="onlineList"></tbody>
+    </table>
   </div>
-</div>
 
-<div class="panel">
-  <h2>🔥 Top 10 do Momento (30 min)</h2>
-  <table>
-    <tbody id="topAgora"></tbody>
-  </table>
-</div>
+  <!-- GRÁFICOS -->
+  <div class="grid">
+    <div class="panel">
+      <h2>📈 Plays por hora</h2>
+      <canvas id="chartHoras"></canvas>
+    </div>
+    <div class="panel">
+      <h2>🎬 Filmes x Séries</h2>
+      <canvas id="chartTipos"></canvas>
+    </div>
+  </div>
 
-<div class="panel">
-  <h2>🏆 Top 10 do Dia</h2>
-  <table>
-    <tbody id="topDia"></tbody>
-  </table>
-</div>
+  <!-- TOP -->
+  <div class="panel">
+    <h2>🏆 Top 10 Conteúdos</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Conteúdo</th>
+          <th>Plays</th>
+        </tr>
+      </thead>
+      <tbody id="topList"></tbody>
+    </table>
+  </div>
 
 </main>
 
@@ -144,30 +169,43 @@ const supabaseClient = supabase.createClient(
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-const dataFiltro = document.getElementById("dataFiltro");
-dataFiltro.value = new Date().toISOString().slice(0,10);
+const kpiOnline = document.getElementById("kpiOnline");
+const kpiPlays = document.getElementById("kpiPlays");
+const kpi50 = document.getElementById("kpi50");
+const kpiFinish = document.getElementById("kpiFinish");
+const onlineList = document.getElementById("onlineList");
+const topList = document.getElementById("topList");
+const filterDate = document.getElementById("filterDate");
 
 let chartHoras, chartTipos;
 
-async function loadDashboard(){
-  const data = dataFiltro.value;
+/* DATA PADRÃO = HOJE */
+filterDate.value = new Date().toISOString().slice(0,10);
 
-  /* ONLINE */
+async function loadDashboard(){
+  const selectedDate = filterDate.value;
+
+  /* ONLINE (SEM DUPLICAR USER) */
   const { data: online } = await supabaseClient
     .from("rs_sessions")
-    .select("*")
-    .in("status",["playing","paused"]);
+    .select("user_id, content_tipo, serie_nome")
+    .gte("last_ping", new Date(Date.now()-30000).toISOString());
 
-  document.getElementById("kpiOnline").textContent = online.length;
+  const uniqueUsers = {};
+  online.forEach(o=>{
+    uniqueUsers[o.user_id]=o;
+  });
+
+  const onlineArr = Object.values(uniqueUsers);
+  kpiOnline.textContent = onlineArr.length;
 
   onlineList.innerHTML="";
-  online.forEach(u=>{
+  onlineArr.forEach(u=>{
     onlineList.innerHTML+=`
       <tr>
         <td>${u.user_id.slice(0,8)}</td>
         <td>${u.serie_nome || "-"}</td>
         <td>${u.content_tipo}</td>
-        <td>${u.status}</td>
       </tr>`;
   });
 
@@ -175,60 +213,49 @@ async function loadDashboard(){
   const { data: events } = await supabaseClient
     .from("rs_play_events")
     .select("*")
-    .gte("created_at", data+"T00:00:00")
-    .lte("created_at", data+"T23:59:59");
+    .gte("created_at", selectedDate+"T00:00:00")
+    .lte("created_at", selectedDate+"T23:59:59");
 
-  document.getElementById("kpiPlays").textContent =
-    events.filter(e=>e.acao==="play").length;
+  kpiPlays.textContent = events.filter(e=>e.acao==="play").length;
 
-  document.getElementById("kpi50").textContent =
-    new Set(events.filter(e=>e.progress_percent>=50).map(e=>e.user_id)).size;
+  /* PROGRESSO */
+  const { data: progress } = await supabaseClient
+    .from("rs_user_progress")
+    .select("*");
 
-  document.getElementById("kpiFinish").textContent =
-    new Set(events.filter(e=>e.progress_percent>=95).map(e=>e.user_id)).size;
+  kpi50.textContent = progress.filter(p=>p.max_progress>=50).length;
+  kpiFinish.textContent = progress.filter(p=>p.max_progress>=95).length;
 
-  /* TOP DIA */
-  const mapDia = {};
+  /* TOP 10 */
+  const map = {};
   events.forEach(e=>{
     if(e.acao==="play"){
-      mapDia[e.titulo]=(mapDia[e.titulo]||0)+1;
+      map[e.titulo]=(map[e.titulo]||0)+1;
     }
   });
 
-  topDia.innerHTML="";
-  Object.entries(mapDia).sort((a,b)=>b[1]-a[1]).slice(0,10)
+  topList.innerHTML="";
+  Object.entries(map)
+    .sort((a,b)=>b[1]-a[1])
+    .slice(0,10)
     .forEach(([t,c])=>{
-      topDia.innerHTML+=`<tr><td>${t}</td><td>${c}</td></tr>`;
+      topList.innerHTML+=`<tr><td>${t}</td><td>${c}</td></tr>`;
     });
 
-  /* TOP AGORA */
-  const limite = new Date(Date.now()-30*60000).toISOString();
-  const recentes = events.filter(e=>e.created_at>=limite);
-
-  const mapAgora = {};
-  recentes.forEach(e=>{
-    if(e.acao==="play"){
-      mapAgora[e.titulo]=(mapAgora[e.titulo]||0)+1;
-    }
-  });
-
-  topAgora.innerHTML="";
-  Object.entries(mapAgora).sort((a,b)=>b[1]-a[1]).slice(0,10)
-    .forEach(([t,c])=>{
-      topAgora.innerHTML+=`<tr><td>${t}</td><td>${c}</td></tr>`;
-    });
-
-  /* CHART HORAS */
-  const horas = {};
+  /* GRÁFICO HORAS */
+  const horas={};
   events.forEach(e=>{
     const h=new Date(e.created_at).getHours();
     horas[h]=(horas[h]||0)+1;
   });
 
   if(chartHoras) chartHoras.destroy();
-  chartHoras=new Chart(chartHorasCtx,{
+  chartHoras=new Chart(document.getElementById("chartHoras"),{
     type:"line",
-    data:{labels:Object.keys(horas),datasets:[{data:Object.values(horas),borderColor:"#e50914"}]}
+    data:{
+      labels:Object.keys(horas),
+      datasets:[{data:Object.values(horas),borderColor:"#e50914"}]
+    }
   });
 
   /* TIPOS */
@@ -236,16 +263,16 @@ async function loadDashboard(){
   const series=events.filter(e=>e.tipo==="serie").length;
 
   if(chartTipos) chartTipos.destroy();
-  chartTipos=new Chart(chartTiposCtx,{
+  chartTipos=new Chart(document.getElementById("chartTipos"),{
     type:"doughnut",
-    data:{labels:["Filmes","Séries"],datasets:[{data:[filmes,series],backgroundColor:["#e50914","#6366f1"]}]}
+    data:{
+      labels:["Filmes","Séries"],
+      datasets:[{data:[filmes,series],backgroundColor:["#e50914","#6366f1"]}]
+    }
   });
 }
 
-const chartHorasCtx=document.getElementById("chartHoras");
-const chartTiposCtx=document.getElementById("chartTipos");
-
-dataFiltro.onchange=loadDashboard;
+filterDate.onchange = loadDashboard;
 loadDashboard();
 setInterval(loadDashboard,15000);
 </script>
