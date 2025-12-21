@@ -199,7 +199,7 @@ async function loadDashboard(){
 
   /* ONLINE */
   const { data: online } = await supabaseClient
-    .from("rs_sessions")
+    .from("rs_online_now")
     .select("*")
     .gte("last_ping", new Date(Date.now()-30000).toISOString());
 
