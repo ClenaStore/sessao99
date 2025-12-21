@@ -8,26 +8,19 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <style>
-/* ================= RESET ================= */
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  scrollbar-width:none;
-}
+/* ========= RESET ========= */
+*{margin:0;padding:0;box-sizing:border-box;scrollbar-width:none}
 *::-webkit-scrollbar{display:none}
 
-/* ================= THEME ================= */
+/* ========= THEME ========= */
 :root{
   --bg:#141414;
   --panel:#181818;
-  --card:#1f1f1f;
   --accent:#e50914;
-  --text:#ffffff;
+  --text:#fff;
   --muted:#b3b3b3;
 }
 
-/* ================= BODY ================= */
 body{
   font-family:Inter,Arial,sans-serif;
   background:var(--bg);
@@ -35,38 +28,28 @@ body{
   overflow-x:hidden;
 }
 
-/* ================= HEADER ================= */
+/* ========= HEADER ========= */
 header{
   position:fixed;
   top:0;left:0;right:0;
-  height:72px;
+  height:70px;
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding:0 56px;
+  padding:0 50px;
   background:linear-gradient(to bottom,rgba(0,0,0,.9),transparent);
   z-index:1000;
-  transition:transform .35s ease, background .35s ease;
 }
-header.hidden{transform:translateY(-100%)}
-header.solid{background:#000}
-
-header h1{
-  color:var(--accent);
-  font-size:22px;
-  letter-spacing:1px;
-}
+header h1{color:var(--accent)}
 header input{
-  width:300px;
-  padding:10px 16px;
-  background:#2a2a2a;
+  width:280px;
+  padding:10px;
+  background:#333;
   border:none;
   color:#fff;
-  font-size:14px;
 }
 .profile{
-  width:44px;
-  height:44px;
+  width:42px;height:42px;
   border-radius:50%;
   background:#222;
   border:none;
@@ -75,83 +58,57 @@ header input{
   cursor:pointer;
 }
 
-/* ================= HERO ================= */
+/* ========= HERO ========= */
 .hero{
-  height:94vh;
+  height:90vh;
   position:relative;
   display:flex;
   align-items:flex-end;
-  padding:90px 56px;
+  padding:80px 50px;
 }
 .hero img{
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
+  position:absolute;inset:0;
+  width:100%;height:100%;
   object-fit:cover;
   z-index:-2;
 }
 .hero::after{
   content:"";
-  position:absolute;
-  inset:0;
+  position:absolute;inset:0;
   background:
-    linear-gradient(to right,rgba(20,20,20,.92) 28%,transparent 70%),
-    linear-gradient(to top,rgba(20,20,20,.98),transparent 55%);
+    linear-gradient(to right,rgba(20,20,20,.9) 30%,transparent 70%),
+    linear-gradient(to top,rgba(20,20,20,.95),transparent 60%);
 }
-.hero-info{
-  max-width:620px;
-}
-.hero-info h2{
-  font-size:54px;
-  margin-bottom:14px;
-}
-.hero-info .meta{
-  font-size:14px;
-  color:var(--muted);
-  margin-bottom:16px;
-}
-.hero-info p{
-  font-size:15px;
-  line-height:1.6;
-  color:#e5e5e5;
-}
-.hero-info .actions{
-  margin-top:26px;
-  display:flex;
-  gap:14px;
-}
+.hero-info{max-width:600px}
+.hero-info h2{font-size:52px;margin-bottom:12px}
+.hero-info .meta{color:var(--muted);margin-bottom:12px}
+.hero-info p{line-height:1.5}
 .hero-info button{
+  margin-top:20px;
   padding:14px 34px;
+  background:var(--accent);
   border:none;
+  color:#fff;
   font-size:16px;
   font-weight:700;
   cursor:pointer;
 }
-.btn-play{background:var(--accent);color:#fff}
-.btn-info{background:#333;color:#fff}
 
-/* ================= HOME ================= */
-#home{padding-top:80px}
-section{padding:26px 56px}
-section h3{
-  font-size:20px;
-  margin-bottom:14px;
-}
+/* ========= HOME ========= */
+#home{padding-top:70px}
+section{padding:26px 50px}
+section h3{margin-bottom:12px}
 .row{
   display:flex;
-  gap:16px;
+  gap:14px;
   overflow-x:auto;
 }
 .card{
   min-width:200px;
   cursor:pointer;
-  transition:.35s;
+  transition:.3s;
 }
-.card:hover{
-  transform:scale(1.14);
-  z-index:10;
-}
+.card:hover{transform:scale(1.12)}
 .card img{
   width:100%;
   height:300px;
@@ -164,7 +121,7 @@ section h3{
   font-weight:600;
 }
 
-/* ================= PLAYER ================= */
+/* ========= PLAYER ========= */
 #player{
   position:fixed;
   inset:0;
@@ -172,90 +129,77 @@ section h3{
   display:none;
   z-index:5000;
 }
-#player video{
+#video{
   width:100%;
   height:100%;
+}
+#close{
+  position:absolute;
+  top:20px;left:20px;
+  background:rgba(0,0,0,.6);
+  border:none;
+  color:#fff;
+  font-size:18px;
+  padding:10px 14px;
+  cursor:pointer;
+  z-index:10;
 }
 #overlay{
   position:absolute;
   inset:0;
+  pointer-events:none;
 }
 #overlay::after{
   content:"";
   position:absolute;
   inset:0;
   background:
-    linear-gradient(to right,rgba(0,0,0,.88) 25%,transparent 60%),
+    linear-gradient(to right,rgba(0,0,0,.85) 25%,transparent 60%),
     linear-gradient(to top,rgba(0,0,0,.95),transparent 50%);
 }
 #info{
   position:absolute;
-  left:70px;
-  bottom:160px;
-  max-width:620px;
+  left:60px;
+  bottom:140px;
+  max-width:600px;
+  pointer-events:auto;
 }
-#info h1{font-size:42px;margin-bottom:10px}
-#info .meta{color:var(--muted);margin-bottom:12px}
+#info h1{margin-bottom:10px}
+#info .meta{color:var(--muted);margin-bottom:10px}
 #info p{color:#ddd}
-#info button{
-  margin-top:20px;
-  padding:14px 34px;
-  background:var(--accent);
-  border:none;
-  color:#fff;
-  font-size:16px;
-  font-weight:700;
+
+/* ========= SERIES CONTROLS ========= */
+#seriesControls{
+  margin-top:14px;
+  display:none;
+  gap:10px;
 }
-#close{
-  position:absolute;
-  top:28px;
-  left:28px;
-  background:rgba(0,0,0,.6);
+#seriesControls select{
+  padding:10px;
+  background:#222;
   border:none;
   color:#fff;
-  font-size:18px;
-  padding:12px 16px;
-  cursor:pointer;
 }
 
-/* ================= PERFIL ================= */
+/* ========= PERFIL ========= */
 #perfilModal{
   position:fixed;
   inset:0;
   background:rgba(0,0,0,.85);
-  backdrop-filter:blur(10px);
   display:none;
   align-items:center;
   justify-content:center;
   z-index:6000;
 }
 #perfilBox{
-  width:480px;
+  width:460px;
   background:#181818;
-  border-radius:20px;
-  padding:30px;
+  padding:28px;
+  border-radius:18px;
 }
-#perfilBox h2{margin-bottom:20px}
-.perfil-item{
-  font-size:14px;
-  margin-bottom:12px;
-  color:#ccc;
-}
-.perfil-item span{
-  color:#fff;
-  font-weight:600;
-}
-.badge{
-  padding:4px 10px;
-  border-radius:999px;
-  font-size:12px;
-}
-.badge.ok{background:#16a34a}
-.badge.warn{background:#eab308}
-.perfil-footer{
-  margin-top:22px;
-  text-align:right;
-}
+.perfil-item{margin-bottom:10px;color:#ccc}
+.perfil-item span{color:#fff;font-weight:600}
+.perfil-footer{text-align:right;margin-top:20px}
 .perfil-footer button{
   background:none;
   border:none;
@@ -267,9 +211,9 @@ section h3{
 
 <body>
 
-<header id="header">
+<header>
   <h1>SESSÃO 99</h1>
-  <input id="search" placeholder="Buscar títulos...">
+  <input id="search" placeholder="Buscar...">
   <button class="profile" onclick="abrirPerfil()">👤</button>
 </header>
 
@@ -279,10 +223,7 @@ section h3{
     <h2 id="heroTitle"></h2>
     <div class="meta" id="heroMeta"></div>
     <p id="heroDesc"></p>
-    <div class="actions">
-      <button class="btn-play" onclick="abrirPlayer(heroItem)">▶ Assistir</button>
-      <button class="btn-info" onclick="abrirPlayer(heroItem)">Mais informações</button>
-    </div>
+    <button onclick="abrirPlayer(heroItem)">▶ Assistir</button>
   </div>
 </div>
 
@@ -290,14 +231,18 @@ section h3{
 
 <!-- PLAYER -->
 <div id="player">
-  <video id="video"></video>
+  <video id="video" autoplay></video>
   <button id="close" onclick="fecharPlayer()">⬅</button>
   <div id="overlay">
     <div id="info">
       <h1 id="pTitle"></h1>
       <div class="meta" id="pMeta"></div>
       <p id="pDesc"></p>
-      <button onclick="video.play()">▶ Assistir</button>
+
+      <div id="seriesControls">
+        <select id="selTemporada"></select>
+        <select id="selEpisodio"></select>
+      </div>
     </div>
   </div>
 </div>
@@ -323,12 +268,12 @@ const sb = supabase.createClient(
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-let dados=[], heroItem=null, atual=null, usuario=null;
+let dados=[], heroItem=null, usuario=null, serieAtual=[], episodioAtual=null;
 
 /* INIT */
 (async()=>{
   if(!localStorage.usuario){location.href="login.html";return;}
-  usuario = JSON.parse(localStorage.usuario);
+  usuario=JSON.parse(localStorage.usuario);
   const { data } = await sb.from("filmes").select("*").eq("ativo",true);
   dados=data||[];
   montarHero();
@@ -337,21 +282,21 @@ let dados=[], heroItem=null, atual=null, usuario=null;
 
 /* HERO */
 function montarHero(){
-  heroItem = dados.find(d=>d.destaque) || dados[0];
-  heroImg.src = heroItem.capa_url;
-  heroTitle.textContent = heroItem.titulo || heroItem.serie_nome;
-  heroMeta.textContent = `${heroItem.genero||""} • ${heroItem.tipo==="serie"?"Série":"Filme"}`;
-  heroDesc.textContent = heroItem.descricao || "";
+  heroItem=dados.find(d=>d.destaque)||dados[0];
+  heroImg.src=heroItem.capa_url;
+  heroTitle.textContent=heroItem.titulo||heroItem.serie_nome;
+  heroMeta.textContent=`${heroItem.genero||""} • ${heroItem.tipo==="serie"?"Série":"Filme"}`;
+  heroDesc.textContent=heroItem.descricao||"";
 }
 
 /* HOME */
 function renderHome(list){
   home.innerHTML="";
-  renderRow("🎬 Filmes", list.filter(i=>i.tipo==="filme"));
-  renderRow("📺 Séries", [...new Map(list.filter(i=>i.tipo==="serie").map(s=>[s.serie_nome,s])).values()]);
+  renderRow("🎬 Filmes",list.filter(i=>i.tipo==="filme"));
+  renderRow("📺 Séries",[...new Map(list.filter(i=>i.tipo==="serie").map(s=>[s.serie_nome,s])).values()]);
 }
 function renderRow(t,it){
-  if(!it.length) return;
+  if(!it.length)return;
   const s=document.createElement("section");
   s.innerHTML=`<h3>${t}</h3>`;
   const r=document.createElement("div");r.className="row";
@@ -368,12 +313,41 @@ function renderRow(t,it){
 
 /* PLAYER */
 function abrirPlayer(item){
-  atual=item;
   player.style.display="block";
-  video.src=item.video_url;
-  pTitle.textContent=item.titulo||item.serie_nome;
-  pMeta.textContent=`${item.genero||""} • ${item.tipo==="serie"?"Série":"Filme"}`;
-  pDesc.textContent=item.descricao||"";
+
+  if(item.tipo==="filme"){
+    tocar(item);
+    seriesControls.style.display="none";
+  }else{
+    abrirSerie(item.serie_nome);
+  }
+}
+function tocar(ep){
+  episodioAtual=ep;
+  video.src=ep.video_url;
+  video.play();
+  pTitle.textContent=ep.titulo||ep.serie_nome;
+  pMeta.textContent=`${ep.genero||""} • ${ep.tipo==="serie"?"Série":"Filme"}`;
+  pDesc.textContent=ep.descricao||"";
+}
+function abrirSerie(nome){
+  serieAtual=dados
+    .filter(d=>d.serie_nome===nome)
+    .sort((a,b)=>a.temporada-b.temporada||a.episodio-b.episodio);
+  seriesControls.style.display="flex";
+  montarTemporadas();
+}
+function montarTemporadas(){
+  const temps=[...new Set(serieAtual.map(e=>e.temporada))];
+  selTemporada.innerHTML=temps.map(t=>`<option value="${t}">Temporada ${t}</option>`).join("");
+  selTemporada.onchange=montarEpisodios;
+  montarEpisodios();
+}
+function montarEpisodios(){
+  const eps=serieAtual.filter(e=>e.temporada==selTemporada.value);
+  selEpisodio.innerHTML=eps.map((e,i)=>`<option value="${i}">Episódio ${e.episodio}</option>`).join("");
+  selEpisodio.onchange=()=>tocar(eps[selEpisodio.value]);
+  tocar(eps[0]);
 }
 function fecharPlayer(){
   video.pause();
@@ -386,9 +360,7 @@ function abrirPerfil(){
   pfEmail.textContent=usuario.email;
   pfCpf.textContent=usuario.cpf||"-";
   pfWhats.textContent=usuario.whatsapp||"-";
-  pfStatus.innerHTML = usuario.status==="ativo"
-    ? '<span class="badge ok">ATIVO</span>'
-    : '<span class="badge warn">PENDENTE</span>';
+  pfStatus.textContent=usuario.status;
   pfTrial.textContent=usuario.trial_expires_at;
   perfilModal.style.display="flex";
 }
@@ -403,13 +375,9 @@ search.oninput=()=>{
   renderHome(dados.filter(d=>d.titulo?.toLowerCase().includes(v)||d.serie_nome?.toLowerCase().includes(v)));
 };
 
-/* HEADER BEHAVIOR */
-let lastScroll=0;
-window.addEventListener("scroll",()=>{
-  const cur=window.scrollY;
-  header.classList.toggle("hidden", cur>lastScroll && cur>80);
-  header.classList.toggle("solid", cur>40);
-  lastScroll=cur;
+/* ESC FECHA */
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"&&player.style.display==="block")fecharPlayer();
 });
 </script>
 
