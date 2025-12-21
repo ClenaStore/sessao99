@@ -13,6 +13,7 @@
   --text:#fff;
   --muted:#b3b3b3;
   --accent:#e50914;
+  --focus:#fff;
 }
 *{box-sizing:border-box}
 
@@ -24,17 +25,45 @@ body{
   overflow:hidden;
 }
 
+/* ================= PERFIS ================= */
+#profiles{
+  position:fixed;
+  inset:0;
+  background:#000;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  z-index:999;
+}
+.profile-row{
+  display:flex;
+  gap:40px;
+}
+.profile{
+  text-align:center;
+  cursor:pointer;
+  outline:none;
+}
+.profile img{
+  width:120px;
+  height:120px;
+  border-radius:8px;
+  border:3px solid transparent;
+}
+.profile:focus img{border-color:var(--focus)}
+.profile span{display:block;margin-top:10px}
+
 /* ================= HOME ================= */
 #home{
   position:absolute;
   inset:0;
-  padding-top:90px;
+  padding-top:60px;
   overflow-y:auto;
 }
 .section{margin-bottom:46px}
 .section h2{
   margin:0 0 16px 48px;
-  font-size:22px;
 }
 .row{
   display:flex;
@@ -45,12 +74,25 @@ body{
 .card{
   min-width:200px;
   cursor:pointer;
+  outline:none;
+  position:relative;
 }
 .card img{
   width:100%;
   height:300px;
   object-fit:cover;
   border-radius:4px;
+}
+.card:focus{
+  outline:4px solid var(--focus);
+  transform:scale(1.08);
+}
+.progress{
+  position:absolute;
+  bottom:0;
+  left:0;
+  height:4px;
+  background:var(--accent);
 }
 
 /* ================= PLAYER ================= */
@@ -70,7 +112,6 @@ body{
 #overlay{
   position:absolute;
   inset:0;
-  transition:.4s;
 }
 #overlay::before{
   content:"";
@@ -79,30 +120,29 @@ body{
   background:
     linear-gradient(to right,rgba(0,0,0,.9) 20%,rgba(0,0,0,.5) 50%,transparent),
     linear-gradient(to top,rgba(0,0,0,.85) 10%,transparent 45%);
-  transition:.4s;
 }
-
-/* INFO */
 #info{
   position:absolute;
   left:60px;
   bottom:90px;
   max-width:600px;
-  transition:.4s;
 }
-#info h1{
-  font-size:44px;
-  margin:0 0 12px;
+#info h1{font-size:40px;margin:0 0 12px}
+#info p{color:var(--muted)}
+.actions{
+  margin-top:16px;
+  display:flex;
+  gap:10px;
 }
-#info p{
-  color:var(--muted);
-}
-#info button{
-  margin-top:20px;
-  padding:12px 22px;
+.actions button{
+  padding:12px 20px;
   font-weight:700;
   border:none;
   cursor:pointer;
+}
+.like,.dislike{
+  background:#222;
+  color:#fff;
 }
 
 /* ================= SUGESTÕES ================= */
@@ -114,9 +154,6 @@ body{
   padding:20px 48px 40px;
   display:none;
 }
-#suggestions h3{
-  margin:0 0 12px;
-}
 .sug-row{
   display:flex;
   gap:14px;
@@ -125,34 +162,38 @@ body{
   width:160px;
   height:240px;
   object-fit:cover;
-  border-radius:4px;
   cursor:pointer;
 }
 
 /* ================= ESTADOS ================= */
-.hide-ui #overlay::before,
+.hide-ui #overlay,
 .hide-ui #info{
   opacity:0;
   pointer-events:none;
-}
-
-/* MOBILE */
-@media(max-width:900px){
-  #info{
-    left:20px;
-    right:20px;
-    bottom:120px;
-  }
-  #info h1{font-size:28px}
 }
 </style>
 </head>
 
 <body>
 
-<div id="home"></div>
+<!-- PERFIS -->
+<div id="profiles">
+  <h1>Quem está assistindo?</h1>
+  <div class="profile-row">
+    <div class="profile" tabindex="0" onclick="selectProfile('Ana')">
+      <img src="https://i.pravatar.cc/150?img=32"><span>Ana</span>
+    </div>
+    <div class="profile" tabindex="0" onclick="selectProfile('Carlos')">
+      <img src="https://i.pravatar.cc/150?img=12"><span>Carlos</span>
+    </div>
+    <div class="profile" tabindex="0" onclick="selectProfile('Kids')">
+      <img src="https://i.pravatar.cc/150?img=8"><span>Kids</span>
+    </div>
+  </div>
+</div>
 
-<!-- PLAYER ÚNICO -->
+<div id="home" style="display:none"></div>
+
 <div id="player">
   <video id="video" autoplay playsinline></video>
 
@@ -160,136 +201,157 @@ body{
     <div id="info">
       <h1 id="titulo"></h1>
       <p id="descricao"></p>
-      <button onclick="assistir()">▶ Assistir</button>
+      <div class="actions">
+        <button onclick="assistir()">▶ Assistir</button>
+        <button class="like" onclick="avaliar(1)">👍</button>
+        <button class="dislike" onclick="avaliar(-1)">👎</button>
+      </div>
     </div>
   </div>
 
   <div id="suggestions">
-    <h3>Sugestões para você</h3>
     <div class="sug-row" id="sugRow"></div>
   </div>
 </div>
 
 <script>
-/* ================= SUPABASE ================= */
 const supabaseClient = supabase.createClient(
-  "https://dxkszikemntfusfyrzos.supabase.co",
-  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+ "https://dxkszikemntfusfyrzos.supabase.co",
+ "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-const home = document.getElementById("home");
-const player = document.getElementById("player");
-const video = document.getElementById("video");
-const suggestions = document.getElementById("suggestions");
-const sugRow = document.getElementById("sugRow");
+let perfil=null;
+let dados=[], atual=null;
+let progresso={}, avaliacoes={};
+let hideTimer=null;
 
-let dados = [];
-let atual = null;
-let hideTimer = null;
+const home=document.getElementById("home");
+const video=document.getElementById("video");
 
-/* ================= LOAD ================= */
+/* PERFIL */
+function selectProfile(p){
+ perfil=p;
+ document.getElementById("profiles").style.display="none";
+ home.style.display="block";
+ carregarLocal();
+ load();
+}
+function carregarLocal(){
+ progresso=JSON.parse(localStorage.getItem("progress_"+perfil)||"{}");
+ avaliacoes=JSON.parse(localStorage.getItem("rate_"+perfil)||"{}");
+}
+
+/* LOAD */
 async function load(){
-  const { data } = await supabaseClient
-    .from("filmes")
-    .select("*")
-    .eq("ativo", true);
-
-  dados = data || [];
-  renderHome();
+ const {data}=await supabaseClient.from("filmes").select("*").eq("ativo",true);
+ dados=data||[];
+ renderHome();
 }
 
-/* ================= HOME ================= */
+/* HOME */
 function renderHome(){
-  home.innerHTML = "";
-  renderSection("Filmes", dados.filter(d => d.tipo === "filme"));
-  renderSection(
-    "Séries",
-    [...new Map(dados.filter(d => d.tipo === "serie").map(s => [s.serie_nome, s])).values()]
-  );
+ home.innerHTML="";
+ renderSection("Continuar Assistindo",dados.filter(d=>progresso[d.id]));
+ renderSection("Filmes",dados.filter(d=>d.tipo==="filme"));
+}
+function renderSection(titulo,itens){
+ if(!itens.length)return;
+ const sec=document.createElement("div");
+ sec.className="section";
+ sec.innerHTML=`<h2>${titulo}</h2>`;
+ const row=document.createElement("div");
+ row.className="row";
+ itens.forEach(i=>{
+  const c=document.createElement("div");
+  c.className="card";
+  c.tabIndex=0;
+  c.innerHTML=`<img src="${i.capa_url}">`;
+  if(progresso[i.id]){
+    c.innerHTML+=`<div class="progress" style="width:${progresso[i.id]}%"></div>`;
+  }
+  c.onclick=()=>abrir(i);
+  row.appendChild(c);
+ });
+ sec.appendChild(row);
+ home.appendChild(sec);
 }
 
-function renderSection(titulo, itens){
-  const sec = document.createElement("div");
-  sec.className = "section";
-  sec.innerHTML = `<h2>${titulo}</h2>`;
-
-  const row = document.createElement("div");
-  row.className = "row";
-
-  itens.forEach(i => {
-    const c = document.createElement("div");
-    c.className = "card";
-    c.innerHTML = `<img src="${i.capa_url}">`;
-    c.onclick = () => abrir(i);
-    row.appendChild(c);
-  });
-
-  sec.appendChild(row);
-  home.appendChild(sec);
-}
-
-/* ================= ABRIR ================= */
+/* PLAYER */
 function abrir(item){
-  atual = item;
-  player.style.display = "block";
-
-  document.getElementById("titulo").textContent = item.titulo || item.serie_nome;
-  document.getElementById("descricao").textContent = item.descricao || "";
-
-  video.src = item.video_url;
-  video.muted = false;   // 🔊 ÁUDIO DESDE O INÍCIO
-  video.play();
-
-  document.body.classList.remove("hide-ui");
-  suggestions.style.display = "none";
-
-  iniciarTimer();
+ atual=item;
+ document.getElementById("player").style.display="block";
+ document.getElementById("titulo").textContent=item.titulo||item.serie_nome;
+ document.getElementById("descricao").textContent=item.descricao||"";
+ video.src=item.video_url;
+ video.play();
+ document.body.classList.remove("hide-ui");
+ iniciarTimer();
 }
 
-/* ================= TIMER 30s ================= */
+/* TIMER */
 function iniciarTimer(){
-  clearTimeout(hideTimer);
-  hideTimer = setTimeout(() => {
-    document.body.classList.add("hide-ui");
-  }, 30000);
+ clearTimeout(hideTimer);
+ hideTimer=setTimeout(()=>document.body.classList.add("hide-ui"),30000);
 }
 
-/* ================= ASSISTIR ================= */
+/* ASSISTIR */
 function assistir(){
-  document.body.classList.add("hide-ui");
-  clearTimeout(hideTimer);
+ document.body.classList.add("hide-ui");
+ clearTimeout(hideTimer);
 }
 
-/* ================= EVENTS ================= */
-video.addEventListener("pause", () => {
-  clearTimeout(hideTimer);
-  document.body.classList.remove("hide-ui");
-  mostrarSugestoes();
+/* AVALIAR */
+function avaliar(v){
+ avaliacoes[atual.id]=v;
+ localStorage.setItem("rate_"+perfil,JSON.stringify(avaliacoes));
+}
+
+/* PLAY / PAUSE */
+video.addEventListener("pause",()=>{
+ clearTimeout(hideTimer);
+ document.body.classList.remove("hide-ui");
+ mostrarSugestoes();
+});
+video.addEventListener("play",()=>{
+ document.getElementById("suggestions").style.display="none";
+ iniciarTimer();
+});
+video.addEventListener("timeupdate",()=>{
+ if(video.duration){
+  progresso[atual.id]=Math.floor(video.currentTime/video.duration*100);
+  localStorage.setItem("progress_"+perfil,JSON.stringify(progresso));
+ }
 });
 
-video.addEventListener("play", () => {
-  suggestions.style.display = "none";
-  iniciarTimer();
-});
-
-/* ================= SUGESTÕES ================= */
+/* SUGESTÕES */
 function mostrarSugestoes(){
-  sugRow.innerHTML = "";
-  dados
-    .filter(d => d.id !== atual.id)
-    .slice(0, 6)
-    .forEach(s => {
-      const img = document.createElement("img");
-      img.src = s.capa_url;
-      img.onclick = () => abrir(s);
-      sugRow.appendChild(img);
-    });
-
-  suggestions.style.display = "block";
+ const row=document.getElementById("sugRow");
+ row.innerHTML="";
+ dados.filter(d=>d.id!==atual.id).slice(0,6).forEach(s=>{
+  const img=document.createElement("img");
+  img.src=s.capa_url;
+  img.onclick=()=>abrir(s);
+  row.appendChild(img);
+ });
+ document.getElementById("suggestions").style.display="block";
 }
 
-/* INIT */
-load();
+/* CONTROLE REMOTO */
+document.addEventListener("keydown",e=>{
+ if(e.key==="ArrowRight" && document.activeElement.nextElementSibling)
+  document.activeElement.nextElementSibling.focus();
+ if(e.key==="ArrowLeft" && document.activeElement.previousElementSibling)
+  document.activeElement.previousElementSibling.focus();
+ if(e.key==="Enter" && document.activeElement.classList.contains("card"))
+  document.activeElement.click();
+ if(e.key===" "){
+  e.preventDefault();
+  video.paused?video.play():video.pause();
+ }
+ if(e.key==="Escape"){
+  document.getElementById("player").style.display="none";
+ }
+});
 </script>
 
 </body>
