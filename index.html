@@ -500,6 +500,17 @@ html, body {
 <header>
   <!-- 🔍 BUSCA MOBILE -->
 <div id="searchMobileBox">
+</div>
+
+<header>
+  <h1>SESSÃO 99</h1>
+  <input id="busca" placeholder="Buscar...">
+  <div id="perfilBtn" onclick="abrirPerfil()"><span>US</span></div>
+  <div id="searchBtn" onclick="toggleSearch()">🔍</div>
+</header>
+
+<!-- 🔍 BUSCA MOBILE -->
+<div id="searchMobileBox">
   <input
     id="buscaMobile"
     placeholder="Buscar filmes e séries..."
@@ -507,21 +518,8 @@ html, body {
   >
 </div>
 
-  <h1>SESSÃO 99</h1>
-  <input id="busca" placeholder="Buscar...">
-  <div id="perfilBtn" onclick="abrirPerfil()"><span>US</span></div>
-  <div id="searchBtn" onclick="toggleSearch()">🔍</div>
-
-</header>
-
-<!-- 🔍 RESULTADOS DA BUSCA -->
+<!-- 🔍 RESULTADOS -->
 <div id="searchResults">
-  <input
-    id="buscaMobile"
-    placeholder="Buscar filmes e séries..."
-    autocomplete="off"
-  >
-
   <h4>Resultados</h4>
   <div class="search-grid" id="searchGrid"></div>
 </div>
@@ -687,8 +685,9 @@ const searchMobileBox = document.getElementById("searchMobileBox");
 buscaMobile.oninput = () => {
   const q = buscaMobile.value.trim().toLowerCase();
 
-  if(q.length < 2){
+  if (q.length < 2) {
     searchGrid.innerHTML = "";
+    searchResults.style.display = "none";
     return;
   }
 
@@ -700,10 +699,10 @@ buscaMobile.oninput = () => {
 
   searchGrid.innerHTML = "";
 
-  if(!resultados.length){
+  if (!resultados.length) {
     searchGrid.innerHTML =
       "<p style='color:#777'>Nenhum resultado encontrado</p>";
-  }else{
+  } else {
     resultados.forEach(r => {
       searchGrid.innerHTML += `
         <div class="search-card" onclick='abrirPlayer(${JSON.stringify(r)})'>
@@ -716,6 +715,7 @@ buscaMobile.oninput = () => {
 
   searchResults.style.display = "block";
 };
+
 
 
 buscaMobile.oninput = () => {
@@ -753,13 +753,16 @@ buscaMobile.oninput = () => {
   searchResults.style.display = "block";
 };
 document.addEventListener("click", e => {
-  if(
+  if (
     !searchResults.contains(e.target) &&
-    e.target !== busca
-  ){
+    !searchMobileBox.contains(e.target) &&
+    e.target.id !== "searchBtn"
+  ) {
     searchResults.style.display = "none";
+    searchMobileBox.style.display = "none";
   }
 });
+
 
 
 function setFiltro(f, el){
