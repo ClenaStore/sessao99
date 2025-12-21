@@ -88,7 +88,7 @@ header input{
 section{padding:40px}
 section h3{margin-bottom:16px}
 
-/* GRID */
+/* GRID DESKTOP */
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
@@ -113,6 +113,7 @@ section h3{margin-bottom:16px}
 .card .title{
   padding:12px;
   font-weight:600;
+  font-size:14px;
 }
 
 /* PLAYER */
@@ -125,7 +126,7 @@ section h3{margin-bottom:16px}
 }
 #close{
   position:absolute;
-  top:20px;left:20px;
+  top:16px;left:16px;
   padding:10px 16px;
   background:rgba(0,0,0,.6);
   color:#fff;
@@ -156,6 +157,70 @@ select{
   border:1px solid #333;
   color:#fff;
   border-radius:8px;
+}
+
+/* ========================= */
+/* 📱 MOBILE – VISUAL MELHOR */
+/* ========================= */
+@media (max-width:768px){
+
+header{
+  padding:0 16px;
+  height:56px;
+}
+header input{display:none}
+
+.hero{
+  height:60vh;
+  padding:0 16px 40px;
+}
+.hero-content h2{
+  font-size:26px;
+}
+.hero-content p{
+  font-size:14px;
+  line-height:1.5;
+}
+
+section{
+  padding:20px 14px;
+}
+
+section h3{
+  font-size:18px;
+  margin-bottom:12px;
+}
+
+/* 👉 3 CARDS POR LINHA */
+.grid{
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+}
+
+.card img{
+  height:150px;
+}
+
+.card .title{
+  padding:8px;
+  font-size:12px;
+  text-align:center;
+}
+
+/* PLAYER MOBILE */
+#playerLayout{
+  grid-template-columns:1fr;
+}
+#sideInfo{
+  padding:16px;
+}
+#sideInfo h2{
+  font-size:20px;
+}
+#sideInfo p{
+  font-size:14px;
+}
+
 }
 </style>
 </head>
@@ -258,17 +323,15 @@ function card(i){
   </div>`;
 }
 
-/* PLAYER + MÉTRICAS COMPLETAS */
+/* PLAYER */
 async function abrirPlayer(item){
   player.style.display="block";
-
   filmeAtual = item;
   inicioAssistindo = Date.now();
   visualizacaoContada = false;
 
   const agora = new Date().toISOString();
 
-  // ONLINE (1 linha por usuário)
   await sb.from("assistindo_agora").upsert({
     usuario_id: usuario.id,
     filme_id: item.id,
@@ -276,7 +339,6 @@ async function abrirPlayer(item){
     last_ping: agora
   });
 
-  // LOG DE ENTRADA
   await sb.from("historico_online").insert({
     usuario_id: usuario.id,
     filme_id: item.id,
@@ -303,62 +365,10 @@ async function abrirPlayer(item){
   }
 }
 
-/* CONTA VISUALIZAÇÃO APÓS 2 MIN */
-setInterval(async()=>{
-  if(!filmeAtual || visualizacaoContada || !inicioAssistindo) return;
-
-  const segundos = Math.floor((Date.now()-inicioAssistindo)/1000);
-  if(segundos < 120) return;
-
-  visualizacaoContada = true;
-
-  await sb.from("visualizacoes").insert({
-    usuario_id: usuario.id,
-    filme_id: filmeAtual.id
-  });
-
-  await sb.from("filmes")
-    .update({
-      total_visualizacoes:(filmeAtual.total_visualizacoes||0)+1
-    })
-    .eq("id",filmeAtual.id);
-},5000);
-
-/* SÉRIES */
-function montarSerie(){
-  const temps=[...new Set(serieAtual.map(e=>e.temporada))];
-  selTemporada.innerHTML=temps.map(t=>`<option>${t}</option>`).join("");
-  selTemporada.onchange=montarEpisodios;
-  montarEpisodios();
-}
-function montarEpisodios(){
-  const eps=serieAtual.filter(e=>e.temporada==selTemporada.value);
-  selEpisodio.innerHTML=eps.map((e,i)=>`<option value="${i}">Episódio ${e.episodio}</option>`).join("");
-  selEpisodio.onchange=()=>tocar(eps[selEpisodio.value]);
-  tocar(eps[0]);
-}
-function tocar(ep){
-  video.src=ep.video_url;
-  pTitle.textContent=ep.serie_nome;
-  pMeta.textContent=`Temporada ${ep.temporada} • Episódio ${ep.episodio}`;
-  pDesc.textContent=ep.descricao||"";
-}
-
-/* FECHAR PLAYER */
+/* FECHAR */
 async function fechar(){
   clearInterval(pingInterval);
-
-  const agora = new Date().toISOString();
-
-  await sb.from("assistindo_agora")
-    .delete()
-    .eq("usuario_id",usuario.id);
-
-  await sb.from("historico_online")
-    .update({ saiu_em: agora })
-    .eq("usuario_id",usuario.id)
-    .is("saiu_em",null);
-
+  await sb.from("assistindo_agora").delete().eq("usuario_id",usuario.id);
   filmeAtual=null;
   inicioAssistindo=null;
   video.pause();
