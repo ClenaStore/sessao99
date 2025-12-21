@@ -6,7 +6,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
 <style>
 :root{
@@ -16,10 +15,7 @@
   --muted:#aaa;
   --accent:#e50914;
 }
-*{
-  box-sizing:border-box;
-  scrollbar-width:none;
-}
+*{box-sizing:border-box;scrollbar-width:none}
 *::-webkit-scrollbar{display:none}
 
 body{
@@ -30,7 +26,7 @@ body{
   overflow:hidden;
 }
 
-/* HEADER */
+/* HEADER (IDÊNTICO) */
 header{
   position:fixed;
   top:0;left:0;right:0;
@@ -44,185 +40,67 @@ header{
   z-index:50;
 }
 .logo{color:var(--accent);font-size:22px;font-weight:800}
-.search{flex:1}
-.search input{
+
+/* LOGIN CONTAINER */
+#login{
+  height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.box{
+  width:420px;
+  background:var(--panel);
+  border-radius:18px;
+  padding:32px;
+  box-shadow:0 40px 80px rgba(0,0,0,.8);
+}
+
+.box h1{
+  margin:0 0 8px;
+  font-size:24px;
+  color:var(--accent);
+}
+.box p{
+  margin:0 0 20px;
+  color:var(--muted);
+  font-size:14px;
+}
+
+/* INPUTS */
+.box input{
   width:100%;
-  height:42px;
-  border-radius:20px;
+  height:44px;
+  margin-bottom:12px;
+  border-radius:22px;
   border:1px solid #333;
   background:#111;
   color:#fff;
   padding:0 18px;
+  outline:none;
 }
-.profile{
-  width:40px;height:40px;
-  border-radius:50%;
-  background:#222;
-  border:none;color:#fff;
-  font-size:18px;cursor:pointer;
-}
+.box input::placeholder{color:var(--muted)}
 
-/* FILTROS */
-.filters{
-  margin-top:70px;
-  padding:14px 24px;
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  border-bottom:1px solid #222;
-}
-.filters button{
-  padding:8px 16px;
-  border-radius:20px;
-  border:1px solid #333;
-  background:#111;
-  color:#fff;
-  cursor:pointer;
-}
-.filters button.active{
+/* BUTTON */
+.box button{
+  width:100%;
+  height:46px;
+  border-radius:24px;
+  border:none;
   background:var(--accent);
-  border-color:var(--accent);
-}
-
-/* HOME */
-#home{
-  height:calc(100vh - 130px);
-  overflow-y:auto;
-  padding:20px 0 60px;
-}
-.section{margin-bottom:40px}
-.section h2{margin:0 0 14px 24px}
-.row{
-  display:flex;
-  gap:14px;
-  padding:0 24px;
-  overflow-x:auto;
-}
-.card{
-  min-width:160px;
-  cursor:pointer;
-  transition:transform .2s;
-}
-.card:hover{transform:scale(1.04)}
-.card img{
-  width:100%;
-  height:240px;
-  object-fit:cover;
-  border-radius:10px;
-}
-
-/* PLAYER */
-#player{
-  position:fixed;
-  inset:0;
-  background:#000;
-  display:none;
-  z-index:100;
-}
-#player video{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-}
-#homeBtn{
-  position:absolute;
-  top:20px;left:20px;
-  background:rgba(0,0,0,.6);
-  border:none;
   color:#fff;
-  font-size:20px;
-  padding:10px 14px;
-  cursor:pointer;
-  z-index:10;
-}
-
-/* OVERLAY */
-#overlay{position:absolute;inset:0}
-#overlay::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  background:
-    linear-gradient(to right,rgba(0,0,0,.85) 25%,transparent 60%),
-    linear-gradient(to top,rgba(0,0,0,.9) 15%,transparent 50%);
-}
-#info{
-  position:absolute;
-  left:40px;
-  bottom:120px;
-  max-width:520px;
-}
-#info h1{margin:0 0 10px}
-#info p{color:var(--muted)}
-#info button{
-  margin-top:16px;
-  padding:12px 22px;
-  border:none;
   font-weight:700;
   cursor:pointer;
+  margin-top:6px;
 }
 
-/* SERIES CONTROLS */
-.series-controls{
-  margin-top:10px;
-  display:none;
-  gap:10px;
-}
-.series-controls select{
-  padding:10px;
-  background:#111;
-  color:#fff;
-  border:1px solid #333;
-}
-
-/* EP CONTROLS */
-#epControls{
-  position:absolute;
-  right:20px;
-  bottom:120px;
-  display:none;
-  gap:10px;
-  z-index:10;
-}
-#epControls button{
-  background:rgba(0,0,0,.6);
-  border:none;
-  color:#fff;
-  font-size:22px;
-  padding:10px 14px;
-  cursor:pointer;
-}
-
-/* PERFIL */
-#perfilModal{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.65);
-  backdrop-filter:blur(8px);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:120;
-}
-#perfilBox{
-  width:420px;
-  background:#111;
-  border-radius:18px;
-  padding:26px;
-  position:relative;
-}
-#perfilClose{
-  position:absolute;
-  top:12px;right:14px;
-  cursor:pointer;
-}
-.perfil-item{margin-bottom:10px;color:#ccc}
-.perfil-footer{text-align:right}
-.perfil-footer button{
-  background:none;
-  border:none;
-  color:#ff6b6b;
-  cursor:pointer;
+/* MSG */
+.msg{
+  margin-top:12px;
+  min-height:18px;
+  font-size:14px;
+  color:#ff9f9f;
 }
 </style>
 </head>
@@ -231,243 +109,102 @@ header{
 
 <header>
   <div class="logo">SESSÃO 99</div>
-  <div class="search">
-    <input id="search" placeholder="Buscar...">
-  </div>
-  <button class="profile" onclick="abrirPerfil()">👤</button>
 </header>
 
-<div class="filters" id="filters"></div>
+<div id="login">
+  <div class="box">
+    <h1>Entrar</h1>
+    <p>Use seu email para acessar ou criar sua conta</p>
 
-<div id="home"></div>
+    <input id="email" placeholder="Email">
+    <input id="senha" type="password" placeholder="Senha">
+    <input id="cpf" placeholder="CPF">
+    <input id="celular" placeholder="Celular">
 
-<!-- PLAYER -->
-<div id="player">
-  <video id="video" playsinline></video>
-  <button id="homeBtn" onclick="fecharPlayer()">🏠</button>
-
-  <div id="epControls">
-    <button id="btnPrev">⏮</button>
-    <button id="btnNext">⏭</button>
-  </div>
-
-  <div id="overlay">
-    <div id="info">
-      <h1 id="titulo"></h1>
-      <p id="descricao"></p>
-
-      <div class="series-controls" id="seriesControls">
-        <select id="selTemporada"></select>
-        <select id="selEpisodio"></select>
-      </div>
-
-      <button onclick="assistir()">▶ Assistir</button>
-    </div>
-  </div>
-</div>
-
-<!-- PERFIL -->
-<div id="perfilModal">
-  <div id="perfilBox">
-    <div id="perfilClose" onclick="fecharPerfil()">✕</div>
-    <h2>Meu Perfil</h2>
-    <div class="perfil-item" id="p_email"></div>
-    <div class="perfil-footer">
-      <button onclick="logout()">Sair</button>
-    </div>
+    <button onclick="entrar()">Entrar</button>
+    <div class="msg" id="msg"></div>
   </div>
 </div>
 
 <script>
-if(!localStorage.usuario) location.href="login.html";
-
 const sb = supabase.createClient(
- "https://dxkszikemntfusfyrzos.supabase.co",
- "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+  "https://dxkszikemntfusfyrzos.supabase.co",
+  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-const home=document.getElementById("home");
-const filtersBox=document.getElementById("filters");
-const search=document.getElementById("search");
+const msg=document.getElementById("msg");
 
-const video=document.getElementById("video");
-const epControls=document.getElementById("epControls");
-const btnPrev=document.getElementById("btnPrev");
-const btnNext=document.getElementById("btnNext");
+/* ===== MASKS ===== */
+cpf.oninput=e=>{
+  let v=e.target.value.replace(/\D/g,"").slice(0,11);
+  v=v.replace(/(\d{3})(\d)/,"$1.$2");
+  v=v.replace(/(\d{3})(\d)/,"$1.$2");
+  v=v.replace(/(\d{3})(\d{1,2})$/,"$1-$2");
+  e.target.value=v;
+};
+celular.oninput=e=>{
+  let v=e.target.value.replace(/\D/g,"").slice(0,11);
+  v=v.replace(/(\d{2})(\d)/,"($1) $2");
+  v=v.replace(/(\d{5})(\d)/,"$1-$2");
+  e.target.value=v;
+};
 
-let dados=[], atual=null, serieAtual=[], indiceEp=0;
-let filtroGenero="Todos";
+/* ===== LOGIN / CADASTRO ===== */
+async function entrar(){
+  msg.textContent="";
 
-/* LOAD */
-async function load(){
- const {data}=await sb.from("filmes").select("*").eq("ativo",true);
- dados=data||[];
- montarFiltros();
- renderHome();
+  const email=emailInput=email.value.trim().toLowerCase();
+  const senhaVal=senha.value;
+  const cpfVal=cpf.value.replace(/\D/g,"");
+  const celVal=celular.value.replace(/\D/g,"");
+
+  if(!email||!senhaVal||!cpfVal||!celVal){
+    msg.textContent="Preencha todos os campos.";
+    return;
+  }
+
+  const {data:user}=await sb.from("usuarios").select("*").eq("email",email).single();
+
+  /* LOGIN */
+  if(user){
+    if(user.senha!==senhaVal){
+      msg.textContent="Senha incorreta.";
+      return;
+    }
+
+    const agora=new Date();
+    const exp=new Date(user.trial_expires_at);
+
+    if(user.status==="pendente" && agora>exp){
+      msg.textContent="Seu período de teste expirou.";
+      return;
+    }
+
+    localStorage.usuario=JSON.stringify({id:user.id,email:user.email});
+    location.href="index.html";
+    return;
+  }
+
+  /* CADASTRO */
+  const expira=new Date(Date.now()+12*60*60*1000);
+
+  const {error}=await sb.from("usuarios").insert({
+    email,
+    senha:senhaVal,
+    cpf:cpfVal,
+    celular:celVal,
+    status:"pendente",
+    trial_expires_at:expira.toISOString()
+  });
+
+  if(error){
+    msg.textContent="Erro ao criar conta.";
+    return;
+  }
+
+  localStorage.usuario=JSON.stringify({email});
+  location.href="index.html";
 }
-
-/* FILTROS DINÂMICOS */
-function montarFiltros(){
- const generos=[...new Set(dados.map(d=>d.genero).filter(Boolean))];
- filtersBox.innerHTML="";
- ["Todos",...generos].forEach(g=>{
-   const b=document.createElement("button");
-   b.textContent=g;
-   b.className=g===filtroGenero?"active":"";
-   b.onclick=()=>{
-     filtroGenero=g;
-     montarFiltros();
-     renderHome();
-   };
-   filtersBox.appendChild(b);
- });
-}
-
-/* HOME */
-function renderHome(){
- home.innerHTML="";
- const termo=search.value.toLowerCase();
-
- const filmes=dados.filter(d=>
-   d.tipo==="filme" &&
-   (filtroGenero==="Todos"||d.genero===filtroGenero) &&
-   (d.titulo||"").toLowerCase().includes(termo)
- );
-
- const series=[...new Map(
-   dados.filter(d=>
-     d.tipo==="serie" &&
-     (filtroGenero==="Todos"||d.genero===filtroGenero) &&
-     (d.serie_nome||"").toLowerCase().includes(termo)
-   ).map(s=>[s.serie_nome,s])
- ).values()];
-
- if(filmes.length) renderSection("Filmes",filmes);
- if(series.length) renderSection("Séries",series);
-}
-
-function renderSection(t,itens){
- const s=document.createElement("div");
- s.className="section";
- s.innerHTML=`<h2>${t}</h2>`;
- const r=document.createElement("div");
- r.className="row";
- itens.forEach(i=>{
-   const c=document.createElement("div");
-   c.className="card";
-   c.innerHTML=`<img src="${i.capa_url}">`;
-   c.onclick=()=>abrir(i);
-   r.appendChild(c);
- });
- s.appendChild(r);
- home.appendChild(s);
-}
-
-/* PLAYER */
-function abrir(item){
- atual=item;
- document.getElementById("player").style.display="block";
- titulo.textContent=item.titulo||item.serie_nome;
- descricao.textContent=item.descricao||"";
-
- if(item.tipo==="serie"){
-   montarSerie(item.serie_nome);
-   seriesControls.style.display="flex";
- }else{
-   seriesControls.style.display="none";
-   epControls.style.display="none";
- }
-
- carregarVideo(item.video_url);
-}
-
-function carregarVideo(url){
- if(Hls.isSupported() && url.endsWith(".m3u8")){
-   const hls=new Hls();
-   hls.loadSource(url);
-   hls.attachMedia(video);
- }else{
-   video.src=url;
- }
- video.play();
-}
-
-function assistir(){video.play();}
-
-/* SERIES */
-function montarSerie(nome){
- serieAtual=dados
-   .filter(d=>d.serie_nome===nome)
-   .sort((a,b)=>a.temporada-b.temporada||a.episodio-b.episodio);
-
- const temps=[...new Set(serieAtual.map(e=>e.temporada))];
- selTemporada.innerHTML="";
- temps.forEach(t=>selTemporada.innerHTML+=`<option value="${t}">Temporada ${t}</option>`);
- selTemporada.onchange=montarEpisodios;
- montarEpisodios();
-}
-
-function montarEpisodios(){
- const t=+selTemporada.value;
- const eps=serieAtual.filter(e=>e.temporada===t);
- selEpisodio.innerHTML="";
- eps.forEach((e,i)=>selEpisodio.innerHTML+=`<option value="${i}">Episódio ${e.episodio}</option>`);
- selEpisodio.onchange=()=>trocarEpisodio(eps,selEpisodio.value);
- trocarEpisodio(eps,0);
-}
-
-function trocarEpisodio(eps,i){
- indiceEp=i;
- atual=eps[i];
- carregarVideo(atual.video_url);
- btnPrev.style.display=i>0?"block":"none";
- btnNext.style.display=i<eps.length-1?"block":"none";
-}
-
-/* CONTROLES */
-btnPrev.onclick=()=>trocarEpisodio(
- serieAtual.filter(e=>e.temporada==selTemporada.value),
- indiceEp-1
-);
-btnNext.onclick=()=>trocarEpisodio(
- serieAtual.filter(e=>e.temporada==selTemporada.value),
- indiceEp+1
-);
-
-video.addEventListener("pause",()=>{
- if(atual?.tipo==="serie") epControls.style.display="flex";
-});
-video.addEventListener("play",()=>epControls.style.display="none");
-
-/* PERFIL */
-function abrirPerfil(){
- const u=JSON.parse(localStorage.usuario);
- p_email.textContent=u.email;
- perfilModal.style.display="flex";
-}
-function fecharPerfil(){perfilModal.style.display="none";}
-function logout(){
- localStorage.removeItem("usuario");
- location.href="login.html";
-}
-
-/* TECLADO / TV */
-document.addEventListener("keydown",e=>{
- if(e.key==="ArrowLeft"&&btnPrev.style.display!=="none")btnPrev.click();
- if(e.key==="ArrowRight"&&btnNext.style.display!=="none")btnNext.click();
- if(e.key==="Enter") video.paused?video.play():video.pause();
-});
-
-/* FECHAR */
-function fecharPlayer(){
- video.pause();
- video.src="";
- document.getElementById("player").style.display="none";
-}
-
-search.oninput=renderHome;
-
-load();
 </script>
 
 </body>
