@@ -258,7 +258,7 @@ function card(i){
   </div>`;
 }
 
-/* PLAYER + MÉTRICAS (CORRIGIDO) */
+/* PLAYER + MÉTRICAS COMPLETAS */
 async function abrirPlayer(item){
   player.style.display="block";
 
@@ -266,17 +266,27 @@ async function abrirPlayer(item){
   inicioAssistindo = Date.now();
   visualizacaoContada = false;
 
+  const agora = new Date().toISOString();
+
+  // ONLINE (1 linha por usuário)
   await sb.from("assistindo_agora").upsert({
     usuario_id: usuario.id,
     filme_id: item.id,
-    last_ping: new Date().toISOString()
+    started_at: agora,
+    last_ping: agora
+  });
+
+  // LOG DE ENTRADA
+  await sb.from("historico_online").insert({
+    usuario_id: usuario.id,
+    filme_id: item.id,
+    entrou_em: agora
   });
 
   pingInterval = setInterval(()=>{
     sb.from("assistindo_agora")
       .update({ last_ping:new Date().toISOString() })
-      .eq("usuario_id",usuario.id)
-      .eq("filme_id",item.id);
+      .eq("usuario_id",usuario.id);
   },30000);
 
   if(item.tipo==="filme"){
@@ -302,25 +312,16 @@ setInterval(async()=>{
 
   visualizacaoContada = true;
 
-  const { data } = await sb
-    .from("visualizacoes")
-    .select("id")
-    .eq("usuario_id",usuario.id)
-    .eq("filme_id",filmeAtual.id)
-    .limit(1);
+  await sb.from("visualizacoes").insert({
+    usuario_id: usuario.id,
+    filme_id: filmeAtual.id
+  });
 
-  if(data.length === 0){
-    await sb.from("visualizacoes").insert({
-      usuario_id: usuario.id,
-      filme_id: filmeAtual.id
-    });
-
-    await sb.from("filmes")
-      .update({
-        total_visualizacoes:(filmeAtual.total_visualizacoes||0)+1
-      })
-      .eq("id",filmeAtual.id);
-  }
+  await sb.from("filmes")
+    .update({
+      total_visualizacoes:(filmeAtual.total_visualizacoes||0)+1
+    })
+    .eq("id",filmeAtual.id);
 },5000);
 
 /* SÉRIES */
@@ -343,16 +344,20 @@ function tocar(ep){
   pDesc.textContent=ep.descricao||"";
 }
 
-/* FECHAR */
+/* FECHAR PLAYER */
 async function fechar(){
   clearInterval(pingInterval);
 
-  if(filmeAtual){
-    await sb.from("assistindo_agora")
-      .delete()
-      .eq("usuario_id",usuario.id)
-      .eq("filme_id",filmeAtual.id);
-  }
+  const agora = new Date().toISOString();
+
+  await sb.from("assistindo_agora")
+    .delete()
+    .eq("usuario_id",usuario.id);
+
+  await sb.from("historico_online")
+    .update({ saiu_em: agora })
+    .eq("usuario_id",usuario.id)
+    .is("saiu_em",null);
 
   filmeAtual=null;
   inicioAssistindo=null;
