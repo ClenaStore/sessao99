@@ -13,7 +13,6 @@
   --muted:#6b7280;
   --border:#e5e7eb;
   --accent:#3483fa;
-  --radius:14px;
 }
 *{box-sizing:border-box}
 
@@ -51,8 +50,9 @@ header{
   padding:10px 16px;
   border-radius:999px;
   border:1px solid var(--border);
-  outline:none;
 }
+
+/* MENU */
 .menu{
   display:flex;
   gap:22px;
@@ -60,7 +60,7 @@ header{
   font-size:14px;
 }
 .menu a{
-  text-decoration:none;
+  cursor:pointer;
   color:var(--muted);
   font-weight:500;
 }
@@ -68,34 +68,10 @@ header{
   color:var(--accent);
 }
 
-/* HERO */
-.hero{
-  height:380px;
-  display:flex;
-  align-items:center;
-  padding:0 60px;
-  background:
-    linear-gradient(to right, rgba(0,0,0,.6), transparent),
-    url("https://images.unsplash.com/photo-1608170825938-a8ea0305d46c") center/cover;
-  color:#fff;
-}
-.hero h1{
-  font-size:40px;
-  max-width:420px;
-  line-height:1.1;
-}
-
-/* SECTIONS */
+/* HOME */
 section{
   padding:24px 32px;
 }
-section h2{
-  margin:0 0 14px;
-  font-size:18px;
-  font-weight:600;
-}
-
-/* ROW */
 .row{
   display:flex;
   gap:14px;
@@ -127,43 +103,57 @@ section h2{
   inset:0;
   background:#000;
   display:none;
-  flex-direction:column;
   z-index:9999;
 }
-.top{
-  padding:14px 20px;
-  display:flex;
-  align-items:center;
-  gap:14px;
+video{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+/* OVERLAY INFO */
+.info{
+  position:absolute;
+  bottom:40px;
+  left:40px;
   color:#fff;
+  max-width:480px;
+}
+.info h1{
+  margin:0 0 6px;
+}
+.info p{
+  margin:0;
+  opacity:.9;
+}
+
+/* CONTROLS */
+.top{
+  position:absolute;
+  top:20px;
+  left:20px;
 }
 .top button{
-  background:#111;
-  border:none;
+  background:rgba(0,0,0,.6);
   color:#fff;
+  border:none;
   padding:8px 14px;
   border-radius:999px;
   cursor:pointer;
 }
-.cover{
-  width:100%;
-  max-height:420px;
-  object-fit:cover;
-}
+
+/* SERIES SELECT */
 .selects{
-  display:flex;
-  gap:12px;
-  padding:14px 20px;
+  position:absolute;
+  bottom:40px;
+  right:40px;
+  display:none;
+  gap:10px;
 }
 select{
   padding:10px 14px;
   border-radius:999px;
   border:none;
-}
-video{
-  width:100%;
-  height:calc(100vh - 300px);
-  background:#000;
 }
 </style>
 </head>
@@ -174,58 +164,53 @@ video{
   <div class="header-top">
     <div class="logo">Mercado Play</div>
     <div class="search">
-      <input id="search" placeholder="Buscar filmes, séries e mais">
+      <input id="search" placeholder="Buscar filmes e séries">
     </div>
   </div>
   <nav class="menu">
-    <a class="active">Para você</a>
-    <a>Filmes</a>
-    <a>Séries</a>
-    <a>Infantil</a>
+    <a class="active" data-filter="all">Para você</a>
+    <a data-filter="filme">Filmes</a>
+    <a data-filter="serie">Séries</a>
   </nav>
 </header>
 
-<div class="hero">
-  <h1>Surpresas do Amor</h1>
-</div>
-
 <div id="home"></div>
 
+<!-- PLAYER -->
 <div id="player">
   <div class="top">
     <button onclick="fechar()">⬅ Voltar</button>
-    <strong id="tituloPlayer"></strong>
   </div>
-  <img id="capaPlayer" class="cover">
-  <div class="selects">
+
+  <video id="video" autoplay controls></video>
+
+  <div class="info">
+    <h1 id="titulo"></h1>
+    <p id="descricao"></p>
+  </div>
+
+  <div class="selects" id="selects">
     <select id="selTemporada"></select>
     <select id="selEpisodio"></select>
   </div>
-  <video id="video" controls autoplay></video>
 </div>
 
 <script>
-/* ================= SUPABASE ================= */
 const supabaseClient = supabase.createClient(
   "https://dxkszikemntfusfyrzos.supabase.co",
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-const USER_ID = localStorage.user_id || crypto.randomUUID();
-localStorage.user_id = USER_ID;
-
 const home = document.getElementById("home");
-const search = document.getElementById("search");
-const player = document.getElementById("player");
-const tituloPlayer = document.getElementById("tituloPlayer");
-const capaPlayer = document.getElementById("capaPlayer");
+const video = document.getElementById("video");
+const titulo = document.getElementById("titulo");
+const descricao = document.getElementById("descricao");
+const selects = document.getElementById("selects");
 const selTemporada = document.getElementById("selTemporada");
 const selEpisodio = document.getElementById("selEpisodio");
-const video = document.getElementById("video");
 
 let dados = [];
 let serieAtual = [];
-let episodioAtual = null;
 
 /* LOAD */
 async function load(){
@@ -237,33 +222,34 @@ async function load(){
   dados = data || [];
   renderHome(dados);
 }
+load();
 
+/* RENDER */
 function renderHome(list){
   home.innerHTML = "";
-  const filmes = list.filter(i => i.tipo === "filme");
+
+  const filmes = list.filter(i => i.tipo==="filme");
   const series = [...new Map(
-    list.filter(i => i.tipo === "serie").map(s => [s.serie_nome, s])
+    list.filter(i=>i.tipo==="serie").map(s=>[s.serie_nome,s])
   ).values()];
 
-  renderRow("Filmes", filmes, playFilme);
-  renderRow("Séries", series, s => abrirSerie(s.serie_nome));
+  if(filmes.length) renderRow("Filmes", filmes, playFilme);
+  if(series.length) renderRow("Séries", series, abrirSerie);
 }
 
-function renderRow(titulo, itens, click){
-  if(!itens.length) return;
+function renderRow(tituloRow,itens,click){
   const sec = document.createElement("section");
-  sec.innerHTML = `<h2>${titulo}</h2>`;
+  sec.innerHTML = `<h2>${tituloRow}</h2>`;
   const row = document.createElement("div");
-  row.className = "row";
+  row.className="row";
 
   itens.forEach(i=>{
-    const c = document.createElement("div");
-    c.className = "card";
-    c.innerHTML = `
+    const c=document.createElement("div");
+    c.className="card";
+    c.innerHTML=`
       <img src="${i.capa_url}">
-      <span>${i.titulo || i.serie_nome}</span>
-    `;
-    c.onclick = ()=>click(i);
+      <span>${i.titulo||i.serie_nome}</span>`;
+    c.onclick=()=>click(i);
     row.appendChild(c);
   });
 
@@ -273,58 +259,64 @@ function renderRow(titulo, itens, click){
 
 /* PLAYER */
 function playFilme(f){
-  tocar(f);
-  tituloPlayer.textContent = f.titulo;
-  capaPlayer.src = f.capa_url;
-  selTemporada.innerHTML = "";
-  selEpisodio.innerHTML = "";
-  player.style.display = "flex";
+  titulo.textContent=f.titulo;
+  descricao.textContent="Filme";
+  video.src=f.video_url;
+  selects.style.display="none";
+  document.getElementById("player").style.display="block";
 }
 
-function abrirSerie(nome){
-  serieAtual = dados.filter(d => d.serie_nome === nome);
-  tituloPlayer.textContent = nome;
-  capaPlayer.src = serieAtual[0].capa_url;
+function abrirSerie(s){
+  serieAtual=dados.filter(d=>d.serie_nome===s.serie_nome);
+  titulo.textContent=s.serie_nome;
+  descricao.textContent="Série";
   montarTemporadas();
-  player.style.display = "flex";
+  selects.style.display="flex";
+  document.getElementById("player").style.display="block";
 }
 
 function montarTemporadas(){
-  const temps = [...new Set(serieAtual.map(e=>e.temporada))];
-  selTemporada.innerHTML = temps.map(t=>`<option>${t}</option>`).join("");
+  const temps=[...new Set(serieAtual.map(e=>e.temporada))];
+  selTemporada.innerHTML=temps.map(t=>`<option>${t}</option>`).join("");
   montarEpisodios();
-  selTemporada.onchange = montarEpisodios;
+  selTemporada.onchange=montarEpisodios;
 }
 
 function montarEpisodios(){
-  const t = selTemporada.value;
-  const eps = serieAtual.filter(e=>e.temporada==t);
-  selEpisodio.innerHTML = eps.map((e,i)=>`<option value="${i}">Episódio ${e.episodio}</option>`).join("");
+  const eps=serieAtual.filter(e=>e.temporada==selTemporada.value);
+  selEpisodio.innerHTML=eps.map((e,i)=>`<option value="${i}">Episódio ${e.episodio}</option>`).join("");
   tocar(eps[0]);
-  selEpisodio.onchange = ()=>tocar(eps[selEpisodio.value]);
+  selEpisodio.onchange=()=>tocar(eps[selEpisodio.value]);
 }
 
-function tocar(ep){
-  episodioAtual = ep;
-  video.src = ep.video_url;
-  video.play();
+function tocar(e){
+  video.src=e.video_url;
 }
 
+/* FECHAR */
 function fechar(){
   video.pause();
-  video.src="";
-  player.style.display="none";
+  document.getElementById("player").style.display="none";
 }
 
-search.oninput = ()=>{
-  const v = search.value.toLowerCase();
-  renderHome(dados.filter(d =>
-    d.titulo?.toLowerCase().includes(v) ||
+/* FILTROS */
+document.querySelectorAll(".menu a").forEach(a=>{
+  a.onclick=()=>{
+    document.querySelectorAll(".menu a").forEach(x=>x.classList.remove("active"));
+    a.classList.add("active");
+    const f=a.dataset.filter;
+    renderHome(f==="all"?dados:dados.filter(d=>d.tipo===f));
+  }
+});
+
+/* SEARCH */
+search.oninput=()=>{
+  const v=search.value.toLowerCase();
+  renderHome(dados.filter(d=>
+    d.titulo?.toLowerCase().includes(v)||
     d.serie_nome?.toLowerCase().includes(v)
   ));
 };
-
-load();
 </script>
 
 </body>
