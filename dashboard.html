@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 :root{
@@ -14,6 +15,7 @@
   --accent:#e50914;
   --text:#fff;
   --muted:#aaa;
+  --green:#22c55e;
 }
 
 *{box-sizing:border-box}
@@ -31,10 +33,7 @@ header{
   top:0;
   z-index:10;
 }
-header h1{
-  margin:0;
-  color:var(--accent);
-}
+header h1{margin:0;color:var(--accent)}
 
 main{
   padding:32px;
@@ -56,13 +55,28 @@ main{
 .kpi span{color:var(--muted);font-size:13px}
 .kpi strong{font-size:34px;display:block;margin-top:6px}
 
-/* SEÇÕES */
-.section h2{
-  margin:0 0 14px;
-  font-size:20px;
+/* ONLINE */
+.online-list{
+  display:grid;
+  gap:10px;
+}
+.online-user{
+  background:var(--card);
+  padding:12px 16px;
+  border-radius:12px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:14px;
+}
+.dot{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:var(--green);
 }
 
-/* GRID */
+/* GRID FILMES */
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
@@ -81,38 +95,13 @@ main{
 .card-info{
   padding:12px;
 }
-.card-info strong{
-  display:block;
-}
-.card-info span{
-  font-size:12px;
-  color:var(--muted);
-}
-.badge{
-  margin-top:6px;
-  font-size:12px;
-}
+.card-info strong{display:block}
+.card-info span{font-size:12px;color:var(--muted)}
+.badge{margin-top:6px;font-size:12px}
 
-/* ONLINE USERS */
-.online-list{
-  display:grid;
-  gap:10px;
-}
-.online-user{
-  background:var(--card);
-  padding:12px 16px;
-  border-radius:12px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  font-size:14px;
-}
-.dot{
-  width:10px;
-  height:10px;
-  border-radius:50%;
-  background:#22c55e;
-}
+/* SECTIONS */
+.section h2{margin:0 0 14px;font-size:20px}
+canvas{background:var(--card);border-radius:14px;padding:10px}
 </style>
 </head>
 
@@ -126,39 +115,34 @@ main{
 
 <!-- KPIS -->
 <div class="kpis">
-  <div class="kpi">
-    <span>👀 Assistindo agora</span>
-    <strong id="kpiOnline">0</strong>
-  </div>
-  <div class="kpi">
-    <span>▶ Visualizações hoje</span>
-    <strong id="kpiHoje">0</strong>
-  </div>
-  <div class="kpi">
-    <span>📅 Visualizações semana</span>
-    <strong id="kpiSemana">0</strong>
-  </div>
+  <div class="kpi"><span>👀 Online agora</span><strong id="kpiOnline">0</strong></div>
+  <div class="kpi"><span>▶ Hoje</span><strong id="kpiHoje">0</strong></div>
+  <div class="kpi"><span>📅 Semana</span><strong id="kpiSemana">0</strong></div>
 </div>
 
-<!-- ONLINE USERS -->
+<!-- ONLINE -->
 <div class="section">
-  <h2>🟢 Usuários online agora</h2>
+  <h2>🟢 Usuários online</h2>
   <div class="online-list" id="listaOnline"></div>
 </div>
 
-<!-- MOMENTO -->
+<!-- GRÁFICO -->
+<div class="section">
+  <h2>📈 Pico simultâneo</h2>
+  <canvas id="chartOnline" height="120"></canvas>
+</div>
+
+<!-- TOPS -->
 <div class="section">
   <h2>🔥 Mais assistidos agora (30 min)</h2>
   <div class="grid" id="topAgora"></div>
 </div>
 
-<!-- DIA -->
 <div class="section">
   <h2>🏆 Top do dia</h2>
   <div class="grid" id="topDia"></div>
 </div>
 
-<!-- SEMANA -->
 <div class="section">
   <h2>📅 Top da semana</h2>
   <div class="grid" id="topSemana"></div>
@@ -172,6 +156,9 @@ const sb = supabase.createClient(
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
+let chart, historico=[];
+
+/* DASHBOARD */
 async function loadDashboard(){
   const agora = new Date();
   const hoje = new Date(); hoje.setHours(0,0,0,0);
@@ -184,74 +171,90 @@ async function loadDashboard(){
     .gte("last_ping", new Date(Date.now()-30000).toISOString());
 
   kpiOnline.textContent = online.length;
-
-  listaOnline.innerHTML = "";
-  online.forEach(o=>{
-    listaOnline.innerHTML += `
+  listaOnline.innerHTML="";
+  online.forEach(u=>{
+    listaOnline.innerHTML+=`
       <div class="online-user">
-        <div>Usuário: ${o.usuario_id.slice(0,8)}...</div>
+        <div>${u.usuario_id.slice(0,8)}...</div>
         <div class="dot"></div>
       </div>
     `;
   });
+
+  /* ALERTA */
+  if(online.length >= 5){
+    console.log("🔥 ALERTA: muitos usuários online!");
+  }
+
+  /* HISTÓRICO ONLINE */
+  historico.push({ t:new Date().toLocaleTimeString(), v:online.length });
+  if(historico.length>20) historico.shift();
+  renderChart();
 
   /* VISUALIZAÇÕES */
   const { data: vis } = await sb
     .from("visualizacoes")
     .select("filme_id, created_at");
 
-  kpiHoje.textContent =
-    vis.filter(v=>new Date(v.created_at)>=hoje).length;
-
-  kpiSemana.textContent =
-    vis.filter(v=>new Date(v.created_at)>=semana).length;
+  kpiHoje.textContent = vis.filter(v=>new Date(v.created_at)>=hoje).length;
+  kpiSemana.textContent = vis.filter(v=>new Date(v.created_at)>=semana).length;
 
   /* FILMES */
   const { data: filmes } = await sb.from("filmes").select("*");
 
   function buildTop(lista){
     const map={};
-    lista.forEach(v=>{
-      map[v.filme_id]=(map[v.filme_id]||0)+1;
-    });
+    lista.forEach(v=>map[v.filme_id]=(map[v.filme_id]||0)+1);
     return Object.entries(map)
       .sort((a,b)=>b[1]-a[1])
       .slice(0,10)
       .map(([id,total])=>{
         const f=filmes.find(x=>x.id===id);
-        return f ? { ...f, total } : null;
+        return f?{...f,total}:null;
       }).filter(Boolean);
   }
 
-  render(topAgora,
-    buildTop(vis.filter(v=>new Date(v.created_at)>=new Date(Date.now()-30*60000)))
-  );
-  render(topDia,
-    buildTop(vis.filter(v=>new Date(v.created_at)>=hoje))
-  );
-  render(topSemana,
-    buildTop(vis.filter(v=>new Date(v.created_at)>=semana))
-  );
+  render(topAgora, buildTop(vis.filter(v=>new Date(v.created_at)>=new Date(Date.now()-30*60000))));
+  render(topDia, buildTop(vis.filter(v=>new Date(v.created_at)>=hoje)));
+  render(topSemana, buildTop(vis.filter(v=>new Date(v.created_at)>=semana)));
 }
 
-function render(container, list){
+/* RENDER */
+function render(container,list){
   container.innerHTML="";
   list.forEach(f=>{
     container.innerHTML+=`
       <div class="card">
         <img src="${f.capa_url}">
         <div class="card-info">
-          <strong>${f.titulo || f.serie_nome}</strong>
+          <strong>${f.titulo||f.serie_nome}</strong>
           <span>${f.genero} • ${f.tipo}</span>
-          <div class="badge">👁 ${f.total} visualizações</div>
+          <div class="badge">👁 ${f.total}</div>
         </div>
-      </div>
-    `;
+      </div>`;
   });
 }
 
+/* CHART */
+function renderChart(){
+  if(chart) chart.destroy();
+  chart = new Chart(chartOnline,{
+    type:"line",
+    data:{
+      labels:historico.map(h=>h.t),
+      datasets:[{data:historico.map(h=>h.v),borderColor:"#e50914",tension:.3}]
+    },
+    options:{plugins:{legend:{display:false}}}
+  });
+}
+
+/* REALTIME */
+sb.channel("realtime-dashboard")
+  .on("postgres_changes",{event:"*",schema:"public",table:"assistindo_agora"},loadDashboard)
+  .on("postgres_changes",{event:"*",schema:"public",table:"visualizacoes"},loadDashboard)
+  .subscribe();
+
 loadDashboard();
-setInterval(loadDashboard,15000);
 </script>
 
 </body>
