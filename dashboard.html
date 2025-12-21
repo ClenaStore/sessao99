@@ -198,12 +198,10 @@ async function loadDashboard(){
   const data = dataFiltro.value;
 
   /* ONLINE */
-const { data: online } = await supabaseClient
-  .from("rs_online_now")
-  .select("*");
-
-kpiOnline.textContent = online.length;
-
+  const { data: online } = await supabaseClient
+    .from("rs_sessions")
+    .select("*")
+    .gte("last_ping", new Date(Date.now()-30000).toISOString());
 
   kpiOnline.textContent = online.length;
   onlineList.innerHTML = "";
