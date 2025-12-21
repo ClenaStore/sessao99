@@ -345,6 +345,30 @@ section{padding:20px 14px}
   font-weight:700;
   color:#00ff99;
 }
+/* ▶ BOTÃO PRÓXIMO EPISÓDIO */
+#btnProximo{
+  position:absolute;
+  right:40px;
+  bottom:120px;
+  padding:12px 22px;
+  border-radius:6px;
+  border:none;
+  font-size:15px;
+  font-weight:600;
+  cursor:pointer;
+
+  background:rgba(255,255,255,.15);
+  color:#fff;
+  backdrop-filter: blur(6px);
+
+  display:none;
+  z-index:20;
+}
+
+#btnProximo:hover{
+  background:rgba(255,255,255,.28);
+}
+
 
 </style>
 </head>
@@ -407,19 +431,32 @@ section{padding:20px 14px}
 <!-- PLAYER -->
 <div id="player">
   <button id="close" onclick="fechar()">←</button>
+
   <div id="playerLayout">
+
+    <!-- 🎬 VÍDEO -->
     <video id="video" controls autoplay></video>
+
+    <!-- ▶ PRÓXIMO EPISÓDIO (aparece 1 min antes) -->
+    <button id="btnProximo" onclick="irProximoEpisodio()">
+      ▶ Próximo episódio
+    </button>
+
+    <!-- ℹ️ INFORMAÇÕES -->
     <div id="sideInfo">
       <h2 id="pTitle"></h2>
       <div class="meta" id="pMeta"></div>
       <p id="pDesc"></p>
+
       <div id="serieControls">
         <select id="selTemporada"></select>
         <select id="selEpisodio"></select>
       </div>
     </div>
+
   </div>
 </div>
+
 
 <!-- PERFIL -->
 <div id="perfilOverlay">
@@ -672,12 +709,15 @@ function montarEpisodios(){
   };
 }
 function tocarEpisodio(eps, index){
+  btnProximo.style.display = "none"; // 👈 ESCONDE SEMPRE
+
   const episodio = eps[index];
   if(!episodio) return;
 
   video.src = episodio.video_url;
   video.play().catch(() => {});
 }
+
 
 
 function fechar(){
@@ -693,6 +733,32 @@ function abrirPerfil(){
 
 function fecharPerfil(){perfilOverlay.style.display="none";}
 function logout(){localStorage.clear();location.href="login.html";}
+function irProximoEpisodio(){
+  btnProximo.style.display = "none";
+
+  const temporadaAtual = selTemporada.value;
+  const epsDaTemp = serieAtual.filter(
+    e => e.temporada == temporadaAtual
+  );
+
+  episodioIndexAtual++;
+
+  // ▶️ próximo episódio da mesma temporada
+  if (episodioIndexAtual < epsDaTemp.length) {
+    selEpisodio.value = episodioIndexAtual;
+    tocarEpisodio(epsDaTemp, episodioIndexAtual);
+    return;
+  }
+
+  // 🔄 próxima temporada
+  const temporadas = [...new Set(serieAtual.map(e => e.temporada))];
+  const tempIndex = temporadas.indexOf(Number(temporadaAtual));
+
+  if (tempIndex < temporadas.length - 1) {
+    selTemporada.value = temporadas[tempIndex + 1];
+    montarEpisodios();
+  }
+}
 
 video.addEventListener("ended", () => {
 
@@ -727,6 +793,23 @@ video.addEventListener("ended", () => {
   // 🛑 acabou a série
   console.log("Série finalizada");
 });
+video.addEventListener("timeupdate", () => {
+
+  // só funciona para série
+  if (!serieAtual.length) return;
+
+  if (!video.duration) return;
+
+  const tempoRestante = video.duration - video.currentTime;
+
+  // ⏱ mostra com 60 segundos restantes
+  if (tempoRestante <= 60) {
+    btnProximo.style.display = "block";
+  } else {
+    btnProximo.style.display = "none";
+  }
+});
+
 
 </script>
 
