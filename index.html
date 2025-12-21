@@ -336,6 +336,7 @@ const sb = supabase.createClient(
 
 let dados=[], heroItem=null, filtro='todos', usuario=null;
 let serieAtual=[], filmeAtual=null;
+const ID_PRINCIPAL = a550f9d7-0f23-4cbf-8178-e37d064c3773; // <-- o filme que VOCÊ quer
 
 (async()=>{
   if(!localStorage.usuario){location.href="login.html";return;}
@@ -345,13 +346,23 @@ let serieAtual=[], filmeAtual=null;
   const { data } = await sb.from("filmes").select("*").eq("ativo",true);
   dados = data || [];
 
-  heroItem = dados.find(d=>d.destaque) || dados[0];
-  hero.style.backgroundImage=`url(${heroItem.capa_url})`;
-  heroTitle.textContent=heroItem.titulo||heroItem.serie_nome;
-  heroMeta.textContent = `${heroItem.categoria} • ${heroItem.tipo}`;
-  heroDesc.textContent=heroItem.descricao||"";
+heroItem =
+  dados.find(d => d.id === ID_PRINCIPAL) ||
+  dados[0];
 
-  render();
+
+hero.style.backgroundImage = `url(${heroItem.capa_url})`;
+heroTitle.textContent = heroItem.titulo || heroItem.serie_nome;
+heroMeta.textContent = `${heroItem.categoria} • ${heroItem.tipo}`;
+heroDesc.textContent = heroItem.descricao || "";
+
+render();
+
+/* ▶️ AUTOPLAY DO PRINCIPAL */
+setTimeout(() => {
+  abrirPlayer(heroItem);
+}, 600);
+
 })();
 
 busca.oninput=()=>render(busca.value.toLowerCase());
