@@ -660,38 +660,6 @@ function abrirPlayer(item){
 }
 
 
-  // 🎬 ABRE PLAYER FULLSCREEN
-  document.getElementById("perfilBtn").style.display = "none";
-  player.style.display = "block";
-
-  // 🧠 FILME
-  if (item.tipo === "filme") {
-    video.src = item.video_url;
-    video.play().catch(() => {});
-
-    pTitle.textContent = item.titulo;
-    pMeta.textContent = `${item.categoria} • Filme`;
-    pDesc.textContent = item.descricao || "";
-
-    serieControls.style.display = "none";
-    return;
-  }
-
-  // 📺 SÉRIE
-  serieAtual = dados
-    .filter(d => d.serie_nome === item.serie_nome)
-    .sort((a, b) =>
-      a.temporada - b.temporada || a.episodio - b.episodio
-    );
-
-  serieControls.style.display = "block";
-  pTitle.textContent = item.serie_nome;
-  pMeta.textContent = `${item.categoria} • Série`;
-  pDesc.textContent = item.descricao || "";
-
-  montarSerie();
-}
-
 
 function montarSerie(){
   const temps=[...new Set(serieAtual.map(e=>e.temporada))];
