@@ -104,11 +104,39 @@ header input{
 
 .hero-content{
   position:relative;
-  z-index:2; /* 👈 GARANTE TEXTO SEMPRE ACIMA DO GRADIENTE */
+  z-index:2;
   max-width:560px;
 }
-dth:560px;
+
+.hero-content h2{
+  font-size:52px;
+  margin-bottom:12px;
+  text-shadow: 0 4px 24px rgba(0,0,0,.9);
 }
+
+.hero-content .meta{
+  color:var(--muted);
+  margin-bottom:12px;
+}
+
+.hero-content p{
+  line-height:1.6;
+  margin-bottom:22px;
+  text-shadow: 0 2px 12px rgba(0,0,0,.9);
+}
+
+.hero-content button{
+  padding:14px 32px;
+  font-size:16px;
+  font-weight:700;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  background:var(--accent);
+  color:#fff;
+}
+
+/* REFORÇO DO GRADIENTE NO DESKTOP */
 @media (min-width:1024px){
   .hero::before{
     background:
@@ -126,20 +154,6 @@ dth:560px;
         rgba(0,0,0,0) 60%
       );
   }
-}
-
-.hero-content h2{font-size:52px;margin-bottom:12px}
-.hero-content .meta{color:var(--muted);margin-bottom:12px}
-.hero-content p{line-height:1.6;margin-bottom:22px}
-.hero-content button{
-  padding:14px 32px;
-  font-size:16px;
-  font-weight:700;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-  background:var(--accent);
-  color:#fff;
 }
 
 /* ================= FILTROS ================= */
