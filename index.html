@@ -6,7 +6,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f0f10">
 
+<!-- iOS -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sessão">
+<link rel="apple-touch-icon" href="logo.png">
+<link rel="apple-touch-startup-image" href="logo.png">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;scrollbar-width:none}
 *::-webkit-scrollbar{display:none}
@@ -367,6 +376,10 @@ section{padding:20px 14px}
 
 #btnProximo:hover{
   background:rgba(255,255,255,.28);
+}
+html, body {
+  overscroll-behavior: none;
+  touch-action: manipulation;
 }
 
 
@@ -809,6 +822,11 @@ video.addEventListener("timeupdate", () => {
     btnProximo.style.display = "none";
   }
 });
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./sw.js")
+    .then(() => console.log("PWA ativo"))
+    .catch(err => console.error("SW erro", err));
+}
 
 
 </script>
