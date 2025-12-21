@@ -16,12 +16,8 @@
   --muted:#aaa;
   --accent:#e50914;
 }
-*{
-  box-sizing:border-box;
-  scrollbar-width:none;
-}
+*{box-sizing:border-box;scrollbar-width:none}
 *::-webkit-scrollbar{display:none}
-
 body{
   margin:0;
   background:var(--bg);
@@ -32,12 +28,9 @@ body{
 
 /* HEADER */
 header{
-  position:fixed;
-  top:0;left:0;right:0;
+  position:fixed;top:0;left:0;right:0;
   height:70px;
-  display:flex;
-  align-items:center;
-  gap:16px;
+  display:flex;align-items:center;gap:16px;
   padding:0 24px;
   background:rgba(0,0,0,.85);
   backdrop-filter:blur(10px);
@@ -46,19 +39,13 @@ header{
 .logo{color:var(--accent);font-size:22px;font-weight:800}
 .search{flex:1}
 .search input{
-  width:100%;
-  height:42px;
-  border-radius:20px;
-  border:1px solid #333;
-  background:#111;
-  color:#fff;
-  padding:0 18px;
+  width:100%;height:42px;border-radius:20px;
+  border:1px solid #333;background:#111;
+  color:#fff;padding:0 18px;
 }
 .profile{
-  width:40px;height:40px;
-  border-radius:50%;
-  background:#222;
-  border:none;color:#fff;
+  width:40px;height:40px;border-radius:50%;
+  background:#222;border:none;color:#fff;
   font-size:18px;cursor:pointer;
 }
 
@@ -66,18 +53,13 @@ header{
 .filters{
   margin-top:70px;
   padding:14px 24px;
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
+  display:flex;gap:10px;flex-wrap:wrap;
   border-bottom:1px solid #222;
 }
 .filters button{
-  padding:8px 16px;
-  border-radius:20px;
-  border:1px solid #333;
-  background:#111;
-  color:#fff;
-  cursor:pointer;
+  padding:8px 16px;border-radius:20px;
+  border:1px solid #333;background:#111;
+  color:#fff;cursor:pointer;
 }
 .filters button.active{
   background:var(--accent);
@@ -93,10 +75,8 @@ header{
 .section{margin-bottom:40px}
 .section h2{margin:0 0 14px 24px}
 .row{
-  display:flex;
-  gap:14px;
-  padding:0 24px;
-  overflow-x:auto;
+  display:flex;gap:14px;
+  padding:0 24px;overflow-x:auto;
 }
 .card{
   min-width:160px;
@@ -105,51 +85,41 @@ header{
 }
 .card:hover{transform:scale(1.04)}
 .card img{
-  width:100%;
-  height:240px;
-  object-fit:cover;
-  border-radius:10px;
+  width:100%;height:240px;
+  object-fit:cover;border-radius:10px;
+  background:#111;
 }
 
 /* PLAYER */
 #player{
-  position:fixed;
-  inset:0;
+  position:fixed;inset:0;
   background:#000;
-  display:none;
-  z-index:100;
+  display:none;z-index:100;
 }
 #player video{
-  width:100%;
-  height:100%;
+  width:100%;height:100%;
   object-fit:cover;
 }
 #homeBtn{
-  position:absolute;
-  top:20px;left:20px;
+  position:absolute;top:20px;left:20px;
   background:rgba(0,0,0,.6);
-  border:none;
-  color:#fff;
-  font-size:20px;
-  padding:10px 14px;
-  cursor:pointer;
-  z-index:10;
+  border:none;color:#fff;
+  font-size:20px;padding:10px 14px;
+  cursor:pointer;z-index:10;
 }
 
 /* OVERLAY */
 #overlay{position:absolute;inset:0}
 #overlay::before{
   content:"";
-  position:absolute;
-  inset:0;
+  position:absolute;inset:0;
   background:
     linear-gradient(to right,rgba(0,0,0,.85) 25%,transparent 60%),
     linear-gradient(to top,rgba(0,0,0,.9) 15%,transparent 50%);
 }
 #info{
   position:absolute;
-  left:40px;
-  bottom:120px;
+  left:40px;bottom:120px;
   max-width:520px;
 }
 #info h1{margin:0 0 10px}
@@ -157,72 +127,54 @@ header{
 #info button{
   margin-top:16px;
   padding:12px 22px;
-  border:none;
-  font-weight:700;
+  border:none;font-weight:700;
   cursor:pointer;
 }
 
-/* SERIES CONTROLS */
+/* SERIES */
 .series-controls{
   margin-top:10px;
-  display:none;
-  gap:10px;
+  display:none;gap:10px;
 }
 .series-controls select{
-  padding:10px;
-  background:#111;
-  color:#fff;
-  border:1px solid #333;
+  padding:10px;background:#111;
+  color:#fff;border:1px solid #333;
 }
 
 /* EP CONTROLS */
 #epControls{
-  position:absolute;
-  right:20px;
-  bottom:120px;
-  display:none;
-  gap:10px;
-  z-index:10;
+  position:absolute;right:20px;bottom:120px;
+  display:none;gap:10px;z-index:10;
 }
 #epControls button{
   background:rgba(0,0,0,.6);
-  border:none;
-  color:#fff;
-  font-size:22px;
-  padding:10px 14px;
+  border:none;color:#fff;
+  font-size:22px;padding:10px 14px;
   cursor:pointer;
 }
 
 /* PERFIL */
 #perfilModal{
-  position:fixed;
-  inset:0;
+  position:fixed;inset:0;
   background:rgba(0,0,0,.65);
   backdrop-filter:blur(8px);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:120;
+  display:none;align-items:center;
+  justify-content:center;z-index:120;
 }
 #perfilBox{
-  width:420px;
-  background:#111;
-  border-radius:18px;
-  padding:26px;
+  width:420px;background:#111;
+  border-radius:18px;padding:26px;
   position:relative;
 }
 #perfilClose{
-  position:absolute;
-  top:12px;right:14px;
+  position:absolute;top:12px;right:14px;
   cursor:pointer;
 }
 .perfil-item{margin-bottom:10px;color:#ccc}
 .perfil-footer{text-align:right}
 .perfil-footer button{
-  background:none;
-  border:none;
-  color:#ff6b6b;
-  cursor:pointer;
+  background:none;border:none;
+  color:#ff6b6b;cursor:pointer;
 }
 </style>
 </head>
@@ -238,7 +190,6 @@ header{
 </header>
 
 <div class="filters" id="filters"></div>
-
 <div id="home"></div>
 
 <!-- PLAYER -->
@@ -279,24 +230,57 @@ header{
 </div>
 
 <script>
-if(!localStorage.usuario) location.href="login.html";
+/* LOGIN */
+let usuario=null;
+try{
+  usuario=JSON.parse(localStorage.usuario);
+  if(!usuario?.email) throw "erro";
+}catch{
+  localStorage.removeItem("usuario");
+  location.href="login.html";
+}
 
-const sb = supabase.createClient(
+/* SUPABASE */
+const sb=supabase.createClient(
  "https://dxkszikemntfusfyrzos.supabase.co",
  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-const home=document.getElementById("home");
+/* VARS */
+const home=home=document.getElementById("home");
 const filtersBox=document.getElementById("filters");
 const search=document.getElementById("search");
-
 const video=document.getElementById("video");
 const epControls=document.getElementById("epControls");
 const btnPrev=document.getElementById("btnPrev");
 const btnNext=document.getElementById("btnNext");
 
-let dados=[], atual=null, serieAtual=[], indiceEp=0;
+let dados=[],atual=null,serieAtual=[],indiceEp=0;
 let filtroGenero="Todos";
+let hls=null;
+
+/* VIDEO CORE */
+function limparVideo(){
+  video.pause();
+  video.removeAttribute("src");
+  video.load();
+  if(hls){hls.destroy();hls=null;}
+}
+
+function carregarVideo(url){
+  limparVideo();
+  if(!url) return;
+  if(Hls.isSupported() && url.endsWith(".m3u8")){
+    hls=new Hls();
+    hls.loadSource(url);
+    hls.attachMedia(video);
+  }else video.src=url;
+  video.play();
+}
+
+function assistir(){
+  if(atual?.video_url) carregarVideo(atual.video_url);
+}
 
 /* LOAD */
 async function load(){
@@ -306,7 +290,7 @@ async function load(){
  renderHome();
 }
 
-/* FILTROS DINÂMICOS */
+/* FILTROS */
 function montarFiltros(){
  const generos=[...new Set(dados.map(d=>d.genero).filter(Boolean))];
  filtersBox.innerHTML="";
@@ -314,11 +298,7 @@ function montarFiltros(){
    const b=document.createElement("button");
    b.textContent=g;
    b.className=g===filtroGenero?"active":"";
-   b.onclick=()=>{
-     filtroGenero=g;
-     montarFiltros();
-     renderHome();
-   };
+   b.onclick=()=>{filtroGenero=g;montarFiltros();renderHome();}
    filtersBox.appendChild(b);
  });
 }
@@ -355,7 +335,7 @@ function renderSection(t,itens){
  itens.forEach(i=>{
    const c=document.createElement("div");
    c.className="card";
-   c.innerHTML=`<img src="${i.capa_url}">`;
+   c.innerHTML=`<img src="${i.capa_url||''}">`;
    c.onclick=()=>abrir(i);
    r.appendChild(c);
  });
@@ -366,7 +346,7 @@ function renderSection(t,itens){
 /* PLAYER */
 function abrir(item){
  atual=item;
- document.getElementById("player").style.display="block";
+ player.style.display="block";
  titulo.textContent=item.titulo||item.serie_nome;
  descricao.textContent=item.descricao||"";
 
@@ -381,24 +361,11 @@ function abrir(item){
  carregarVideo(item.video_url);
 }
 
-function carregarVideo(url){
- if(Hls.isSupported() && url.endsWith(".m3u8")){
-   const hls=new Hls();
-   hls.loadSource(url);
-   hls.attachMedia(video);
- }else{
-   video.src=url;
- }
- video.play();
-}
-
-function assistir(){video.play();}
-
 /* SERIES */
 function montarSerie(nome){
  serieAtual=dados
-   .filter(d=>d.serie_nome===nome)
-   .sort((a,b)=>a.temporada-b.temporada||a.episodio-b.episodio);
+  .filter(d=>d.serie_nome===nome)
+  .sort((a,b)=>a.temporada-b.temporada||a.episodio-b.episodio);
 
  const temps=[...new Set(serieAtual.map(e=>e.temporada))];
  selTemporada.innerHTML="";
@@ -417,8 +384,11 @@ function montarEpisodios(){
 }
 
 function trocarEpisodio(eps,i){
+ if(!eps[i]) return;
  indiceEp=i;
  atual=eps[i];
+ titulo.textContent=atual.titulo||atual.serie_nome;
+ descricao.textContent=atual.descricao||"";
  carregarVideo(atual.video_url);
  btnPrev.style.display=i>0?"block":"none";
  btnNext.style.display=i<eps.length-1?"block":"none";
@@ -434,15 +404,12 @@ btnNext.onclick=()=>trocarEpisodio(
  indiceEp+1
 );
 
-video.addEventListener("pause",()=>{
- if(atual?.tipo==="serie") epControls.style.display="flex";
-});
+video.addEventListener("pause",()=>{if(atual?.tipo==="serie")epControls.style.display="flex"});
 video.addEventListener("play",()=>epControls.style.display="none");
 
 /* PERFIL */
 function abrirPerfil(){
- const u=JSON.parse(localStorage.usuario);
- p_email.textContent=u.email;
+ p_email.textContent=usuario.email;
  perfilModal.style.display="flex";
 }
 function fecharPerfil(){perfilModal.style.display="none";}
@@ -451,22 +418,16 @@ function logout(){
  location.href="login.html";
 }
 
-/* TECLADO / TV */
-document.addEventListener("keydown",e=>{
- if(e.key==="ArrowLeft"&&btnPrev.style.display!=="none")btnPrev.click();
- if(e.key==="ArrowRight"&&btnNext.style.display!=="none")btnNext.click();
- if(e.key==="Enter") video.paused?video.play():video.pause();
-});
-
 /* FECHAR */
 function fecharPlayer(){
- video.pause();
- video.src="";
- document.getElementById("player").style.display="none";
+ limparVideo();
+ atual=null;
+ serieAtual=[];
+ indiceEp=0;
+ player.style.display="none";
 }
 
 search.oninput=renderHome;
-
 load();
 </script>
 
