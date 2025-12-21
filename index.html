@@ -23,6 +23,7 @@ header{
 }
 .header-top{
   display:flex;
+  align-items:center;
   gap:24px;
   padding:14px 32px;
 }
@@ -37,8 +38,6 @@ header{
   border:none;
   outline:none;
 }
-
-/* MENU */
 .menu{
   display:flex;
   gap:22px;
@@ -48,14 +47,10 @@ header{
   color:#aaa;
   cursor:pointer;
 }
-.menu a.active{
-  color:#fff;
-}
+.menu a.active{color:#fff}
 
 /* HOME */
-section{
-  padding:20px 32px;
-}
+section{padding:20px 32px}
 section h2{color:#fff}
 .row{
   display:flex;
@@ -63,8 +58,6 @@ section h2{color:#fff}
   overflow-x:auto;
 }
 .row::-webkit-scrollbar{display:none}
-
-/* CARD */
 .card{
   min-width:160px;
   cursor:pointer;
@@ -76,9 +69,7 @@ section h2{color:#fff}
   border-radius:8px;
   transition:.3s;
 }
-.card:hover img{
-  transform:scale(1.05);
-}
+.card:hover img{transform:scale(1.05)}
 
 /* PLAYER */
 #player{
@@ -88,17 +79,18 @@ section h2{color:#fff}
   display:none;
   z-index:9999;
 }
-video{
+#player video{
   width:100%;
   height:100%;
   object-fit:cover;
 }
 
-/* UI LAYER */
-.ui{
+/* OVERLAY */
+.overlay{
   position:absolute;
   inset:0;
   pointer-events:none;
+  transition:opacity .4s;
 }
 
 /* GRADIENT */
@@ -107,11 +99,19 @@ video{
   inset:0;
   background:linear-gradient(
     to top,
-    rgba(0,0,0,.85) 0%,
-    rgba(0,0,0,.55) 25%,
-    rgba(0,0,0,.15) 45%,
-    transparent 60%
+    rgba(0,0,0,.9) 0%,
+    rgba(0,0,0,.6) 25%,
+    rgba(0,0,0,.25) 45%,
+    transparent 65%
   );
+}
+
+/* UI */
+.ui{
+  position:absolute;
+  inset:0;
+  color:#fff;
+  pointer-events:auto;
 }
 
 /* TOP */
@@ -119,7 +119,6 @@ video{
   position:absolute;
   top:20px;
   left:20px;
-  pointer-events:auto;
 }
 .top button{
   background:rgba(0,0,0,.6);
@@ -135,7 +134,6 @@ video{
   position:absolute;
   bottom:150px;
   left:40px;
-  color:#fff;
   max-width:520px;
 }
 .info h1{
@@ -161,11 +159,15 @@ video{
   border:1px solid rgba(255,255,255,.3);
   padding:10px 16px;
   border-radius:999px;
+  font-size:14px;
 }
+select option{color:#000}
 
-/* HIDE UI */
+/* HIDDEN UI */
+.hide-ui .overlay,
 .hide-ui .ui{
-  display:none;
+  opacity:0;
+  pointer-events:none;
 }
 </style>
 </head>
@@ -175,7 +177,9 @@ video{
 <header>
   <div class="header-top">
     <div class="logo">Mercado Play</div>
-    <input id="search" placeholder="Buscar">
+    <div class="search">
+      <input id="search" placeholder="Buscar">
+    </div>
   </div>
   <nav class="menu">
     <a class="active" data-filter="all">Para você</a>
@@ -189,9 +193,11 @@ video{
 <div id="player">
   <video id="video" autoplay controls></video>
 
-  <div class="ui">
+  <div class="overlay">
     <div class="gradient"></div>
+  </div>
 
+  <div class="ui">
     <div class="top">
       <button onclick="fechar()">← Voltar</button>
     </div>
@@ -215,15 +221,16 @@ const supabaseClient = supabase.createClient(
 );
 
 const home=document.getElementById("home");
-const video=document.getElementById("video");
+const search=document.getElementById("search");
 const player=document.getElementById("player");
+const video=document.getElementById("video");
 const titulo=document.getElementById("titulo");
 const descricao=document.getElementById("descricao");
 const selects=document.getElementById("selects");
 const selTemporada=document.getElementById("selTemporada");
 const selEpisodio=document.getElementById("selEpisodio");
 
-let dados=[], serieAtual=[], timer;
+let dados=[], serieAtual=[], hideTimer;
 
 /* LOAD */
 (async()=>{
@@ -288,25 +295,37 @@ function tocar(e){ video.src=e.video_url; video.play(); }
 /* UI CONTROL */
 function abrirPlayer(){
   player.style.display="block";
-  player.classList.remove("hide-ui");
-  iniciarTimer();
+  mostrarUI();
 }
 function fechar(){
-  video.pause(); video.src="";
+  video.pause();
+  video.src="";
   player.style.display="none";
 }
-function iniciarTimer(){
-  clearTimeout(timer);
-  timer=setTimeout(()=>{
+function mostrarUI(){
+  player.classList.remove("hide-ui");
+  iniciarAutoHide();
+}
+function iniciarAutoHide(){
+  clearTimeout(hideTimer);
+  hideTimer=setTimeout(()=>{
     player.classList.add("hide-ui");
   },30000);
 }
 
-/* EVENTS */
-video.addEventListener("pause",()=>{
-  player.classList.remove("hide-ui");
-});
-video.addEventListener("play",iniciarTimer);
+/* EVENTS – PADRÃO STREAMER */
+video.addEventListener("play", iniciarAutoHide);
+video.addEventListener("pause", mostrarUI);
+player.addEventListener("mousemove", mostrarUI);
+
+/* SEARCH */
+search.oninput=()=>{
+  const v=search.value.toLowerCase();
+  renderHome(dados.filter(d=>
+    d.titulo?.toLowerCase().includes(v) ||
+    d.serie_nome?.toLowerCase().includes(v)
+  ));
+};
 </script>
 
 </body>
