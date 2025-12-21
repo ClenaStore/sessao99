@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>CLENA</title>
+<title>SESSÃO 99</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -11,8 +11,9 @@
 <style>
 :root{
   --bg:#000;
+  --panel:#0b0b0b;
   --text:#fff;
-  --muted:#9a9a9a;
+  --muted:#aaa;
   --accent:#e50914;
 }
 *{box-sizing:border-box;scrollbar-width:none}
@@ -20,8 +21,8 @@
 
 body{
   margin:0;
-  background:#000;
-  color:#fff;
+  background:var(--bg);
+  color:var(--text);
   font-family:Inter,Arial,sans-serif;
   overflow:hidden;
 }
@@ -30,11 +31,11 @@ body{
 header{
   position:fixed;
   top:0;left:0;right:0;
-  height:70px;
+  height:72px;
   display:flex;
   align-items:center;
   gap:18px;
-  padding:0 28px;
+  padding:0 24px;
   background:rgba(0,0,0,.85);
   backdrop-filter:blur(10px);
   z-index:50;
@@ -44,7 +45,7 @@ header{
 .search input{
   width:100%;
   height:42px;
-  border-radius:24px;
+  border-radius:20px;
   border:1px solid #333;
   background:#111;
   color:#fff;
@@ -62,58 +63,81 @@ header{
 
 /* ================= NAV ================= */
 .nav{
-  margin-top:70px;
-  padding:16px 28px 8px;
+  margin-top:72px;
+  padding:14px 24px;
   display:flex;
-  gap:28px;
-  border-bottom:1px solid #1c1c1c;
+  gap:26px;
+  border-bottom:1px solid #222;
 }
 .nav button{
   background:none;
   border:none;
-  color:#8c8c8c;
+  color:#aaa;
   font-size:16px;
   cursor:pointer;
-  padding-bottom:8px;
 }
 .nav button.active{
   color:#fff;
   font-weight:700;
-  border-bottom:2px solid var(--accent);
 }
 
 /* ================= FILTERS ================= */
 .filters{
-  padding:14px 28px 18px;
+  padding:12px 24px;
   display:flex;
   gap:10px;
-  overflow-x:auto;
+  flex-wrap:wrap;
 }
 .filters button{
-  padding:8px 18px;
-  border-radius:999px;
+  padding:8px 16px;
+  border-radius:20px;
   border:1px solid #333;
   background:#111;
   color:#fff;
   cursor:pointer;
 }
 .filters button.active{
-  background:#fff;
-  color:#000;
+  background:var(--accent);
+  border-color:var(--accent);
 }
 
 /* ================= HOME ================= */
 #home{
-  height:calc(100vh - 160px);
+  padding:20px 0 60px;
   overflow-y:auto;
-  padding:24px 0 60px;
+  height:calc(100vh - 160px);
 }
-.section{margin-bottom:46px}
-.section h2{margin:0 0 14px 28px;font-size:22px}
-.row{display:flex;gap:16px;padding:0 28px;overflow-x:auto}
-.card{min-width:180px;cursor:pointer;transition:.25s}
+.section{margin-bottom:40px}
+.section h2{margin:0 0 14px 24px}
+.row{
+  display:flex;
+  gap:14px;
+  padding:0 24px;
+  overflow-x:auto;
+}
+.card{
+  min-width:160px;
+  cursor:pointer;
+  transition:.25s;
+}
 .card:hover{transform:scale(1.08)}
-.card img{width:100%;height:260px;object-fit:cover;border-radius:10px}
+.card img{
+  width:100%;
+  height:240px;
+  object-fit:cover;
+  border-radius:10px;
+}
+
+/* TOP 10 */
+.top{position:relative}
+.rank{
+  position:absolute;
+  bottom:-10px;
+  left:-10px;
+  font-size:64px;
+  font-weight:900;
+  color:#fff;
+}
 
 /* ================= PLAYER ================= */
 #player{
@@ -123,7 +147,13 @@ header{
   display:none;
   z-index:100;
 }
-#player video{width:100%;height:100%;object-fit:cover}
+#player video{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+/* HOME BUTTON */
 #homeBtn{
   position:absolute;
   top:20px;left:20px;
@@ -134,6 +164,24 @@ header{
   padding:10px 14px;
   cursor:pointer;
   z-index:10;
+}
+
+/* EP CONTROLS */
+#epControls{
+  position:absolute;
+  right:20px;
+  bottom:120px;
+  display:none;
+  gap:10px;
+  z-index:10;
+}
+#epControls button{
+  background:rgba(0,0,0,.6);
+  border:none;
+  color:#fff;
+  font-size:22px;
+  padding:10px 14px;
+  cursor:pointer;
 }
 
 /* OVERLAY */
@@ -152,38 +200,49 @@ header{
   bottom:120px;
   max-width:520px;
 }
+#info h1{margin:0 0 10px}
 #info p{color:var(--muted)}
 #info button{
   margin-top:16px;
-  padding:12px 26px;
+  padding:12px 22px;
   border:none;
-  border-radius:999px;
   font-weight:700;
   cursor:pointer;
 }
 
-/* SERIES CONTROLS */
-.series-controls{
+/* PERFIL */
+#perfilModal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.65);
+  backdrop-filter:blur(8px);
   display:none;
-  gap:10px;
-  margin-top:14px;
+  align-items:center;
+  justify-content:center;
+  z-index:120;
 }
-.series-controls select{
-  padding:10px 18px;
-  border-radius:999px;
-  background:rgba(0,0,0,.6);
-  color:#fff;
-  border:1px solid #444;
+#perfilBox{
+  width:420px;
+  background:#111;
+  border-radius:18px;
+  padding:26px;
+  position:relative;
+}
+#perfilClose{
+  position:absolute;
+  top:12px;
+  right:14px;
   cursor:pointer;
 }
+.perfil-item{margin-bottom:10px;color:#ccc}
 
-/* ================= HIDE UI (INLINE) ================= */
+/* ===== HIDE UI ===== */
 .hide-ui #overlay,
 .hide-ui #info,
+.hide-ui #epControls,
 .hide-ui #homeBtn{
   opacity:0;
   pointer-events:none;
-  transition:opacity .4s ease;
 }
 </style>
 </head>
@@ -191,189 +250,153 @@ header{
 <body>
 
 <header>
-  <div class="logo">CLENA</div>
-  <div class="search">
-    <input id="search" placeholder="Buscar...">
-  </div>
-  <button class="profile">👤</button>
+  <div class="logo">SESSÃO 99</div>
+  <div class="search"><input id="search" placeholder="Buscar..."></div>
+  <button class="profile" onclick="abrirPerfil()">👤</button>
 </header>
 
 <div class="nav">
-  <button class="active" onclick="setTipo('all',this)">Para você</button>
-  <button onclick="setTipo('filme',this)">Filmes</button>
-  <button onclick="setTipo('serie',this)">Séries</button>
+  <button class="active">Para você</button>
+  <button>Filmes</button>
+  <button>Séries</button>
+  <button>Infantil</button>
 </div>
 
-<div class="filters" id="filters"></div>
-<div id="home"></div>
+<div class="filters">
+  <button class="active">Todos</button>
+  <button>Ação</button>
+  <button>Comédia</button>
+  <button>Drama</button>
+  <button>Terror</button>
+</div>
 
-<!-- PLAYER -->
+<div id="home">
+  <div class="section">
+    <h2>TOP 10</h2>
+    <div class="row" id="top10"></div>
+  </div>
+  <div class="section">
+    <h2>Você pode curtir</h2>
+    <div class="row" id="lista"></div>
+  </div>
+</div>
+
 <div id="player">
-  <video id="video" playsinline></video>
+  <video id="video" autoplay playsinline></video>
   <button id="homeBtn" onclick="fecharPlayer()">🏠</button>
+
+  <div id="epControls">
+    <button id="btnPrev">⏮</button>
+    <button id="btnNext">⏭</button>
+  </div>
 
   <div id="overlay">
     <div id="info">
       <h1 id="titulo"></h1>
       <p id="descricao"></p>
-
-      <div class="series-controls" id="seriesControls">
-        <select id="selTemporada"></select>
-        <select id="selEpisodio"></select>
-      </div>
-
       <button onclick="assistir()">▶ Assistir</button>
     </div>
   </div>
 </div>
 
+<div id="perfilModal">
+  <div id="perfilBox">
+    <div id="perfilClose" onclick="fecharPerfil()">✕</div>
+    <h2>Meu Perfil</h2>
+    <div class="perfil-item" id="p_email"></div>
+    <button onclick="logout()">Sair</button>
+  </div>
+</div>
+
 <script>
-const sb = supabase.createClient(
+if(!localStorage.usuario) location.href="login.html";
+
+const sb=supabase.createClient(
  "https://dxkszikemntfusfyrzos.supabase.co",
  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-const home=document.getElementById("home");
-const filtersBox=document.getElementById("filters");
-const search=document.getElementById("search");
-const player=document.getElementById("player");
+const top10=document.getElementById("top10");
+const lista=document.getElementById("lista");
 const video=document.getElementById("video");
+const epControls=document.getElementById("epControls");
+const btnPrev=document.getElementById("btnPrev");
+const btnNext=document.getElementById("btnNext");
 
-let dados=[], atual=null, serieAtual=[], indiceEp=0;
-let filtroGenero="Todos", filtroTipo="all";
-let hideTimer=null, isAssistindo=false, hls=null;
-
-/* NAV */
-function setTipo(tipo,btn){
- filtroTipo=tipo;
- document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
- btn.classList.add("active");
- renderHome();
-}
+let dados=[], atual=null;
+let hideTimer=null;
 
 /* LOAD */
 async function load(){
  const {data}=await sb.from("filmes").select("*").eq("ativo",true);
  dados=data||[];
- montarFiltros();
- renderHome();
-}
 
-/* FILTROS */
-function montarFiltros(){
- const generos=[...new Set(dados.map(d=>d.genero).filter(Boolean))];
- filtersBox.innerHTML="";
- ["Todos",...generos].forEach(g=>{
-   const b=document.createElement("button");
-   b.textContent=g;
-   b.className=g===filtroGenero?"active":"";
-   b.onclick=()=>{
-     filtroGenero=g;
-     montarFiltros();
-     renderHome();
-   };
-   filtersBox.appendChild(b);
- });
-}
-
-/* HOME */
-function renderHome(){
- home.innerHTML="";
- const termo=search.value.toLowerCase();
-
- const filtrados=dados.filter(d=>{
-   if(filtroTipo!=="all" && d.tipo!==filtroTipo) return false;
-   if(filtroGenero!=="Todos" && d.genero!==filtroGenero) return false;
-   return (d.titulo||d.serie_nome||"").toLowerCase().includes(termo);
- });
-
- const filmes=filtrados.filter(d=>d.tipo==="filme");
- const series=[...new Map(filtrados.filter(d=>d.tipo==="serie").map(s=>[s.serie_nome,s])).values()];
-
- if(filmes.length) renderSection("Filmes",filmes);
- if(series.length) renderSection("Séries",series);
-}
-
-function renderSection(t,itens){
- const s=document.createElement("div");
- s.className="section";
- s.innerHTML=`<h2>${t}</h2>`;
- const r=document.createElement("div");
- r.className="row";
- itens.forEach(i=>{
+ data.forEach((f,i)=>{
    const c=document.createElement("div");
-   c.className="card";
-   c.innerHTML=`<img src="${i.capa_url}">`;
-   c.onclick=()=>abrir(i);
-   r.appendChild(c);
+   c.className="card top";
+   c.innerHTML=`<img src="${f.capa_url}"><div class="rank">${i+1}</div>`;
+   c.onclick=()=>abrir(f);
+   if(i<10) top10.appendChild(c);
+   else lista.appendChild(c.cloneNode(true));
  });
- s.appendChild(r);
- home.appendChild(s);
 }
+load();
 
 /* PLAYER */
 function abrir(item){
  atual=item;
  player.style.display="block";
- document.body.classList.remove("hide-ui");
- isAssistindo=false;
-
  titulo.textContent=item.titulo||item.serie_nome;
  descricao.textContent=item.descricao||"";
-
- carregarVideo(item.video_url);
- iniciarTimer();
-}
-
-function carregarVideo(url){
- if(hls){hls.destroy();hls=null}
- video.pause();
- video.src="";
- if(url.endsWith(".m3u8") && Hls.isSupported()){
-   hls=new Hls();
-   hls.loadSource(url);
-   hls.attachMedia(video);
- }else video.src=url;
- video.muted=true;
+ video.src=item.video_url;
  video.play();
+ showUI();
 }
 
 function assistir(){
- isAssistindo=true;
- video.muted=false;
  video.play();
  document.body.classList.add("hide-ui");
- clearTimeout(hideTimer);
+ startHideTimer();
 }
 
-/* TIMER */
-function iniciarTimer(){
+/* UI TIMER */
+function startHideTimer(){
  clearTimeout(hideTimer);
- hideTimer=setTimeout(()=>{
-   if(isAssistindo){
-     document.body.classList.add("hide-ui");
-   }
- },30000);
+ hideTimer=setTimeout(()=>document.body.classList.add("hide-ui"),30000);
 }
-
-video.addEventListener("pause",()=>{
- clearTimeout(hideTimer);
+function showUI(){
  document.body.classList.remove("hide-ui");
-});
-video.addEventListener("play",()=>{
- if(isAssistindo) iniciarTimer();
-});
+ startHideTimer();
+}
+
+/* EVENTS */
+video.addEventListener("pause",showUI);
+video.addEventListener("play",startHideTimer);
+player.addEventListener("mousemove",showUI);
+player.addEventListener("touchstart",showUI);
 
 function fecharPlayer(){
- if(hls){hls.destroy();hls=null}
  video.pause();
- video.src="";
  player.style.display="none";
  document.body.classList.remove("hide-ui");
 }
 
-search.oninput=renderHome;
-load();
+/* PERFIL */
+function abrirPerfil(){
+ const u=JSON.parse(localStorage.usuario);
+ p_email.textContent=u.email;
+ perfilModal.style.display="flex";
+}
+function fecharPerfil(){perfilModal.style.display="none";}
+function logout(){
+ localStorage.removeItem("usuario");
+ location.href="login.html";
+}
+
+/* TECLADO */
+document.addEventListener("keydown",e=>{
+ if(e.key==="Enter") video.paused?video.play():video.pause();
+});
 </script>
 
 </body>
