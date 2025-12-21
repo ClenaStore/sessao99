@@ -103,11 +103,16 @@ section h2{color:#fff}
 }
 
 /* OVERLAY + UI */
-.overlay,
+.overlay{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+}
 .ui{
   position:absolute;
   inset:0;
-  transition:opacity .4s;
+  pointer-events:none;
+  color:#fff;
 }
 
 /* GRADIENT */
@@ -123,14 +128,12 @@ section h2{color:#fff}
   );
 }
 
-/* UI */
-.ui{color:#fff}
-
 /* TOP */
 .top{
   position:absolute;
   top:20px;
   left:20px;
+  pointer-events:auto;
 }
 .top button{
   background:rgba(0,0,0,.6);
@@ -147,6 +150,7 @@ section h2{color:#fff}
   bottom:170px;
   left:40px;
   max-width:520px;
+  pointer-events:none;
 }
 .info h1{margin:0 0 6px;font-size:32px}
 .info p{margin:0;opacity:.85}
@@ -158,13 +162,13 @@ section h2{color:#fff}
   left:40px;
   display:flex;
   gap:14px;
+  pointer-events:auto;
 }
 .actions button{
   padding:10px 18px;
   border-radius:999px;
   border:none;
   cursor:pointer;
-  font-size:14px;
 }
 .actions .play{
   background:#fff;
@@ -179,6 +183,7 @@ section h2{color:#fff}
   left:40px;
   display:none;
   gap:12px;
+  pointer-events:auto;
 }
 .selects select{
   background:rgba(255,255,255,.15);
@@ -192,8 +197,7 @@ select option{color:#000}
 /* HIDE UI */
 .hide-ui .overlay,
 .hide-ui .ui{
-  opacity:0;
-  pointer-events:none;
+  display:none;
 }
 </style>
 </head>
@@ -267,26 +271,23 @@ const selects = document.getElementById("selects");
 const selTemporada = document.getElementById("selTemporada");
 const selEpisodio = document.getElementById("selEpisodio");
 
-let dados = [];
-let serieAtual = [];
-let filtroTipo = "all";
-let filtroCategoria = "all";
-let hideTimer;
+let dados=[], serieAtual=[], filtroTipo="all", filtroCategoria="all";
+let hideTimer=null;
 
 /* LOAD */
 (async()=>{
   const { data } = await sb.from("filmes").select("*").eq("ativo",true);
-  dados = data || [];
+  dados=data||[];
   aplicarFiltros();
 })();
 
 /* HOME */
 function renderHome(list){
   home.innerHTML="";
-  const filmes = list.filter(i=>i.tipo==="filme");
-  const series = [...new Map(list.filter(i=>i.tipo==="serie").map(s=>[s.serie_nome,s])).values()];
-  if(filmes.length) renderRow("Filmes", filmes, playFilme);
-  if(series.length) renderRow("Séries", series, abrirSerie);
+  const filmes=list.filter(i=>i.tipo==="filme");
+  const series=[...new Map(list.filter(i=>i.tipo==="serie").map(s=>[s.serie_nome,s])).values()];
+  if(filmes.length) renderRow("Filmes",filmes,playFilme);
+  if(series.length) renderRow("Séries",series,abrirSerie);
 }
 function renderRow(t,it,cb){
   const s=document.createElement("section");
@@ -300,8 +301,7 @@ function renderRow(t,it,cb){
     c.onclick=()=>cb(i);
     r.appendChild(c);
   });
-  s.appendChild(r);
-  home.appendChild(s);
+  s.appendChild(r); home.appendChild(s);
 }
 
 /* CATEGORIAS */
@@ -312,28 +312,28 @@ function renderCategorias(tipo){
   const cats=[...new Set(lista.map(i=>i.categoria).filter(Boolean))];
   if(!cats.length){categoriasBox.style.display="none";return;}
   categoriasBox.style.display="flex";
-  criarBotaoCategoria("Todos","all",true);
-  cats.forEach(c=>criarBotaoCategoria(c,c));
+  criarCat("Todos","all",true);
+  cats.forEach(c=>criarCat(c,c));
 }
-function criarBotaoCategoria(label,valor,ativo=false){
-  const btn=document.createElement("button");
-  btn.textContent=label;
-  if(ativo) btn.classList.add("active");
-  btn.onclick=()=>{
-    document.querySelectorAll(".categorias button").forEach(b=>b.classList.remove("active"));
-    btn.classList.add("active");
-    filtroCategoria=valor;
+function criarCat(label,val,act=false){
+  const b=document.createElement("button");
+  b.textContent=label;
+  if(act) b.classList.add("active");
+  b.onclick=()=>{
+    document.querySelectorAll(".categorias button").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    filtroCategoria=val;
     aplicarFiltros();
   };
-  categoriasBox.appendChild(btn);
+  categoriasBox.appendChild(b);
 }
 
 /* FILTROS */
 function aplicarFiltros(){
-  let lista=[...dados];
-  if(filtroTipo!=="all") lista=lista.filter(i=>i.tipo===filtroTipo);
-  if(filtroCategoria!=="all") lista=lista.filter(i=>i.categoria===filtroCategoria);
-  renderHome(lista);
+  let l=[...dados];
+  if(filtroTipo!=="all") l=l.filter(i=>i.tipo===filtroTipo);
+  if(filtroCategoria!=="all") l=l.filter(i=>i.categoria===filtroCategoria);
+  renderHome(l);
 }
 document.querySelectorAll(".menu a").forEach(a=>{
   a.onclick=()=>{
@@ -350,13 +350,13 @@ document.querySelectorAll(".menu a").forEach(a=>{
 /* SEARCH */
 search.oninput=()=>{
   const v=search.value.toLowerCase();
-  let lista=dados.filter(d=>
+  let l=dados.filter(d=>
     d.titulo?.toLowerCase().includes(v) ||
     d.serie_nome?.toLowerCase().includes(v)
   );
-  if(filtroTipo!=="all") lista=lista.filter(i=>i.tipo===filtroTipo);
-  if(filtroCategoria!=="all") lista=lista.filter(i=>i.categoria===filtroCategoria);
-  renderHome(lista);
+  if(filtroTipo!=="all") l=l.filter(i=>i.tipo===filtroTipo);
+  if(filtroCategoria!=="all") l=l.filter(i=>i.categoria===filtroCategoria);
+  renderHome(l);
 };
 
 /* PLAYER */
@@ -377,12 +377,12 @@ function abrirSerie(s){
 }
 function montarTemporadas(){
   const t=[...new Set(serieAtual.map(e=>e.temporada))];
-  selTemporada.innerHTML=t.map(x=>`<option value="${x}">Temporada ${x}</option>`).join("");
+  selTemporada.innerHTML=t.map(x=>`<option>Temporada ${x}</option>`).join("");
   montarEpisodios();
   selTemporada.onchange=montarEpisodios;
 }
 function montarEpisodios(){
-  const eps=serieAtual.filter(e=>e.temporada==selTemporada.value);
+  const eps=serieAtual.filter(e=>e.temporada==selTemporada.value.replace("Temporada ",""));
   selEpisodio.innerHTML=eps.map((e,i)=>`<option value="${i}">Episódio ${e.episodio}</option>`).join("");
   tocar(eps[0]);
   selEpisodio.onchange=()=>tocar(eps[selEpisodio.value]);
@@ -406,13 +406,16 @@ function fechar(){
 function mostrarUI(){
   player.classList.remove("hide-ui");
   video.controls=true;
+  if(video.paused) return;
   iniciarAutoHide();
 }
 function iniciarAutoHide(){
   clearTimeout(hideTimer);
   hideTimer=setTimeout(()=>{
-    player.classList.add("hide-ui");
-    video.controls=false;
+    if(!video.paused){
+      player.classList.add("hide-ui");
+      video.controls=false;
+    }
   },30000);
 }
 
