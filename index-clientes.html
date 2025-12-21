@@ -13,9 +13,9 @@
   --text:#fff;
   --muted:#b3b3b3;
   --accent:#e50914;
+  --green:#46d369;
 }
 *{box-sizing:border-box}
-
 body{
   margin:0;
   background:var(--bg);
@@ -23,7 +23,7 @@ body{
   font-family:Inter,Arial,sans-serif;
 }
 
-/* HEADER */
+/* ================= HEADER ================= */
 header{
   position:fixed;
   top:0;left:0;right:0;
@@ -32,7 +32,7 @@ header{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  background:linear-gradient(to bottom,rgba(0,0,0,.9),rgba(0,0,0,.4),transparent);
+  background:linear-gradient(to bottom,rgba(0,0,0,.95),rgba(0,0,0,.6),transparent);
 }
 .logo{
   font-size:26px;
@@ -41,7 +41,7 @@ header{
 }
 .logo span{color:var(--accent)}
 header input{
-  width:300px;
+  width:320px;
   padding:12px 18px;
   border-radius:999px;
   border:none;
@@ -49,9 +49,9 @@ header input{
   color:#fff;
 }
 
-/* HOME */
+/* ================= HOME ================= */
 #home{
-  padding-top:100px;
+  padding-top:110px;
   padding-bottom:80px;
 }
 .section{
@@ -69,7 +69,7 @@ header input{
 }
 .row::-webkit-scrollbar{display:none}
 
-/* CARD */
+/* ================= CARD ================= */
 .card{
   min-width:200px;
   cursor:pointer;
@@ -83,20 +83,21 @@ header input{
   border-radius:4px;
 }
 .card:hover{
-  transform:scale(1.1);
+  transform:scale(1.12);
   z-index:10;
 }
 
-/* DETAILS */
+/* ================= DETAILS ================= */
 #details{
   display:none;
   position:fixed;
   inset:0;
   z-index:200;
   background:#000;
+  overflow:hidden;
 }
 
-/* VIDEO BACKGROUND */
+/* BACKGROUND VIDEO */
 .details-bg{
   position:absolute;
   inset:0;
@@ -108,36 +109,59 @@ header input{
   object-fit:cover;
 }
 
-/* DEGRADÊ */
+/* DEGRADÊ CINEMATOGRÁFICO */
 .details-bg::after{
   content:"";
   position:absolute;
   inset:0;
   background:
-    linear-gradient(to right,rgba(0,0,0,.95) 15%,rgba(0,0,0,.6) 45%,transparent),
-    linear-gradient(to top,rgba(0,0,0,.9) 10%,transparent 45%);
+    linear-gradient(to right,rgba(0,0,0,.95) 18%,rgba(0,0,0,.6) 48%,transparent),
+    linear-gradient(to top,rgba(0,0,0,.95) 12%,transparent 50%);
 }
 
 /* INFO */
 .details-info{
   position:relative;
   z-index:2;
-  padding:120px 60px;
-  max-width:620px;
+  padding:130px 60px;
+  max-width:640px;
 }
 .details-info h1{
-  font-size:42px;
+  font-size:44px;
   margin:0 0 16px;
 }
 .meta{
-  color:#46d369;
+  color:var(--green);
   font-weight:600;
-  margin-bottom:12px;
+  margin-bottom:14px;
 }
 .details-info p{
   color:var(--muted);
   line-height:1.5;
   font-size:16px;
+  margin-bottom:24px;
+}
+
+/* ACTIONS */
+.actions{
+  display:flex;
+  gap:14px;
+}
+.actions button{
+  border:none;
+  cursor:pointer;
+  padding:14px 26px;
+  font-size:16px;
+  font-weight:700;
+  border-radius:6px;
+}
+.play{
+  background:#fff;
+  color:#000;
+}
+.sound{
+  background:rgba(255,255,255,.15);
+  color:#fff;
 }
 
 /* CLOSE */
@@ -155,27 +179,44 @@ header input{
   cursor:pointer;
 }
 
-/* RECOMENDAÇÕES */
+/* ================= RECOMENDAÇÕES ================= */
 .reco{
   position:absolute;
   bottom:0;
   left:0;
   right:0;
-  padding:0 0 40px;
+  padding-bottom:40px;
 }
 .reco h2{
   margin:0 0 12px 48px;
 }
 .reco .row{padding:0 48px}
 
+/* ================= PLAYER FULL ================= */
+#player{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:300;
+  background:#000;
+}
+#player video{
+  width:100%;
+  height:100%;
+}
+#player .close{
+  top:20px;
+  left:20px;
+}
+
 /* MOBILE */
 @media(max-width:900px){
   header{padding:14px 20px}
   .details-info{
-    padding:100px 20px;
+    padding:110px 20px;
     max-width:100%;
   }
-  .details-info h1{font-size:28px}
+  .details-info h1{font-size:30px}
   .row{padding:0 20px}
   .section h2,.reco h2{margin-left:20px}
 }
@@ -196,19 +237,18 @@ header input{
   <button class="close" onclick="fecharDetails()">⬅</button>
 
   <div class="details-bg">
-    <video id="previewVideo"
-      muted
-      autoplay
-      loop
-      playsinline
-      preload="auto">
-    </video>
+    <video id="previewVideo" muted autoplay loop playsinline preload="auto"></video>
   </div>
 
   <div class="details-info">
     <div class="meta" id="detailsMeta"></div>
     <h1 id="detailsTitulo"></h1>
     <p id="detailsDesc"></p>
+
+    <div class="actions">
+      <button class="play" onclick="abrirPlayer()">▶ Assistir</button>
+      <button class="sound" onclick="toggleSom()">🔊 Som</button>
+    </div>
   </div>
 
   <div class="reco">
@@ -217,8 +257,14 @@ header input{
   </div>
 </div>
 
+<!-- PLAYER FULL -->
+<div id="player">
+  <button class="close" onclick="fecharPlayer()">⬅</button>
+  <video id="playerVideo" controls></video>
+</div>
+
 <script>
-/* SUPABASE */
+/* ================= SUPABASE ================= */
 const supabaseClient = supabase.createClient(
   "https://dxkszikemntfusfyrzos.supabase.co",
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
@@ -227,8 +273,10 @@ const supabaseClient = supabase.createClient(
 const home=document.getElementById("home");
 const details=document.getElementById("details");
 const previewVideo=document.getElementById("previewVideo");
+const player=document.getElementById("player");
+const playerVideo=document.getElementById("playerVideo");
 
-let dados=[], atual=null;
+let dados=[], atual=null, somAtivo=false;
 
 /* LOAD */
 async function load(){
@@ -276,45 +324,56 @@ function renderSection(titulo,itens){
 /* DETAILS */
 function abrirDetails(item){
   atual=item;
-
-  document.getElementById("detailsTitulo").textContent =
-    item.titulo || item.serie_nome;
-
-  document.getElementById("detailsDesc").textContent =
-    item.descricao || "Sem descrição disponível.";
-
-  document.getElementById("detailsMeta").textContent =
-    item.tipo==="serie" ? "Série" : "Filme";
+  document.getElementById("detailsTitulo").textContent=item.titulo||item.serie_nome;
+  document.getElementById("detailsDesc").textContent=item.descricao||"Sem descrição disponível.";
+  document.getElementById("detailsMeta").textContent=item.tipo==="serie"?"Série":"Filme";
 
   previewVideo.pause();
   previewVideo.src=item.video_url;
+  previewVideo.muted=true;
   previewVideo.load();
-
   previewVideo.play().catch(()=>{});
 
   renderRecomendacoes(item);
   details.style.display="block";
 }
 
+/* RECOMENDAÇÕES */
+function renderRecomendacoes(item){
+  const row=document.getElementById("recoRow");
+  row.innerHTML="";
+  dados.filter(d=>d.id!==item.id).slice(0,10).forEach(r=>{
+    const c=document.createElement("div");
+    c.className="card";
+    c.innerHTML=`<img src="${r.capa_url}">`;
+    c.onclick=()=>abrirDetails(r);
+    row.appendChild(c);
+  });
+}
+
+/* SOM PREVIEW */
+function toggleSom(){
+  somAtivo=!somAtivo;
+  previewVideo.muted=!somAtivo;
+}
+
+/* PLAYER FULL */
+function abrirPlayer(){
+  playerVideo.src=atual.video_url;
+  player.style.display="block";
+  playerVideo.play();
+}
+function fecharPlayer(){
+  playerVideo.pause();
+  playerVideo.src="";
+  player.style.display="none";
+}
+
+/* FECHAR DETAILS */
 function fecharDetails(){
   previewVideo.pause();
   previewVideo.src="";
   details.style.display="none";
-}
-
-function renderRecomendacoes(item){
-  const row=document.getElementById("recoRow");
-  row.innerHTML="";
-  dados
-    .filter(d=>d.id!==item.id)
-    .slice(0,10)
-    .forEach(r=>{
-      const c=document.createElement("div");
-      c.className="card";
-      c.innerHTML=`<img src="${r.capa_url}">`;
-      c.onclick=()=>abrirDetails(r);
-      row.appendChild(c);
-    });
 }
 
 load();
