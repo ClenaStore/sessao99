@@ -5,14 +5,17 @@
 <title>SESSÃO 99</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
+<!-- SUPABASE -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+<!-- HLS (para .m3u8 no Chrome/Edge) -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
 <style>
 :root{
   --bg:#000;
   --text:#fff;
   --muted:#b3b3b3;
-  --accent:#e50914;
   --badge:#222;
 }
 *{box-sizing:border-box}
@@ -25,118 +28,50 @@ body{
 }
 
 /* HOME */
-#home{
-  position:absolute;
-  inset:0;
-  padding-top:90px;
-  overflow-y:auto;
-}
+#home{position:absolute;inset:0;padding-top:90px;overflow-y:auto}
 .section{margin-bottom:46px}
 .section h2{margin:0 0 16px 48px}
-.row{
-  display:flex;
-  gap:16px;
-  padding:0 48px;
-  overflow-x:auto;
-}
-.card{
-  min-width:200px;
-  cursor:pointer;
-}
-.card img{
-  width:100%;
-  height:300px;
-  object-fit:cover;
-  border-radius:4px;
-}
+.row{display:flex;gap:16px;padding:0 48px;overflow-x:auto}
+.card{min-width:200px;cursor:pointer}
+.card img{width:100%;height:300px;object-fit:cover;border-radius:4px}
 
 /* PLAYER */
-#player{
-  position:fixed;
-  inset:0;
-  background:#000;
-  display:none;
-}
-#player video{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-}
+#player{position:fixed;inset:0;background:#000;display:none}
+#player video{width:100%;height:100%;object-fit:cover}
 
 /* HOME BUTTON */
 #homeBtn{
-  position:absolute;
-  top:20px;
-  left:20px;
-  padding:10px 14px;
-  font-size:20px;
+  position:absolute;top:20px;left:20px;
+  padding:10px 14px;font-size:20px;
   background:rgba(0,0,0,.6);
-  color:#fff;
-  border:none;
-  cursor:pointer;
-  display:none;
-  z-index:5;
+  color:#fff;border:none;cursor:pointer;display:none;z-index:5
 }
 
 /* OVERLAY */
 #overlay{position:absolute;inset:0}
 #overlay::before{
-  content:"";
-  position:absolute;
-  inset:0;
+  content:"";position:absolute;inset:0;
   background:
     linear-gradient(to right,rgba(0,0,0,.9) 20%,rgba(0,0,0,.5) 50%,transparent),
     linear-gradient(to top,rgba(0,0,0,.85) 10%,transparent 45%);
 }
 
 /* INFO */
-#info{
-  position:absolute;
-  left:60px;
-  bottom:120px;
-  max-width:640px;
-}
-.badge{
-  display:inline-block;
-  padding:4px 10px;
-  background:var(--badge);
-  font-size:12px;
-  margin-bottom:8px;
-}
+#info{position:absolute;left:60px;bottom:120px;max-width:640px}
+.badge{display:inline-block;padding:4px 10px;background:var(--badge);font-size:12px;margin-bottom:8px}
 #info h1{font-size:40px;margin:0 0 12px}
 #info p{color:var(--muted)}
+.actions{margin-top:16px}
+.actions button{padding:12px 22px;font-weight:700;border:none;cursor:pointer}
 
-.actions{
-  margin-top:16px;
-}
-.actions button{
-  padding:12px 22px;
-  font-weight:700;
-  border:none;
-  cursor:pointer;
-}
+/* SERIES */
+.series-controls{display:none;gap:10px;margin-top:14px}
+.series-controls select{padding:10px;background:#111;color:#fff;border:1px solid #333}
 
-/* SERIES CONTROLS */
-.series-controls{
-  display:none;
-  gap:10px;
-  margin-top:14px;
-}
-.series-controls select{
-  padding:10px;
-  background:#111;
-  color:#fff;
-  border:1px solid #333;
-}
-
-/* ESTADOS */
+/* STATES */
 .hide-ui #overlay,
-.hide-ui #info{
-  opacity:0;
-  pointer-events:none;
-}
+.hide-ui #info{opacity:0;pointer-events:none}
 
-/* MOBILE */
 @media(max-width:900px){
   #info{left:20px;right:20px}
   #info h1{font-size:26px}
@@ -150,7 +85,6 @@ body{
 
 <div id="player">
   <video id="video" controls autoplay playsinline></video>
-
   <button id="homeBtn" onclick="voltarHome()">🏠</button>
 
   <div id="overlay">
@@ -187,8 +121,32 @@ const selTemporada=document.getElementById("selTemporada");
 const selEpisodio=document.getElementById("selEpisodio");
 
 let dados=[], atual=null, serieAtual=[], indiceEp=0;
-let hideTimer=null;
-let audioUnlocked=false;
+let hideTimer=null, audioUnlocked=false;
+let hls=null;
+
+/* ================= VIDEO LOADER (CRÍTICO) ================= */
+function loadVideo(url){
+  if(hls){ hls.destroy(); hls=null; }
+
+  video.pause();
+  video.removeAttribute("src");
+  video.load();
+
+  if(url.endsWith(".m3u8")){
+    if(Hls.isSupported()){
+      hls=new Hls({ enableWorker:true });
+      hls.loadSource(url);
+      hls.attachMedia(video);
+    }else if(video.canPlayType("application/vnd.apple.mpegurl")){
+      video.src=url;
+    }
+  }else{
+    video.src=url;
+  }
+
+  video.muted=!audioUnlocked;
+  video.play();
+}
 
 /* LOAD */
 async function load(){
@@ -199,10 +157,7 @@ async function load(){
 function renderHome(){
  home.innerHTML="";
  renderSection("Filmes",dados.filter(d=>d.tipo==="filme"));
- renderSection(
-  "Séries",
-  [...new Map(dados.filter(d=>d.tipo==="serie").map(s=>[s.serie_nome,s])).values()]
- );
+ renderSection("Séries",[...new Map(dados.filter(d=>d.tipo==="serie").map(s=>[s.serie_nome,s])).values()]);
 }
 function renderSection(t,itens){
  const sec=document.createElement("div");
@@ -224,10 +179,6 @@ function renderSection(t,itens){
 /* ABRIR */
 function abrir(item){
  clearTimeout(hideTimer);
- video.pause();
- video.removeAttribute("src");
- video.load();
-
  atual=item;
  player.style.display="block";
  homeBtn.style.display="none";
@@ -245,13 +196,12 @@ function abrir(item){
   seriesControls.style.display="none";
  }
 
- video.src=item.video_url;
- video.muted=true;
- video.play();
+ audioUnlocked=false;
+ loadVideo(item.video_url);
  iniciarTimer();
 }
 
-/* ASSISTIR */
+/* ASSISTIR (LIBERA ÁUDIO) */
 function assistir(){
  audioUnlocked=true;
  video.muted=false;
@@ -281,10 +231,7 @@ function montarEpisodios(){
 function trocarEpisodio(eps,i){
  indiceEp=i;
  atual=eps[i];
- video.pause();
- video.src=atual.video_url;
- video.muted=!audioUnlocked;
- video.play();
+ loadVideo(atual.video_url);
  iniciarTimer();
 }
 
@@ -319,6 +266,7 @@ video.addEventListener("play",()=>{
 
 /* HOME */
 function voltarHome(){
+ if(hls){ hls.destroy(); hls=null; }
  video.pause();
  video.removeAttribute("src");
  video.load();
