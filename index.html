@@ -12,9 +12,9 @@
 *::-webkit-scrollbar{display:none}
 
 :root{
-  --bg:#1c1c1e;
-  --surface:#2a2a2e;
-  --card:#323236;
+  --bg:#0f0f10;
+  --surface:#1b1b1e;
+  --card:#232326;
   --accent:#e50914;
   --text:#ffffff;
   --muted:#b5b5b5;
@@ -33,21 +33,24 @@ header{
   align-items:center;
   justify-content:space-between;
   padding:0 40px;
-  background:#111;
+  background:linear-gradient(to bottom,rgba(0,0,0,.9),rgba(0,0,0,.6));
+  position:sticky;
+  top:0;
+  z-index:100;
 }
-header h1{color:var(--accent)}
+header h1{color:var(--accent);letter-spacing:1px}
 header input{
   width:320px;
-  padding:10px 14px;
+  padding:10px 16px;
   background:#2b2b2b;
   border:none;
   color:#fff;
-  border-radius:6px;
+  border-radius:999px;
 }
 .profile{
-  width:36px;height:36px;
+  width:38px;height:38px;
   border-radius:50%;
-  background:#444;
+  background:#333;
   border:none;
   color:#fff;
   cursor:pointer;
@@ -55,18 +58,28 @@ header input{
 
 /* HERO */
 .hero{
+  position:relative;
   display:grid;
   grid-template-columns:1.2fr .8fr;
   gap:40px;
-  padding:40px;
-  background:linear-gradient(180deg,#2a2a2e,#1c1c1e);
+  padding:60px 40px;
+  background:linear-gradient(90deg,rgba(0,0,0,.85) 35%,rgba(0,0,0,.4));
 }
+.hero::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(to top,#0f0f10 10%,transparent 60%);
+}
+.hero > *{position:relative;z-index:2}
+
 .hero img{
   width:100%;
-  border-radius:12px;
+  border-radius:14px;
+  box-shadow:0 30px 60px rgba(0,0,0,.6);
 }
 .hero-info h2{
-  font-size:42px;
+  font-size:46px;
   margin-bottom:12px;
 }
 .hero-info .meta{
@@ -74,33 +87,45 @@ header input{
   margin-bottom:14px;
 }
 .hero-info p{
-  line-height:1.5;
-  margin-bottom:20px;
+  line-height:1.6;
+  margin-bottom:24px;
+  max-width:520px;
 }
 .hero-info button{
-  padding:14px 30px;
+  padding:14px 34px;
   background:var(--accent);
   border:none;
   color:#fff;
   font-weight:700;
   cursor:pointer;
   border-radius:6px;
+  font-size:16px;
 }
 
 /* SECTIONS */
-section{padding:32px 40px}
-section h3{margin-bottom:14px}
+section{padding:36px 40px}
+section h3{
+  margin-bottom:16px;
+  font-size:20px;
+}
 
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
-  gap:18px;
+  gap:20px;
 }
+
+/* CARD */
 .card{
   background:var(--card);
-  border-radius:10px;
+  border-radius:12px;
   overflow:hidden;
   cursor:pointer;
+  transition:.25s;
+}
+.card:hover{
+  transform:scale(1.06);
+  box-shadow:0 20px 40px rgba(0,0,0,.6);
 }
 .card img{
   width:100%;
@@ -108,7 +133,7 @@ section h3{margin-bottom:14px}
   object-fit:cover;
 }
 .card .title{
-  padding:10px;
+  padding:12px;
   font-size:14px;
   font-weight:600;
 }
@@ -129,22 +154,26 @@ section h3{margin-bottom:14px}
 video{
   width:100%;
   height:100%;
+  background:#000;
 }
 #sideInfo{
   background:#141414;
-  padding:24px;
+  padding:28px;
 }
 #sideInfo h2{margin-bottom:10px}
 #sideInfo .meta{color:var(--muted);margin-bottom:10px}
 #sideInfo p{color:#ddd;margin-bottom:20px}
 select{
   width:100%;
-  padding:10px;
+  padding:12px;
   margin-bottom:10px;
   background:#2a2a2a;
   border:none;
   color:#fff;
+  border-radius:6px;
 }
+
+/* CLOSE */
 #close{
   position:absolute;
   top:20px;left:20px;
@@ -152,15 +181,16 @@ select{
   border:none;
   color:#fff;
   font-size:18px;
-  padding:10px 14px;
+  padding:10px 16px;
   cursor:pointer;
+  border-radius:999px;
 }
 
 /* PERFIL */
 #perfil{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.65);
+  background:rgba(0,0,0,.75);
   backdrop-filter:blur(6px);
   display:none;
   align-items:center;
@@ -169,14 +199,16 @@ select{
 #perfilBox{
   width:420px;
   background:var(--surface);
-  padding:26px;
-  border-radius:16px;
+  padding:28px;
+  border-radius:18px;
   position:relative;
 }
+#perfilBox h3{margin-bottom:14px}
+#perfilBox div{margin-bottom:10px;color:#ccc}
+#perfilBox span{font-weight:600;color:#fff}
 .closePerfil{
   position:absolute;
-  top:12px;
-  right:14px;
+  top:14px;right:16px;
   background:none;
   border:none;
   color:#aaa;
@@ -184,15 +216,6 @@ select{
   cursor:pointer;
 }
 .closePerfil:hover{color:#fff}
-.perfil-item{margin-bottom:10px;color:#ccc}
-.perfil-item span{color:#fff;font-weight:600}
-.statusBadge{
-  padding:4px 10px;
-  border-radius:999px;
-  font-size:12px;
-}
-.statusBadge.pendente{background:#facc15;color:#000}
-.statusBadge.ativo{background:#22c55e;color:#000}
 </style>
 </head>
 
@@ -228,7 +251,7 @@ select{
 <div id="player">
   <button id="close" onclick="fechar()">←</button>
   <div id="playerLayout">
-    <video id="video" controls autoplay></video>
+    <video id="video" autoplay controls></video>
     <div id="sideInfo">
       <h2 id="pTitle"></h2>
       <div class="meta" id="pMeta"></div>
@@ -240,16 +263,16 @@ select{
 </div>
 
 <!-- PERFIL -->
-<div id="perfil" onclick="clicouFora(event)">
+<div id="perfil" onclick="if(event.target.id==='perfil')fecharPerfil()">
   <div id="perfilBox">
     <button class="closePerfil" onclick="fecharPerfil()">✕</button>
     <h3>Meu Perfil</h3>
-    <div class="perfil-item">Email: <span id="pfEmail"></span></div>
-    <div class="perfil-item">CPF: <span id="pfCpf"></span></div>
-    <div class="perfil-item">WhatsApp: <span id="pfWhats"></span></div>
-    <div class="perfil-item">Status: <span id="pfStatus"></span></div>
-    <div class="perfil-item">Trial: <span id="pfTrial"></span></div>
-    <button onclick="logout()" style="color:#ff6b6b;background:none;border:none;margin-top:10px">Sair</button>
+    <div>Email: <span id="pfEmail"></span></div>
+    <div>CPF: <span id="pfCpf"></span></div>
+    <div>WhatsApp: <span id="pfWhats"></span></div>
+    <div>Status: <span id="pfStatus"></span></div>
+    <div>Trial: <span id="pfTrial"></span></div>
+    <button onclick="logout()" style="color:#ff6b6b;background:none;border:none;margin-top:14px">Sair</button>
   </div>
 </div>
 
@@ -275,7 +298,6 @@ let dados=[], heroItem=null, usuario=null, serieAtual=[];
   heroImg.src=heroItem.capa_url;
 
   render();
-  setInterval(pingOnline,30000);
 })();
 
 function render(){
@@ -295,13 +317,6 @@ function card(i){
 
 function abrirPlayer(item){
   player.style.display="block";
-
-  sb.from("views").insert({
-    user_id: usuario.id,
-    filme_id: item.id,
-    tipo: item.tipo
-  });
-
   if(item.tipo==="filme"){
     video.src=item.video_url;
     pTitle.textContent=item.titulo;
@@ -349,23 +364,10 @@ function abrirPerfil(){
   pfCpf.textContent=usuario.cpf;
   pfWhats.textContent=usuario.whatsapp;
   pfStatus.textContent=usuario.status;
-  pfTrial.textContent=new Date(usuario.trial_expires_at).toLocaleDateString("pt-BR");
-  pfStatus.className="statusBadge "+usuario.status;
+  pfTrial.textContent=usuario.trial_expires_at;
   perfil.style.display="flex";
 }
 function fecharPerfil(){perfil.style.display="none"}
-function clicouFora(e){if(e.target.id==="perfil")fecharPerfil()}
-document.addEventListener("keydown",e=>{
-  if(e.key==="Escape"&&perfil.style.display==="flex")fecharPerfil();
-});
-
-function pingOnline(){
-  sb.from("online_users").upsert({
-    user_id: usuario.id,
-    last_ping: new Date()
-  });
-}
-
 function logout(){
   localStorage.removeItem("usuario");
   location.href="login.html";
