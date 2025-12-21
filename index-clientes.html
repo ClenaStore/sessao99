@@ -129,26 +129,6 @@ body{
   border:1px solid #333;
 }
 
-/* SUGESTÕES */
-#suggestions{
-  position:absolute;
-  left:0;
-  right:0;
-  bottom:0;
-  padding:20px 48px 40px;
-  display:none;
-}
-.sug-row{
-  display:flex;
-  gap:14px;
-}
-.sug-row img{
-  width:160px;
-  height:240px;
-  object-fit:cover;
-  cursor:pointer;
-}
-
 /* ESTADOS */
 .hide-ui #overlay,
 .hide-ui #info{
@@ -189,10 +169,6 @@ body{
       </div>
     </div>
   </div>
-
-  <div id="suggestions">
-    <div class="sug-row" id="sugRow"></div>
-  </div>
 </div>
 
 <script>
@@ -209,8 +185,6 @@ const tipoBadge=document.getElementById("tipoBadge");
 const seriesControls=document.getElementById("seriesControls");
 const selTemporada=document.getElementById("selTemporada");
 const selEpisodio=document.getElementById("selEpisodio");
-const suggestions=document.getElementById("suggestions");
-const sugRow=document.getElementById("sugRow");
 
 let dados=[], atual=null, serieAtual=[], indiceEp=0;
 let hideTimer=null;
@@ -225,7 +199,10 @@ async function load(){
 function renderHome(){
  home.innerHTML="";
  renderSection("Filmes",dados.filter(d=>d.tipo==="filme"));
- renderSection("Séries",[...new Map(dados.filter(d=>d.tipo==="serie").map(s=>[s.serie_nome,s])).values()]);
+ renderSection(
+  "Séries",
+  [...new Map(dados.filter(d=>d.tipo==="serie").map(s=>[s.serie_nome,s])).values()]
+ );
 }
 function renderSection(t,itens){
  const sec=document.createElement("div");
@@ -255,7 +232,6 @@ function abrir(item){
  player.style.display="block";
  homeBtn.style.display="none";
  document.body.classList.remove("hide-ui");
- suggestions.style.display="none";
 
  document.getElementById("titulo").textContent=item.titulo||item.serie_nome;
  document.getElementById("descricao").textContent=item.descricao||"";
@@ -335,11 +311,9 @@ video.addEventListener("pause",()=>{
  clearTimeout(hideTimer);
  document.body.classList.remove("hide-ui");
  homeBtn.style.display="block";
- mostrarSugestoes();
 });
 video.addEventListener("play",()=>{
  homeBtn.style.display="none";
- suggestions.style.display="none";
  iniciarTimer();
 });
 
@@ -350,18 +324,6 @@ function voltarHome(){
  video.load();
  player.style.display="none";
  homeBtn.style.display="none";
-}
-
-/* SUGESTÕES */
-function mostrarSugestoes(){
- sugRow.innerHTML="";
- dados.filter(d=>d.id!==atual.id).slice(0,6).forEach(s=>{
-  const img=document.createElement("img");
-  img.src=s.capa_url;
-  img.onclick=()=>abrir(s);
-  sugRow.appendChild(img);
- });
- suggestions.style.display="block";
 }
 
 load();
