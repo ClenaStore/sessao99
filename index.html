@@ -72,6 +72,9 @@ header{
 section{
   padding:24px 32px;
 }
+section h2{
+  margin:0 0 14px;
+}
 .row{
   display:flex;
   gap:14px;
@@ -111,23 +114,7 @@ video{
   object-fit:cover;
 }
 
-/* OVERLAY INFO */
-.info{
-  position:absolute;
-  bottom:40px;
-  left:40px;
-  color:#fff;
-  max-width:480px;
-}
-.info h1{
-  margin:0 0 6px;
-}
-.info p{
-  margin:0;
-  opacity:.9;
-}
-
-/* CONTROLS */
+/* TOP */
 .top{
   position:absolute;
   top:20px;
@@ -142,18 +129,50 @@ video{
   cursor:pointer;
 }
 
-/* SERIES SELECT */
+/* INFO */
+.info{
+  position:absolute;
+  bottom:200px;
+  left:40px;
+  color:#fff;
+  max-width:500px;
+}
+.info h1{
+  margin:0 0 8px;
+  font-size:28px;
+}
+.info p{
+  margin:0;
+  opacity:.9;
+}
+
+/* SELECTS */
 .selects{
   position:absolute;
-  bottom:40px;
-  right:40px;
+  bottom:130px;
+  left:40px;
   display:none;
-  gap:10px;
+  gap:12px;
+  background:rgba(0,0,0,.55);
+  backdrop-filter:blur(8px);
+  padding:14px 18px;
+  border-radius:14px;
+  transition:opacity .3s;
 }
-select{
+.selects.hidden{
+  opacity:0;
+  pointer-events:none;
+}
+.selects select{
+  background:rgba(255,255,255,.15);
+  color:#fff;
+  border:1px solid rgba(255,255,255,.25);
   padding:10px 14px;
   border-radius:999px;
-  border:none;
+  outline:none;
+}
+.selects option{
+  color:#000;
 }
 </style>
 </head>
@@ -182,7 +201,7 @@ select{
     <button onclick="fechar()">⬅ Voltar</button>
   </div>
 
-  <video id="video" autoplay controls></video>
+  <video id="video" controls autoplay></video>
 
   <div class="info">
     <h1 id="titulo"></h1>
@@ -202,15 +221,18 @@ const supabaseClient = supabase.createClient(
 );
 
 const home = document.getElementById("home");
+const search = document.getElementById("search");
 const video = document.getElementById("video");
 const titulo = document.getElementById("titulo");
 const descricao = document.getElementById("descricao");
 const selects = document.getElementById("selects");
 const selTemporada = document.getElementById("selTemporada");
 const selEpisodio = document.getElementById("selEpisodio");
+const player = document.getElementById("player");
 
 let dados = [];
 let serieAtual = [];
+let hideTimer = null;
 
 /* LOAD */
 async function load(){
@@ -228,7 +250,7 @@ load();
 function renderHome(list){
   home.innerHTML = "";
 
-  const filmes = list.filter(i => i.tipo==="filme");
+  const filmes = list.filter(i=>i.tipo==="filme");
   const series = [...new Map(
     list.filter(i=>i.tipo==="serie").map(s=>[s.serie_nome,s])
   ).values()];
@@ -237,9 +259,9 @@ function renderHome(list){
   if(series.length) renderRow("Séries", series, abrirSerie);
 }
 
-function renderRow(tituloRow,itens,click){
+function renderRow(t,itens,click){
   const sec = document.createElement("section");
-  sec.innerHTML = `<h2>${tituloRow}</h2>`;
+  sec.innerHTML = `<h2>${t}</h2>`;
   const row = document.createElement("div");
   row.className="row";
 
@@ -248,7 +270,8 @@ function renderRow(tituloRow,itens,click){
     c.className="card";
     c.innerHTML=`
       <img src="${i.capa_url}">
-      <span>${i.titulo||i.serie_nome}</span>`;
+      <span>${i.titulo || i.serie_nome}</span>
+    `;
     c.onclick=()=>click(i);
     row.appendChild(c);
   });
@@ -259,45 +282,67 @@ function renderRow(tituloRow,itens,click){
 
 /* PLAYER */
 function playFilme(f){
-  titulo.textContent=f.titulo;
-  descricao.textContent="Filme";
-  video.src=f.video_url;
-  selects.style.display="none";
-  document.getElementById("player").style.display="block";
+  titulo.textContent = f.titulo;
+  descricao.textContent = "Filme";
+  video.src = f.video_url;
+  selects.style.display = "none";
+  abrirPlayer();
 }
 
 function abrirSerie(s){
-  serieAtual=dados.filter(d=>d.serie_nome===s.serie_nome);
-  titulo.textContent=s.serie_nome;
-  descricao.textContent="Série";
+  serieAtual = dados.filter(d=>d.serie_nome===s.serie_nome);
+  titulo.textContent = s.serie_nome;
+  descricao.textContent = "Série";
   montarTemporadas();
-  selects.style.display="flex";
-  document.getElementById("player").style.display="block";
+  selects.style.display = "flex";
+  abrirPlayer();
 }
 
 function montarTemporadas(){
-  const temps=[...new Set(serieAtual.map(e=>e.temporada))];
-  selTemporada.innerHTML=temps.map(t=>`<option>${t}</option>`).join("");
+  const temps = [...new Set(serieAtual.map(e=>e.temporada))];
+  selTemporada.innerHTML = temps.map(t=>`<option value="${t}">Temporada ${t}</option>`).join("");
   montarEpisodios();
-  selTemporada.onchange=montarEpisodios;
+  selTemporada.onchange = montarEpisodios;
 }
 
 function montarEpisodios(){
-  const eps=serieAtual.filter(e=>e.temporada==selTemporada.value);
-  selEpisodio.innerHTML=eps.map((e,i)=>`<option value="${i}">Episódio ${e.episodio}</option>`).join("");
+  const eps = serieAtual.filter(e=>e.temporada==selTemporada.value);
+  selEpisodio.innerHTML = eps.map((e,i)=>`<option value="${i}">Episódio ${e.episodio}</option>`).join("");
   tocar(eps[0]);
-  selEpisodio.onchange=()=>tocar(eps[selEpisodio.value]);
+  selEpisodio.onchange = ()=>tocar(eps[selEpisodio.value]);
 }
 
 function tocar(e){
-  video.src=e.video_url;
+  video.src = e.video_url;
+  video.play();
 }
 
-/* FECHAR */
+/* PLAYER CONTROL */
+function abrirPlayer(){
+  player.style.display="block";
+  iniciarAutoHide();
+}
+
 function fechar(){
   video.pause();
-  document.getElementById("player").style.display="none";
+  video.src="";
+  player.style.display="none";
 }
+
+function iniciarAutoHide(){
+  clearTimeout(hideTimer);
+  selects.classList.remove("hidden");
+  hideTimer = setTimeout(()=>{
+    selects.classList.add("hidden");
+  },30000);
+}
+
+/* EVENTS */
+video.addEventListener("pause", ()=>{
+  selects.classList.remove("hidden");
+});
+video.addEventListener("play", iniciarAutoHide);
+player.addEventListener("mousemove", iniciarAutoHide);
 
 /* FILTROS */
 document.querySelectorAll(".menu a").forEach(a=>{
@@ -313,7 +358,7 @@ document.querySelectorAll(".menu a").forEach(a=>{
 search.oninput=()=>{
   const v=search.value.toLowerCase();
   renderHome(dados.filter(d=>
-    d.titulo?.toLowerCase().includes(v)||
+    d.titulo?.toLowerCase().includes(v) ||
     d.serie_nome?.toLowerCase().includes(v)
   ));
 };
