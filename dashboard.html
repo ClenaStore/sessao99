@@ -2,107 +2,96 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Dashboard • SESSÃO 99</title>
+<title>Dashboard • Sessão 99</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 :root{
-  --bg:#05070f;
-  --panel:#0b1020;
-  --card:#141a2e;
+  --bg:#0f0f10;
+  --card:#1b1b1e;
   --accent:#e50914;
   --text:#fff;
-  --muted:#9ca3af;
+  --muted:#aaa;
 }
+
 *{box-sizing:border-box}
 body{
   margin:0;
-  background:
-    radial-gradient(1200px 600px at 50% -200px, #11183a, transparent),
-    var(--bg);
-  color:var(--text);
   font-family:Inter,Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
 }
 
 header{
-  padding:18px 32px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  background:rgba(0,0,0,.85);
-  backdrop-filter:blur(10px);
+  padding:20px 32px;
+  background:#000;
   position:sticky;
   top:0;
   z-index:10;
 }
-header h1{color:var(--accent);margin:0}
+header h1{
+  margin:0;
+  color:var(--accent);
+}
 
-main{padding:24px 32px;display:grid;gap:22px}
+main{
+  padding:32px;
+  display:grid;
+  gap:32px;
+}
 
+/* KPI */
 .kpis{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:16px;
-}
-.kpi{
-  background:linear-gradient(180deg,#0f1533,#090d1f);
-  padding:18px;
-  border-radius:16px;
-}
-.kpi span{color:var(--muted);font-size:13px}
-.kpi strong{font-size:30px}
-
-.panel{
-  background:linear-gradient(180deg,#0f1533,#090d1f);
-  padding:18px;
-  border-radius:16px;
-}
-.panel h2{margin:0 0 14px;font-size:16px}
-
-table{width:100%;border-collapse:collapse}
-th,td{padding:10px;border-bottom:1px solid #1f243d}
-th{color:var(--muted);text-align:left}
-
-.grid{
-  display:grid;
-  grid-template-columns:2fr 1fr;
   gap:20px;
 }
-
-canvas{height:260px!important}
-
-.top-card{
-  display:flex;
-  gap:14px;
-  align-items:center;
-  padding:12px;
+.kpi{
+  background:var(--card);
+  padding:20px;
   border-radius:14px;
-  background:#0c122b;
-  margin-bottom:10px;
 }
-.top-card img{
-  width:80px;
-  height:120px;
-  object-fit:cover;
-  border-radius:10px;
-}
-.top-info strong{display:block}
-.top-info span{font-size:12px;color:var(--muted)}
+.kpi span{color:var(--muted);font-size:13px}
+.kpi strong{font-size:34px;display:block;margin-top:6px}
 
-.filter{
-  display:flex;
-  gap:10px;
-  align-items:center;
+/* SEÇÕES */
+.section h2{
+  margin:0 0 14px;
+  font-size:20px;
 }
-input[type=date]{
-  background:#111;
-  border:none;
-  color:#fff;
-  padding:8px 12px;
-  border-radius:999px;
+
+/* GRID FILMES */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+  gap:18px;
+}
+
+.card{
+  background:var(--card);
+  border-radius:14px;
+  overflow:hidden;
+}
+.card img{
+  width:100%;
+  height:260px;
+  object-fit:cover;
+}
+.card-info{
+  padding:12px;
+}
+.card-info strong{
+  display:block;
+}
+.card-info span{
+  font-size:12px;
+  color:var(--muted);
+}
+.badge{
+  margin-top:6px;
+  font-size:12px;
 }
 </style>
 </head>
@@ -110,56 +99,43 @@ input[type=date]{
 <body>
 
 <header>
-  <h1>📊 Dashboard • SESSÃO 99</h1>
-  <div class="filter">
-    <span>📅 Data:</span>
-    <input type="date" id="dataFiltro">
-  </div>
+  <h1>📊 Dashboard • Sessão 99</h1>
 </header>
 
 <main>
 
+<!-- KPIS -->
 <div class="kpis">
-  <div class="kpi"><span>👥 Assistindo agora</span><strong id="kpiOnline">0</strong></div>
-  <div class="kpi"><span>▶ Plays no dia</span><strong id="kpiPlays">0</strong></div>
-  <div class="kpi"><span>⏱ +50% assistido</span><strong id="kpi50">0</strong></div>
-  <div class="kpi"><span>🏁 Concluídos</span><strong id="kpiFinish">0</strong></div>
-</div>
-
-<div class="panel">
-  <h2>👀 Usuários assistindo agora</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Usuário</th>
-        <th>Conteúdo</th>
-        <th>Tipo</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody id="onlineList"></tbody>
-  </table>
-</div>
-
-<div class="grid">
-  <div class="panel">
-    <h2>📈 Plays por hora</h2>
-    <canvas id="chartHoras"></canvas>
+  <div class="kpi">
+    <span>👀 Assistindo agora</span>
+    <strong id="kpiOnline">0</strong>
   </div>
-  <div class="panel">
-    <h2>🎬 Filmes x Séries</h2>
-    <canvas id="chartTipos"></canvas>
+  <div class="kpi">
+    <span>▶ Visualizações hoje</span>
+    <strong id="kpiHoje">0</strong>
+  </div>
+  <div class="kpi">
+    <span>📅 Visualizações semana</span>
+    <strong id="kpiSemana">0</strong>
   </div>
 </div>
 
-<div class="panel">
-  <h2>🔥 Top 10 (últimos 30 min)</h2>
-  <div id="topAgora"></div>
+<!-- MOMENTO -->
+<div class="section">
+  <h2>🔥 Mais assistidos agora (30 min)</h2>
+  <div class="grid" id="topAgora"></div>
 </div>
 
-<div class="panel">
-  <h2>🏆 Top 10 do dia</h2>
-  <div id="topDia"></div>
+<!-- DIA -->
+<div class="section">
+  <h2>🏆 Top do dia</h2>
+  <div class="grid" id="topDia"></div>
+</div>
+
+<!-- SEMANA -->
+<div class="section">
+  <h2>📅 Top da semana</h2>
+  <div class="grid" id="topSemana"></div>
 </div>
 
 </main>
@@ -170,111 +146,79 @@ const sb = supabase.createClient(
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-const hoje = new Date(new Date().getTime() - new Date().getTimezoneOffset()*60000)
-  .toISOString().slice(0,10);
-dataFiltro.value = hoje;
-
-let chartHoras, chartTipos;
-
 async function loadDashboard(){
-  const dia = dataFiltro.value;
+  const agora = new Date();
+  const hoje = new Date();
+  hoje.setHours(0,0,0,0);
 
-  /* ONLINE AGORA */
+  const semana = new Date();
+  semana.setDate(semana.getDate()-7);
+
+  /* ASSISTINDO AGORA */
   const { data: online } = await sb
-    .from("usuarios_online")
-    .select("usuario_id, ultimo_ping")
-    .gte("ultimo_ping", new Date(Date.now()-30000).toISOString());
+    .from("assistindo_agora")
+    .select("*")
+    .gte("last_ping", new Date(Date.now()-30000).toISOString());
 
   kpiOnline.textContent = online.length;
-  onlineList.innerHTML = "";
-  online.forEach(o=>{
-    onlineList.innerHTML += `
-      <tr>
-        <td>${o.usuario_id.slice(0,8)}</td>
-        <td>Assistindo</td>
-        <td>-</td>
-        <td>▶ ativo</td>
-      </tr>`;
-  });
 
-  /* VISUALIZAÇÕES DO DIA */
-  const { data: views } = await sb
-    .from("visualizacoes")
-    .select("*, filmes(titulo,capa_url)")
-    .gte("created_at", dia+"T00:00:00")
-    .lte("created_at", dia+"T23:59:59");
+  /* VISUALIZAÇÕES */
+  const { data: vis } = await sb.from("visualizacoes").select("filme_id, created_at");
 
-  kpiPlays.textContent = views.length;
-  kpi50.textContent = views.filter(v=>v.segundos_assistidos>=((v.duracao_segundos||3600)*0.5)).length;
-  kpiFinish.textContent = views.filter(v=>v.segundos_assistidos>=((v.duracao_segundos||3600)*0.95)).length;
+  const hojeCount = vis.filter(v=>new Date(v.created_at)>=hoje).length;
+  const semanaCount = vis.filter(v=>new Date(v.created_at)>=semana).length;
 
-  /* MAPA TOP */
-  function buildMap(lista){
+  kpiHoje.textContent = hojeCount;
+  kpiSemana.textContent = semanaCount;
+
+  /* FILMES */
+  const { data: filmes } = await sb.from("filmes").select("*");
+
+  function buildTop(lista){
     const map={};
     lista.forEach(v=>{
-      const t=v.filmes?.titulo||"Sem título";
-      if(!map[t]) map[t]={total:0,img:v.filmes?.capa_url};
-      map[t].total++;
+      map[v.filme_id]=(map[v.filme_id]||0)+1;
     });
-    return Object.entries(map).sort((a,b)=>b[1].total-a[1].total);
+    return Object.entries(map)
+      .sort((a,b)=>b[1]-a[1])
+      .slice(0,10)
+      .map(([id,total])=>{
+        const f=filmes.find(x=>x.id===id);
+        return { ...f, total };
+      });
   }
 
-  function renderTop(el,map){
-    el.innerHTML="";
-    map.slice(0,10).forEach(([titulo,info])=>{
-      el.innerHTML+=`
-        <div class="top-card">
-          <img src="${info.img||''}">
-          <div class="top-info">
-            <strong>${titulo}</strong>
-            <span>👁 ${info.total} visualizações</span>
-          </div>
-        </div>`;
-    });
-  }
+  const topAgoraList = buildTop(
+    vis.filter(v=>new Date(v.created_at)>=new Date(Date.now()-30*60000))
+  );
+  const topDiaList = buildTop(
+    vis.filter(v=>new Date(v.created_at)>=hoje)
+  );
+  const topSemanaList = buildTop(
+    vis.filter(v=>new Date(v.created_at)>=semana)
+  );
 
-  renderTop(topDia, buildMap(views));
+  render(topAgora, topAgoraList);
+  render(topDia, topDiaList);
+  render(topSemana, topSemanaList);
+}
 
-  const limite = new Date(Date.now()-30*60000).toISOString();
-  renderTop(topAgora, buildMap(views.filter(v=>v.created_at>=limite)));
-
-  /* CHART HORAS */
-  const horas={};
-  views.forEach(v=>{
-    const h=new Date(v.created_at).getHours();
-    horas[h]=(horas[h]||0)+1;
-  });
-
-  if(chartHoras) chartHoras.destroy();
-  chartHoras=new Chart(chartHorasCtx,{
-    type:"line",
-    data:{
-      labels:Object.keys(horas),
-      datasets:[{data:Object.values(horas),borderColor:"#e50914"}]
-    }
-  });
-
-  /* FILMES x SERIES */
-  const filmesCount = views.filter(v=>v.tipo==="filme").length;
-  const seriesCount = views.filter(v=>v.tipo==="serie").length;
-
-  if(chartTipos) chartTipos.destroy();
-  chartTipos=new Chart(chartTiposCtx,{
-    type:"doughnut",
-    data:{
-      labels:["Filmes","Séries"],
-      datasets:[{
-        data:[filmesCount,seriesCount],
-        backgroundColor:["#e50914","#6366f1"]
-      }]
-    }
+function render(container, list){
+  container.innerHTML="";
+  list.forEach(f=>{
+    container.innerHTML+=`
+      <div class="card">
+        <img src="${f.capa_url}">
+        <div class="card-info">
+          <strong>${f.titulo || f.serie_nome}</strong>
+          <span>${f.genero} • ${f.tipo}</span>
+          <div class="badge">👁 ${f.total} visualizações</div>
+        </div>
+      </div>
+    `;
   });
 }
 
-const chartHorasCtx=document.getElementById("chartHoras");
-const chartTiposCtx=document.getElementById("chartTipos");
-
-dataFiltro.onchange=loadDashboard;
 loadDashboard();
 setInterval(loadDashboard,15000);
 </script>
