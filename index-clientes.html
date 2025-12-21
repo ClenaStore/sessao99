@@ -14,9 +14,7 @@
   --muted:#b3b3b3;
   --accent:#e50914;
 }
-
 *{box-sizing:border-box}
-
 body{
   margin:0;
   background:var(--bg);
@@ -25,7 +23,7 @@ body{
   overflow:hidden;
 }
 
-/* ================= HOME ================= */
+/* HOME */
 #home{
   position:absolute;
   inset:0;
@@ -33,10 +31,7 @@ body{
   overflow-y:auto;
 }
 .section{margin-bottom:46px}
-.section h2{
-  margin:0 0 16px 48px;
-  font-size:22px;
-}
+.section h2{margin:0 0 16px 48px;font-size:22px}
 .row{
   display:flex;
   gap:16px;
@@ -54,29 +49,25 @@ body{
   border-radius:4px;
 }
 
-/* ================= PLAYER ÚNICO ================= */
+/* PLAYER */
 #player{
   position:fixed;
   inset:0;
   background:#000;
   display:none;
 }
-
 #player video{
   width:100%;
   height:100%;
   object-fit:cover;
 }
 
-/* ================= OVERLAY ================= */
+/* OVERLAY */
 #overlay{
   position:absolute;
   inset:0;
-  pointer-events:none;
-  transition:.3s;
+  transition:.4s;
 }
-
-/* DEGRADÊ */
 #overlay::before{
   content:"";
   position:absolute;
@@ -84,24 +75,19 @@ body{
   background:
     linear-gradient(to right,rgba(0,0,0,.9) 20%,rgba(0,0,0,.5) 50%,transparent),
     linear-gradient(to top,rgba(0,0,0,.85) 10%,transparent 45%);
+  transition:.4s;
 }
 
 /* INFO */
 #info{
   position:absolute;
   left:60px;
-  bottom:100px;
+  bottom:90px;
   max-width:600px;
-  pointer-events:auto;
-  transition:.3s;
+  transition:.4s;
 }
-#info h1{
-  font-size:44px;
-  margin:0 0 12px;
-}
-#info p{
-  color:var(--muted);
-}
+#info h1{font-size:44px;margin:0 0 12px}
+#info p{color:var(--muted)}
 #info button{
   margin-top:20px;
   padding:12px 22px;
@@ -110,14 +96,7 @@ body{
   cursor:pointer;
 }
 
-/* ESCONDER INFO */
-.watching #info,
-.watching #overlay::before{
-  opacity:0;
-  pointer-events:none;
-}
-
-/* ================= SUGESTÕES ================= */
+/* SUGESTÕES */
 #suggestions{
   position:absolute;
   left:0;
@@ -126,9 +105,7 @@ body{
   padding:20px 48px 40px;
   display:none;
 }
-#suggestions h3{
-  margin:0 0 12px;
-}
+#suggestions h3{margin:0 0 12px}
 .sug-row{
   display:flex;
   gap:14px;
@@ -141,12 +118,19 @@ body{
   cursor:pointer;
 }
 
+/* ESTADOS */
+.hide-ui #overlay::before,
+.hide-ui #info{
+  opacity:0;
+  pointer-events:none;
+}
+
 /* MOBILE */
 @media(max-width:900px){
   #info{
     left:20px;
     right:20px;
-    bottom:120px;
+    bottom:110px;
   }
   #info h1{font-size:28px}
 }
@@ -157,7 +141,6 @@ body{
 
 <div id="home"></div>
 
-<!-- PLAYER ÚNICO -->
 <div id="player">
   <video id="video" autoplay muted playsinline></video>
 
@@ -190,6 +173,7 @@ const suggestions=document.getElementById("suggestions");
 const sugRow=document.getElementById("sugRow");
 
 let dados=[], atual=null;
+let hideTimer=null;
 
 /* LOAD */
 async function load(){
@@ -225,34 +209,46 @@ function renderSection(titulo,itens){
 function abrir(item){
  atual=item;
  player.style.display="block";
- video.src=item.video_url;
- video.muted=true;
- video.play();
 
  document.getElementById("titulo").textContent=item.titulo||item.serie_nome;
  document.getElementById("descricao").textContent=item.descricao||"";
 
- document.body.classList.remove("watching");
+ video.src=item.video_url;
+ video.muted=true;
+ video.play();
+
+ document.body.classList.remove("hide-ui");
  suggestions.style.display="none";
+
+ iniciarTimer();
+}
+
+/* TIMER 30s */
+function iniciarTimer(){
+ clearTimeout(hideTimer);
+ hideTimer=setTimeout(()=>{
+  document.body.classList.add("hide-ui");
+ },30000);
 }
 
 /* ASSISTIR */
 function assistir(){
  video.muted=false;
- document.body.classList.add("watching");
- suggestions.style.display="none";
+ document.body.classList.add("hide-ui");
+ clearTimeout(hideTimer);
 }
 
 /* PAUSE */
 video.addEventListener("pause",()=>{
- document.body.classList.remove("watching");
+ clearTimeout(hideTimer);
+ document.body.classList.remove("hide-ui");
  mostrarSugestoes();
 });
 
 /* PLAY */
 video.addEventListener("play",()=>{
- document.body.classList.add("watching");
  suggestions.style.display="none";
+ iniciarTimer();
 });
 
 /* SUGESTÕES */
