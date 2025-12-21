@@ -161,7 +161,7 @@ async function registrar(acao){
   const duration = Math.floor(video.duration);
   const percent = Math.round((played / duration) * 100);
 
-  /* EVENTO */
+  /* EVENTO (histórico, NUNCA some) */
   await supabaseClient.from("rs_play_events").insert({
     user_id: USER_ID,
     content_id: episodioAtual.id,
@@ -177,15 +177,24 @@ async function registrar(acao){
     user_agent: navigator.userAgent
   });
 
-  /* SESSÃO ATIVA */
+  /* STATUS DA SESSÃO */
+  let status = "playing";
+  if(acao === "pause") status = "paused";
+  if(acao === "stop" && percent >= 95) status = "finished";
+  if(acao === "stop" && percent < 95) status = "left";
+
   await supabaseClient.from("rs_sessions").upsert({
     user_id: USER_ID,
     content_id: episodioAtual.id,
     content_tipo: episodioAtual.tipo,
     serie_nome: episodioAtual.serie_nome,
+    status,
     last_ping: new Date().toISOString()
+  },{
+    onConflict:"user_id"
   });
 }
+
 
 /* ================= LOAD ================= */
 async function load(){
@@ -285,10 +294,12 @@ video.addEventListener("play",()=>{
   pingTimer = setInterval(()=>registrar("ping"),15000);
 });
 
+
 video.addEventListener("pause",()=>{
   clearInterval(pingTimer);
-  registrar("stop");
+  registrar("pause");
 });
+
 
 window.addEventListener("beforeunload",()=>registrar("stop"));
 
@@ -296,9 +307,10 @@ function fechar(){
   clearInterval(pingTimer);
   registrar("stop");
   video.pause();
-  video.src = "";
-  player.style.display = "none";
+  video.src="";
+  player.style.display="none";
 }
+
 
 /* ================= SEARCH ================= */
 search.oninput = ()=>{
