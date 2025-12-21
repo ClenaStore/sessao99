@@ -22,8 +22,10 @@ body{
   justify-content:center;
 }
 
+/* CONTAINER */
 .container{
   width:420px;
+  z-index:2;
 }
 
 h1{
@@ -60,6 +62,11 @@ button{
   cursor:pointer;
 }
 
+button:disabled{
+  opacity:.6;
+  cursor:not-allowed;
+}
+
 .link{
   margin-top:16px;
   text-align:center;
@@ -73,6 +80,23 @@ button{
   color:#facc15;
 }
 
+/* OVERLAY LOADING */
+#loading{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.75);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:20;
+}
+#loading span{
+  padding:20px 26px;
+  background:#0b0b0b;
+  border-radius:14px;
+  font-weight:700;
+}
+
 /* MODAL */
 .modal{
   position:fixed;
@@ -81,6 +105,7 @@ button{
   display:none;
   align-items:center;
   justify-content:center;
+  z-index:10;
 }
 .modal-content{
   width:420px;
@@ -88,10 +113,14 @@ button{
   padding:30px;
   border-radius:14px;
 }
+.modal-content h2{margin-top:0}
 </style>
 </head>
 
 <body>
+
+<!-- LOADING -->
+<div id="loading"><span>Aguarde...</span></div>
 
 <div class="container">
   <h1>Faça seu Login<span>.</span></h1>
@@ -102,9 +131,9 @@ button{
   <label>Senha</label>
   <input id="senha" type="password">
 
-  <button onclick="login()">Entrar</button>
+  <button id="btnLogin">Entrar</button>
 
-  <div class="link" onclick="abrirCadastro()">Ainda não tenho uma conta</div>
+  <div class="link" id="linkCadastro">Ainda não tenho uma conta</div>
 
   <div class="msg" id="msg"></div>
 </div>
@@ -120,8 +149,8 @@ button{
     <input id="c_senha" type="password" placeholder="Senha">
     <input id="c_confirma" type="password" placeholder="Confirmar senha">
 
-    <button onclick="cadastrar()">Cadastrar</button>
-    <div class="link" onclick="fecharCadastro()">Cancelar</div>
+    <button id="btnCadastro">Cadastrar</button>
+    <div class="link" id="cancelar">Cancelar</div>
   </div>
 </div>
 
@@ -131,87 +160,107 @@ const supabase = supabase.createClient(
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
+const modal = document.getElementById("modal");
+const loading = document.getElementById("loading");
 const msg = document.getElementById("msg");
 
+/* HELPERS */
+const showLoading = () => loading.style.display="flex";
+const hideLoading = () => loading.style.display="none";
+
+/* ABRIR / FECHAR CADASTRO */
+document.getElementById("linkCadastro").onclick = () => {
+  modal.style.display="flex";
+};
+
+document.getElementById("cancelar").onclick = () => {
+  modal.style.display="none";
+};
+
+modal.onclick = (e) => {
+  if(e.target === modal) modal.style.display="none";
+};
+
 /* LOGIN */
+document.getElementById("btnLogin").onclick = login;
+
 async function login(){
   msg.textContent="";
+  showLoading();
 
-  const email = email.value;
-  const senha = senha.value;
+  try{
+    const emailVal = email.value.trim();
+    const senhaVal = senha.value;
 
-  const { data } = await supabase
-    .from("usuarios")
-    .select("*")
-    .eq("email", email)
-    .eq("senha", senha)
-    .single();
+    const { data } = await supabase
+      .from("usuarios")
+      .select("*")
+      .eq("email", emailVal)
+      .eq("senha", senhaVal)
+      .single();
 
-  if(!data){
-    msg.textContent="Usuário ou senha inválidos";
-    return;
-  }
+    if(!data){
+      msg.textContent="Usuário ou senha inválidos";
+      return;
+    }
 
-  const agora = new Date();
+    const agora = new Date();
 
-  if(data.status === "aprovado"){
-    localStorage.usuario = JSON.stringify(data);
-    window.location.href = "index.html";
-    return;
-  }
+    if(data.status === "aprovado"){
+      localStorage.usuario = JSON.stringify(data);
+      window.location.href = "index.html";
+      return;
+    }
 
-  const expira = new Date(data.trial_expires_at);
+    const expira = new Date(data.trial_expires_at);
 
-  if(agora <= expira){
-    alert("Conta pendente. Você está usando o teste grátis de 1 dia.");
-    localStorage.usuario = JSON.stringify(data);
-    window.location.href = "index.html";
-  }else{
-    msg.textContent="Seu teste expirou. Aguarde aprovação.";
+    if(agora <= expira){
+      alert("Conta pendente. Você está usando o teste grátis.");
+      localStorage.usuario = JSON.stringify(data);
+      window.location.href = "index.html";
+    }else{
+      msg.textContent="Seu teste expirou. Aguarde aprovação.";
+    }
+  }finally{
+    hideLoading();
   }
 }
 
 /* CADASTRO */
-function abrirCadastro(){
-  modal.style.display="flex";
-}
-function fecharCadastro(){
-  modal.style.display="none";
-}
+document.getElementById("btnCadastro").onclick = cadastrar;
 
 async function cadastrar(){
-  const email = c_email.value;
-  const cpf = c_cpf.value;
-  const whatsapp = c_whats.value;
-  const senha = c_senha.value;
-  const confirma = c_confirma.value;
+  showLoading();
 
-  if(senha !== confirma){
-    alert("Senhas não conferem");
-    return;
+  try{
+    if(c_senha.value !== c_confirma.value){
+      alert("Senhas não conferem");
+      return;
+    }
+
+    const trial = new Date(Date.now() + 24*60*60*1000);
+
+    const { error } = await supabase
+      .from("usuarios")
+      .insert({
+        email: c_email.value,
+        cpf: c_cpf.value,
+        whatsapp: c_whats.value,
+        senha: c_senha.value,
+        status: "pendente",
+        trial_expires_at: trial.toISOString()
+      });
+
+    if(error){
+      alert("Erro ao cadastrar. Email ou CPF já existe.");
+      return;
+    }
+
+    alert("Cadastro realizado! Você tem 1 dia de teste.");
+    modal.style.display="none";
+  }finally{
+    hideLoading();
   }
-
-  const agora = new Date();
-  const trial = new Date(agora.getTime() + 24*60*60*1000);
-
-  const { error } = await supabase
-    .from("usuarios")
-    .insert({
-      email,
-      cpf,
-      whatsapp,
-      senha,
-      status:"pendente",
-      trial_expires_at: trial.toISOString()
-    });
-
-  if(error){
-    alert("Erro ao cadastrar. Email ou CPF já existe.");
-    return;
-  }
-
-  alert("Cadastro realizado! Você tem 1 dia de teste.");
-  fecharCadastro();
 }
 </script>
 
