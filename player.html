@@ -86,8 +86,13 @@ video.src = item.video_url;
 video.play().catch(()=>{});
 
 function voltar(){
-  history.back();
+  if (document.referrer && document.referrer.includes("index.html")) {
+    history.back();
+  } else {
+    location.href = "index.html";
+  }
 }
+
 </script>
 
 </body>
