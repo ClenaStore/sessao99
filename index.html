@@ -201,7 +201,7 @@ select option{color:#000}
 
 <!-- PLAYER -->
 <div id="player">
-  <video id="video" controls autoplay></video>
+  <video id="video" autoplay></video>
 
   <div class="overlay">
     <div class="gradient"></div>
@@ -260,17 +260,14 @@ function renderHome(list){
   home.innerHTML="";
   const filmes = list.filter(i=>i.tipo==="filme");
   const series = [...new Map(list.filter(i=>i.tipo==="serie").map(s=>[s.serie_nome,s])).values()];
-
   if(filmes.length) renderRow("Filmes", filmes, playFilme);
   if(series.length) renderRow("Séries", series, abrirSerie);
 }
-
 function renderRow(t,it,cb){
   const s=document.createElement("section");
   s.innerHTML=`<h2>${t}</h2>`;
   const r=document.createElement("div");
   r.className="row";
-
   it.forEach(i=>{
     const c=document.createElement("div");
     c.className="card";
@@ -278,7 +275,6 @@ function renderRow(t,it,cb){
     c.onclick=()=>cb(i);
     r.appendChild(c);
   });
-
   s.appendChild(r);
   home.appendChild(s);
 }
@@ -287,62 +283,41 @@ function renderRow(t,it,cb){
 function renderCategorias(tipo){
   categoriasBox.innerHTML="";
   filtroCategoria="all";
-
   const lista = dados.filter(d=>d.tipo===tipo);
-  const cats = [...new Set(lista.map(i=>i.categoria).filter(Boolean))];
-
-  if(!cats.length){
-    categoriasBox.style.display="none";
-    return;
-  }
-
+  const cats = [...new Set(lista.map(i=>i.categoria).filter(Boolean)]);
+  if(!cats.length){categoriasBox.style.display="none";return;}
   categoriasBox.style.display="flex";
   criarBotaoCategoria("Todos","all",true);
   cats.forEach(c=>criarBotaoCategoria(c,c));
 }
-
 function criarBotaoCategoria(label,valor,ativo=false){
   const btn=document.createElement("button");
   btn.textContent=label;
   if(ativo) btn.classList.add("active");
-
   btn.onclick=()=>{
     document.querySelectorAll(".categorias button").forEach(b=>b.classList.remove("active"));
     btn.classList.add("active");
     filtroCategoria=valor;
     aplicarFiltros();
   };
-
   categoriasBox.appendChild(btn);
 }
 
 /* FILTROS */
 function aplicarFiltros(){
   let lista=[...dados];
-
-  if(filtroTipo!=="all"){
-    lista=lista.filter(i=>i.tipo===filtroTipo);
-  }
-  if(filtroCategoria!=="all"){
-    lista=lista.filter(i=>i.categoria===filtroCategoria);
-  }
+  if(filtroTipo!=="all") lista=lista.filter(i=>i.tipo===filtroTipo);
+  if(filtroCategoria!=="all") lista=lista.filter(i=>i.categoria===filtroCategoria);
   renderHome(lista);
 }
-
 document.querySelectorAll(".menu a").forEach(a=>{
   a.onclick=()=>{
     document.querySelectorAll(".menu a").forEach(x=>x.classList.remove("active"));
     a.classList.add("active");
-
     filtroTipo=a.dataset.filter;
     filtroCategoria="all";
-
-    if(filtroTipo==="filme" || filtroTipo==="serie"){
-      renderCategorias(filtroTipo);
-    } else {
-      categoriasBox.style.display="none";
-    }
-
+    if(filtroTipo==="filme"||filtroTipo==="serie") renderCategorias(filtroTipo);
+    else categoriasBox.style.display="none";
     aplicarFiltros();
   };
 });
@@ -354,10 +329,8 @@ search.oninput=()=>{
     d.titulo?.toLowerCase().includes(v) ||
     d.serie_nome?.toLowerCase().includes(v)
   );
-
   if(filtroTipo!=="all") lista=lista.filter(i=>i.tipo===filtroTipo);
   if(filtroCategoria!=="all") lista=lista.filter(i=>i.categoria===filtroCategoria);
-
   renderHome(lista);
 };
 
@@ -397,6 +370,7 @@ function tocar(e){
 /* UI CONTROL */
 function abrirPlayer(){
   player.style.display="block";
+  video.controls = true;        // controles visíveis
   mostrarUI();
 }
 function fechar(){
@@ -406,11 +380,15 @@ function fechar(){
 }
 function mostrarUI(){
   player.classList.remove("hide-ui");
+  video.controls = true;
   iniciarAutoHide();
 }
 function iniciarAutoHide(){
   clearTimeout(hideTimer);
-  hideTimer=setTimeout(()=>player.classList.add("hide-ui"),30000);
+  hideTimer=setTimeout(()=>{
+    player.classList.add("hide-ui");
+    video.controls = false;     // esconde controles junto com UI
+  },30000);
 }
 
 /* EVENTS */
@@ -423,6 +401,9 @@ document.addEventListener("keydown",e=>{
   if(e.code==="Space"){
     e.preventDefault();
     video.paused?video.play():video.pause();
+  }
+  if(e.code==="Escape"){
+    fechar();
   }
 });
 </script>
