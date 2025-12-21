@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>SESSÃO 99</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <style>
@@ -27,6 +28,22 @@ body{
   font-family:Inter,Arial,sans-serif;
 }
 
+/* ================= GATE ================= */
+#gate{
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(800px 400px at 50% -200px,#1a2355,transparent),
+    #05070f;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  z-index:20000;
+}
+#gate h1{color:var(--accent);margin:0 0 12px}
+#gate p{color:var(--muted);max-width:420px;text-align:center}
+
 /* HEADER */
 header{
   position:sticky;
@@ -44,7 +61,6 @@ header h1{
   color:var(--accent);
   margin:0;
   font-size:22px;
-  letter-spacing:.5px;
 }
 header input{
   background:#0f1326;
@@ -53,23 +69,19 @@ header input{
   padding:10px 16px;
   color:#fff;
   width:280px;
-  outline:none;
 }
-header input::placeholder{color:var(--muted)}
 
 /* HOME */
 section{padding:24px 32px}
 section h2{
   margin:0 0 14px;
   font-size:18px;
-  font-weight:600;
 }
 
 .row{
   display:flex;
   gap:16px;
   overflow-x:auto;
-  padding-bottom:6px;
 }
 .row::-webkit-scrollbar{height:6px}
 .row::-webkit-scrollbar-thumb{
@@ -85,7 +97,7 @@ section h2{
   position:relative;
   cursor:pointer;
   background:var(--card);
-  transition:transform .25s, box-shadow .25s;
+  transition:.25s;
 }
 .card:hover{
   transform:scale(1.06);
@@ -95,7 +107,6 @@ section h2{
   width:100%;
   height:260px;
   object-fit:cover;
-  display:block;
 }
 .card::after{
   content:"";
@@ -110,7 +121,6 @@ section h2{
   bottom:12px;
   font-size:14px;
   font-weight:600;
-  z-index:2;
 }
 
 /* PLAYER */
@@ -122,7 +132,6 @@ section h2{
   flex-direction:column;
   z-index:9999;
 }
-
 .top{
   padding:14px 20px;
   display:flex;
@@ -136,24 +145,16 @@ section h2{
   color:#fff;
   padding:8px 14px;
   border-radius:999px;
-  cursor:pointer;
 }
-.top strong{
-  font-size:16px;
-  font-weight:600;
-}
-
 .cover{
   width:100%;
   max-height:420px;
   object-fit:cover;
 }
-
 .selects{
   display:flex;
   gap:12px;
   padding:14px 20px;
-  background:#000;
 }
 select{
   background:#0f1326;
@@ -162,7 +163,6 @@ select{
   padding:10px 14px;
   border-radius:999px;
 }
-
 video{
   width:100%;
   height:calc(100vh - 320px);
@@ -173,6 +173,12 @@ video{
 
 <body>
 
+<!-- ================= GATE ================= -->
+<div id="gate">
+  <h1>SESSÃO 99</h1>
+  <p>Verificando seu acesso…</p>
+</div>
+
 <header>
   <h1>SESSÃO 99</h1>
   <input id="search" placeholder="Buscar filmes ou séries...">
@@ -180,6 +186,7 @@ video{
 
 <div id="home"></div>
 
+<!-- PLAYER -->
 <div id="player">
   <div class="top">
     <button onclick="fechar()">⬅ Voltar</button>
@@ -195,192 +202,170 @@ video{
 
 <script>
 /* ================= SUPABASE ================= */
-const supabaseClient = supabase.createClient(
+const sb = supabase.createClient(
   "https://dxkszikemntfusfyrzos.supabase.co",
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
+
+/* ================= AUTH / TRIAL ================= */
+(async()=>{
+  const session = localStorage.getItem("session_user");
+  if(!session){ location.href="login.html"; return; }
+
+  const u = JSON.parse(session);
+
+  const { data } = await sb
+    .from("usuarios")
+    .select("status, trial_expires_at")
+    .eq("id", u.id)
+    .single();
+
+  if(!data){
+    bloquear("Conta não encontrada.");
+    return;
+  }
+
+  const agora = new Date();
+  const expira = new Date(data.trial_expires_at);
+
+  if(data.status==="ativo" || (data.status==="pendente" && agora<=expira)){
+    document.getElementById("gate").style.display="none";
+    load();
+  }else{
+    bloquear("Seu período de teste gratuito expirou.");
+  }
+})();
+
+function bloquear(msg){
+  const g=document.getElementById("gate");
+  g.innerHTML=`<h1>Acesso bloqueado</h1><p>${msg}</p>`;
+}
 
 /* ================= USER ================= */
 const USER_ID = localStorage.user_id || crypto.randomUUID();
 localStorage.user_id = USER_ID;
 
 /* ================= ELEMENTOS ================= */
-const home = document.getElementById("home");
-const search = document.getElementById("search");
-const player = document.getElementById("player");
-const tituloPlayer = document.getElementById("tituloPlayer");
-const capaPlayer = document.getElementById("capaPlayer");
-const selTemporada = document.getElementById("selTemporada");
-const selEpisodio = document.getElementById("selEpisodio");
-const video = document.getElementById("video");
+const home=document.getElementById("home");
+const search=document.getElementById("search");
+const player=document.getElementById("player");
+const tituloPlayer=document.getElementById("tituloPlayer");
+const capaPlayer=document.getElementById("capaPlayer");
+const selTemporada=document.getElementById("selTemporada");
+const selEpisodio=document.getElementById("selEpisodio");
+const video=document.getElementById("video");
 
 /* ================= STATE ================= */
-let dados = [];
-let serieAtual = [];
-let episodioAtual = null;
-let pingTimer = null;
+let dados=[], serieAtual=[], episodioAtual=null, pingTimer=null;
 
 /* ================= TRACKING (INALTERADO) ================= */
 async function registrar(acao){
   if(!episodioAtual || !video.duration) return;
+  const played=Math.floor(video.currentTime);
+  const duration=Math.floor(video.duration);
+  const percent=Math.round((played/duration)*100);
+  const remaining=Math.max(duration-played,0);
+  const now=new Date().toISOString();
 
-  const played = Math.floor(video.currentTime);
-  const duration = Math.floor(video.duration);
-  const percent = Math.round((played / duration) * 100);
-  const remaining = Math.max(duration - played, 0);
-  const now = new Date().toISOString();
-
-  await supabaseClient.from("rs_play_events").insert({
-    user_id: USER_ID,
-    content_id: episodioAtual.id,
+  await sb.from("rs_play_events").insert({
+    user_id:USER_ID,
+    content_id:episodioAtual.id,
     acao,
-    tipo: episodioAtual.tipo,
-    titulo: episodioAtual.titulo,
-    serie_nome: episodioAtual.serie_nome,
-    played_seconds: played,
-    duration_seconds: duration,
-    progress_percent: percent,
-    created_at: now
+    tipo:episodioAtual.tipo,
+    titulo:episodioAtual.titulo,
+    serie_nome:episodioAtual.serie_nome,
+    played_seconds:played,
+    duration_seconds:duration,
+    progress_percent:percent,
+    created_at:now
   });
 
-  await supabaseClient.from("rs_user_progress").upsert({
-    user_id: USER_ID,
-    content_id: episodioAtual.id,
-    titulo: episodioAtual.titulo,
-    tipo: episodioAtual.tipo,
-    max_progress: percent,
-    remaining_seconds: remaining,
-    updated_at: now
+  await sb.from("rs_user_progress").upsert({
+    user_id:USER_ID,
+    content_id:episodioAtual.id,
+    titulo:episodioAtual.titulo,
+    tipo:episodioAtual.tipo,
+    max_progress:percent,
+    remaining_seconds:remaining,
+    updated_at:now
   });
-
-  if(acao === "play" || acao === "ping"){
-    await supabaseClient.from("rs_sessions").upsert({
-      user_id: USER_ID,
-      content_id: episodioAtual.id,
-      content_tipo: episodioAtual.tipo,
-      serie_nome: episodioAtual.serie_nome,
-      last_ping: now
-    });
-  }
-
-  if(acao === "stop"){
-    await supabaseClient
-      .from("rs_sessions")
-      .delete()
-      .eq("user_id", USER_ID);
-  }
 }
 
 /* ================= LOAD ================= */
 async function load(){
-  const { data } = await supabaseClient
-    .from("filmes")
-    .select("*")
-    .eq("ativo", true);
-
-  dados = data || [];
+  const { data } = await sb.from("filmes").select("*").eq("ativo",true);
+  dados=data||[];
   renderHome(dados);
 }
 
 /* ================= HOME ================= */
 function renderHome(list){
-  home.innerHTML = "";
-
-  const filmes = list.filter(i => i.tipo === "filme");
-  const series = [...new Map(
-    list.filter(i => i.tipo === "serie").map(s => [s.serie_nome, s])
-  ).values()];
-
-  renderRow("🎬 Filmes", filmes, playFilme);
-  renderRow("📺 Séries", series, s => abrirSerie(s.serie_nome));
+  home.innerHTML="";
+  const filmes=list.filter(i=>i.tipo==="filme");
+  const series=[...new Map(list.filter(i=>i.tipo==="serie").map(s=>[s.serie_nome,s]))].map(e=>e[1]);
+  renderRow("🎬 Filmes",filmes,playFilme);
+  renderRow("📺 Séries",series,s=>abrirSerie(s.serie_nome));
 }
-
-function renderRow(titulo, itens, click){
-  if(!itens.length) return;
-  const sec = document.createElement("section");
-  sec.innerHTML = `<h2>${titulo}</h2>`;
-  const row = document.createElement("div");
-  row.className = "row";
-
-  itens.forEach(i=>{
-    const c = document.createElement("div");
-    c.className = "card";
-    c.innerHTML = `
-      <img src="${i.capa_url}">
-      <span>${i.titulo || i.serie_nome}</span>
-    `;
-    c.onclick = () => click(i);
+function renderRow(t,it,cb){
+  if(!it.length) return;
+  const sec=document.createElement("section");
+  sec.innerHTML=`<h2>${t}</h2>`;
+  const row=document.createElement("div");row.className="row";
+  it.forEach(i=>{
+    const c=document.createElement("div");
+    c.className="card";
+    c.innerHTML=`<img src="${i.capa_url}"><span>${i.titulo||i.serie_nome}</span>`;
+    c.onclick=()=>cb(i);
     row.appendChild(c);
   });
-
-  sec.appendChild(row);
-  home.appendChild(sec);
+  sec.appendChild(row);home.appendChild(sec);
 }
 
 /* ================= PLAYER ================= */
 function playFilme(f){
-  serieAtual = [f];
+  serieAtual=[f];
   tocar(f);
-  tituloPlayer.textContent = f.titulo;
-  capaPlayer.src = f.capa_url;
-  selTemporada.innerHTML = "";
-  selEpisodio.innerHTML = "";
-  player.style.display = "flex";
+  tituloPlayer.textContent=f.titulo;
+  capaPlayer.src=f.capa_url;
+  selTemporada.innerHTML="";
+  selEpisodio.innerHTML="";
+  player.style.display="flex";
 }
-
 function abrirSerie(nome){
-  serieAtual = dados
-    .filter(d => d.serie_nome === nome)
-    .sort((a,b)=>a.temporada-b.temporada || a.episodio-b.episodio);
-
-  tituloPlayer.textContent = nome;
-  capaPlayer.src = serieAtual[0].capa_url;
+  serieAtual=dados.filter(d=>d.serie_nome===nome).sort((a,b)=>a.temporada-b.temporada||a.episodio-b.episodio);
+  tituloPlayer.textContent=nome;
+  capaPlayer.src=serieAtual[0].capa_url;
   montarTemporadas();
-  player.style.display = "flex";
+  player.style.display="flex";
 }
-
 function montarTemporadas(){
-  const temps = [...new Set(serieAtual.map(e=>e.temporada))];
-  selTemporada.innerHTML = "";
-  temps.forEach(t=>{
-    selTemporada.innerHTML += `<option value="${t}">Temporada ${t}</option>`;
-  });
-  selTemporada.onchange = montarEpisodios;
+  const temps=[...new Set(serieAtual.map(e=>e.temporada))];
+  selTemporada.innerHTML=temps.map(t=>`<option value="${t}">Temporada ${t}</option>`).join("");
+  selTemporada.onchange=montarEpisodios;
   montarEpisodios();
 }
-
 function montarEpisodios(){
-  const t = Number(selTemporada.value);
-  const eps = serieAtual.filter(e=>e.temporada===t);
-  selEpisodio.innerHTML = "";
-  eps.forEach((e,i)=>{
-    selEpisodio.innerHTML += `<option value="${i}">Episódio ${e.episodio}</option>`;
-  });
-  selEpisodio.onchange = ()=>tocar(eps[selEpisodio.value]);
+  const t=+selTemporada.value;
+  const eps=serieAtual.filter(e=>e.temporada===t);
+  selEpisodio.innerHTML=eps.map((e,i)=>`<option value="${i}">Episódio ${e.episodio}</option>`).join("");
+  selEpisodio.onchange=()=>tocar(eps[selEpisodio.value]);
   tocar(eps[0]);
 }
-
 function tocar(ep){
-  episodioAtual = ep;
-  video.src = ep.video_url;
+  episodioAtual=ep;
+  video.src=ep.video_url;
   video.play();
 }
 
 /* ================= EVENTS ================= */
 video.addEventListener("play",()=>{
   registrar("play");
-  pingTimer = setInterval(()=>registrar("ping"),15000);
+  pingTimer=setInterval(()=>registrar("ping"),15000);
 });
-
 video.addEventListener("pause",()=>{
   clearInterval(pingTimer);
   registrar("stop");
 });
-
-window.addEventListener("beforeunload",()=>{
-  registrar("stop");
-});
-
 function fechar(){
   clearInterval(pingTimer);
   registrar("stop");
@@ -388,17 +373,10 @@ function fechar(){
   video.src="";
   player.style.display="none";
 }
-
-/* ================= SEARCH ================= */
-search.oninput = ()=>{
-  const v = search.value.toLowerCase();
-  renderHome(dados.filter(d =>
-    d.titulo?.toLowerCase().includes(v) ||
-    d.serie_nome?.toLowerCase().includes(v)
-  ));
+search.oninput=()=>{
+  const v=search.value.toLowerCase();
+  renderHome(dados.filter(d=>d.titulo?.toLowerCase().includes(v)||d.serie_nome?.toLowerCase().includes(v)));
 };
-
-load();
 </script>
 
 </body>
