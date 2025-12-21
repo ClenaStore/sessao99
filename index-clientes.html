@@ -63,6 +63,21 @@ body{
   object-fit:cover;
 }
 
+/* HOME BUTTON */
+#homeBtn{
+  position:absolute;
+  top:20px;
+  left:20px;
+  padding:10px 14px;
+  font-size:20px;
+  background:rgba(0,0,0,.6);
+  color:#fff;
+  border:none;
+  cursor:pointer;
+  display:none;
+  z-index:5;
+}
+
 /* OVERLAY */
 #overlay{position:absolute;inset:0}
 #overlay::before{
@@ -156,6 +171,8 @@ body{
 <div id="player">
   <video id="video" controls autoplay playsinline></video>
 
+  <button id="homeBtn" onclick="voltarHome()">🏠</button>
+
   <div id="overlay">
     <div id="info">
       <div class="badge" id="tipoBadge"></div>
@@ -187,6 +204,7 @@ const supabaseClient = supabase.createClient(
 const home=document.getElementById("home");
 const player=document.getElementById("player");
 const video=document.getElementById("video");
+const homeBtn=document.getElementById("homeBtn");
 const tipoBadge=document.getElementById("tipoBadge");
 const seriesControls=document.getElementById("seriesControls");
 const selTemporada=document.getElementById("selTemporada");
@@ -229,13 +247,13 @@ function renderSection(t,itens){
 /* ABRIR */
 function abrir(item){
  clearTimeout(hideTimer);
-
  video.pause();
  video.removeAttribute("src");
  video.load();
 
  atual=item;
  player.style.display="block";
+ homeBtn.style.display="none";
  document.body.classList.remove("hide-ui");
  suggestions.style.display="none";
 
@@ -252,21 +270,16 @@ function abrir(item){
  }
 
  video.src=item.video_url;
-
- // PREVIEW SEMPRE MUDO
- video.muted = true;
+ video.muted=true;
  video.play();
-
  iniciarTimer();
 }
 
-/* ASSISTIR = GESTO QUE LIBERA ÁUDIO */
+/* ASSISTIR */
 function assistir(){
- audioUnlocked = true;
- video.muted = false;
- video.volume = 1;
+ audioUnlocked=true;
+ video.muted=false;
  video.play();
-
  document.body.classList.add("hide-ui");
  clearTimeout(hideTimer);
 }
@@ -294,7 +307,7 @@ function trocarEpisodio(eps,i){
  atual=eps[i];
  video.pause();
  video.src=atual.video_url;
- video.muted = !audioUnlocked;
+ video.muted=!audioUnlocked;
  video.play();
  iniciarTimer();
 }
@@ -321,12 +334,23 @@ function iniciarTimer(){
 video.addEventListener("pause",()=>{
  clearTimeout(hideTimer);
  document.body.classList.remove("hide-ui");
+ homeBtn.style.display="block";
  mostrarSugestoes();
 });
 video.addEventListener("play",()=>{
+ homeBtn.style.display="none";
  suggestions.style.display="none";
  iniciarTimer();
 });
+
+/* HOME */
+function voltarHome(){
+ video.pause();
+ video.removeAttribute("src");
+ video.load();
+ player.style.display="none";
+ homeBtn.style.display="none";
+}
 
 /* SUGESTÕES */
 function mostrarSugestoes(){
