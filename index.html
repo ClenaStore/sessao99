@@ -8,27 +8,28 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <style>
-/* ================= RESET ================= */
+/* ===== RESET ===== */
 *{margin:0;padding:0;box-sizing:border-box;scrollbar-width:none}
 *::-webkit-scrollbar{display:none}
 
-/* ================= THEME ================= */
+/* ===== THEME ===== */
 :root{
-  --bg:#141414;
-  --panel:#181818;
+  --bg:#0f0f10;
+  --surface:#181818;
+  --card:#202020;
   --accent:#e50914;
-  --text:#fff;
-  --muted:#b3b3b3;
+  --text:#ffffff;
+  --muted:#cfcfcf;
 }
 
+/* ===== BODY ===== */
 body{
   font-family:Inter,Arial,sans-serif;
   background:var(--bg);
   color:var(--text);
-  overflow-x:hidden;
 }
 
-/* ================= HEADER ================= */
+/* ===== HEADER ===== */
 header{
   position:fixed;
   top:0;left:0;right:0;
@@ -36,55 +37,71 @@ header{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding:0 48px;
-  background:linear-gradient(to bottom,rgba(0,0,0,.9),transparent);
+  padding:0 50px;
+  background:linear-gradient(to bottom,rgba(0,0,0,.7),transparent);
   z-index:1000;
 }
-header h1{color:var(--accent)}
+header h1{
+  color:var(--accent);
+  font-size:22px;
+}
 header input{
-  width:280px;
-  padding:10px;
-  background:#333;
+  width:300px;
+  padding:10px 14px;
+  background:#2b2b2b;
   border:none;
   color:#fff;
+  border-radius:4px;
 }
 .profile{
   width:42px;height:42px;
   border-radius:50%;
-  background:#222;
+  background:#333;
   border:none;
   color:#fff;
-  font-size:18px;
   cursor:pointer;
 }
 
-/* ================= HERO ================= */
+/* ===== HERO ===== */
 .hero{
-  height:90vh;
+  height:85vh;
   position:relative;
   display:flex;
-  align-items:flex-end;
-  padding:80px 48px;
+  align-items:center;
+  padding:90px 60px;
 }
 .hero img{
-  position:absolute;inset:0;
-  width:100%;height:100%;
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
   object-fit:cover;
   z-index:-2;
 }
 .hero::after{
   content:"";
-  position:absolute;inset:0;
+  position:absolute;
+  inset:0;
   background:
-    linear-gradient(to right,rgba(20,20,20,.9) 30%,transparent 70%),
-    linear-gradient(to top,rgba(20,20,20,.95),transparent 60%);
+    linear-gradient(to right,rgba(15,15,16,.85) 30%,transparent 70%),
+    linear-gradient(to top,rgba(15,15,16,.9),transparent 55%);
 }
-.hero-info{max-width:600px}
-.hero-info h2{font-size:52px;margin-bottom:12px}
-.hero-info .meta{color:var(--muted);margin-bottom:12px}
-.hero-info p{line-height:1.5}
+.hero-info{
+  max-width:620px;
+}
+.hero-info h2{
+  font-size:48px;
+  margin-bottom:14px;
+}
+.hero-info .meta{
+  color:var(--muted);
+  margin-bottom:14px;
+}
+.hero-info p{
+  line-height:1.5;
+  margin-bottom:20px;
+}
 .hero-info button{
-  margin-top:20px;
   padding:14px 34px;
   background:var(--accent);
   border:none;
@@ -92,28 +109,36 @@ header input{
   font-size:16px;
   font-weight:700;
   cursor:pointer;
+  border-radius:4px;
 }
 
-/* ================= HOME ================= */
+/* ===== HOME ===== */
 #home{padding-top:70px}
-section{padding:26px 48px}
-section h3{margin-bottom:12px}
+section{
+  padding:26px 60px;
+}
+section h3{
+  font-size:20px;
+  margin-bottom:14px;
+}
 .row{
   display:flex;
-  gap:14px;
+  gap:16px;
   overflow-x:auto;
 }
 .card{
   min-width:200px;
   cursor:pointer;
-  transition:.3s;
 }
-.card:hover{transform:scale(1.12)}
 .card img{
   width:100%;
   height:300px;
   object-fit:cover;
-  border-radius:6px;
+  border-radius:4px;
+  transition:.25s;
+}
+.card:hover img{
+  transform:scale(1.08);
 }
 .card .title{
   margin-top:8px;
@@ -121,7 +146,7 @@ section h3{margin-bottom:12px}
   font-weight:600;
 }
 
-/* ================= PLAYER ================= */
+/* ===== PLAYER ===== */
 #player{
   position:fixed;
   inset:0;
@@ -129,10 +154,14 @@ section h3{margin-bottom:12px}
   display:none;
   z-index:5000;
 }
-#video{width:100%;height:100%}
+#video{
+  width:100%;
+  height:100%;
+}
 #close{
   position:absolute;
-  top:20px;left:20px;
+  top:20px;
+  left:20px;
   background:rgba(0,0,0,.6);
   border:none;
   color:#fff;
@@ -142,14 +171,16 @@ section h3{margin-bottom:12px}
   z-index:10;
 }
 #overlay{
-  position:absolute;inset:0;
+  position:absolute;
+  inset:0;
 }
 #overlay::after{
   content:"";
-  position:absolute;inset:0;
+  position:absolute;
+  inset:0;
   background:
-    linear-gradient(to right,rgba(0,0,0,.85) 25%,transparent 60%),
-    linear-gradient(to top,rgba(0,0,0,.95),transparent 50%);
+    linear-gradient(to right,rgba(0,0,0,.8) 30%,transparent 65%),
+    linear-gradient(to top,rgba(0,0,0,.9),transparent 50%);
 }
 #info{
   position:absolute;
@@ -163,22 +194,22 @@ section h3{margin-bottom:12px}
 
 /* SERIES CONTROLS */
 #seriesControls{
-  margin-top:14px;
+  margin-top:16px;
   display:none;
   gap:10px;
 }
 #seriesControls select{
-  padding:10px;
+  padding:10px 12px;
   background:#222;
   border:none;
   color:#fff;
 }
 
-/* ================= PERFIL ================= */
+/* ===== PERFIL ===== */
 #perfilModal{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.85);
+  background:rgba(0,0,0,.7);
   display:none;
   align-items:center;
   justify-content:center;
@@ -186,13 +217,23 @@ section h3{margin-bottom:12px}
 }
 #perfilBox{
   width:460px;
-  background:#181818;
+  background:var(--surface);
   padding:28px;
-  border-radius:18px;
+  border-radius:14px;
 }
-.perfil-item{margin-bottom:10px;color:#ccc}
-.perfil-item span{color:#fff;font-weight:600}
-.perfil-footer{text-align:right;margin-top:20px}
+#perfilBox h2{margin-bottom:18px}
+.perfil-item{
+  margin-bottom:10px;
+  color:#ccc;
+}
+.perfil-item span{
+  color:#fff;
+  font-weight:600;
+}
+.perfil-footer{
+  margin-top:18px;
+  text-align:right;
+}
 .perfil-footer button{
   background:none;
   border:none;
@@ -288,8 +329,8 @@ function montarHero(){
 /* HOME */
 function renderHome(list){
   home.innerHTML="";
-  renderRow("🎬 Filmes", list.filter(i=>i.tipo==="filme"));
-  renderRow("📺 Séries", [...new Map(list.filter(i=>i.tipo==="serie").map(s=>[s.serie_nome,s])).values()]);
+  renderRow("Filmes", list.filter(i=>i.tipo==="filme"));
+  renderRow("Séries", [...new Map(list.filter(i=>i.tipo==="serie").map(s=>[s.serie_nome,s])).values()]);
 }
 function renderRow(t,it){
   if(!it.length) return;
@@ -318,39 +359,33 @@ function abrirPlayer(item){
     abrirSerie(item.serie_nome);
   }
 }
-
 function tocar(ep){
-  episodioAtual = ep;
-  video.src = ep.video_url;
+  episodioAtual=ep;
+  video.src=ep.video_url;
   video.play();
-  pTitle.textContent = ep.titulo || ep.serie_nome;
-  pMeta.textContent = `${ep.genero||""} • ${ep.tipo==="serie"?"Série":"Filme"}`;
-  pDesc.textContent = ep.descricao || "";
+  pTitle.textContent=ep.titulo||ep.serie_nome;
+  pMeta.textContent=`${ep.genero||""} • ${ep.tipo==="serie"?"Série":"Filme"}`;
+  pDesc.textContent=ep.descricao||"";
 }
-
 function abrirSerie(nome){
-  serieAtual = dados
+  serieAtual=dados
     .filter(d=>d.serie_nome===nome)
     .sort((a,b)=>a.temporada-b.temporada||a.episodio-b.episodio);
-
   seriesControls.style.display="flex";
   montarTemporadas();
 }
-
 function montarTemporadas(){
   const temps=[...new Set(serieAtual.map(e=>e.temporada))];
   selTemporada.innerHTML=temps.map(t=>`<option value="${t}">Temporada ${t}</option>`).join("");
   selTemporada.onchange=montarEpisodios;
   montarEpisodios();
 }
-
 function montarEpisodios(){
   const eps=serieAtual.filter(e=>e.temporada==selTemporada.value);
   selEpisodio.innerHTML=eps.map((e,i)=>`<option value="${i}">Episódio ${e.episodio}</option>`).join("");
   selEpisodio.onchange=()=>tocar(eps[selEpisodio.value]);
   tocar(eps[0]);
 }
-
 video.addEventListener("ended",()=>{
   if(!serieAtual.length) return;
   const eps=serieAtual.filter(e=>e.temporada==selTemporada.value);
@@ -360,7 +395,6 @@ video.addEventListener("ended",()=>{
     tocar(eps[selEpisodio.selectedIndex]);
   }
 });
-
 function fecharPlayer(){
   video.pause();
   video.src="";
