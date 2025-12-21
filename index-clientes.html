@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>SESSÃO 99</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <style>
@@ -13,32 +14,23 @@
   --muted:#b3b3b3;
   --accent:#e50914;
 }
+
 *{box-sizing:border-box}
+
 body{
   margin:0;
   background:var(--bg);
   color:var(--text);
   font-family:Inter,Arial,sans-serif;
+  overflow:hidden;
 }
-
-/* ================= HEADER ================= */
-header{
-  position:fixed;
-  top:0;left:0;right:0;
-  z-index:100;
-  padding:18px 48px;
-  background:linear-gradient(to bottom,rgba(0,0,0,.95),transparent);
-}
-.logo{
-  font-size:26px;
-  font-weight:900;
-}
-.logo span{color:var(--accent)}
 
 /* ================= HOME ================= */
 #home{
-  padding-top:110px;
-  padding-bottom:80px;
+  position:absolute;
+  inset:0;
+  padding-top:90px;
+  overflow-y:auto;
 }
 .section{margin-bottom:46px}
 .section h2{
@@ -62,140 +54,124 @@ header{
   border-radius:4px;
 }
 
-/* ================= DETAILS / PLAYER ÚNICO ================= */
-#details{
+/* ================= PLAYER ÚNICO ================= */
+#player{
   position:fixed;
   inset:0;
-  z-index:200;
   background:#000;
   display:none;
 }
-.video-wrap{
-  position:absolute;
-  inset:0;
-}
-.video-wrap video{
+
+#player video{
   width:100%;
   height:100%;
   object-fit:cover;
 }
 
+/* ================= OVERLAY ================= */
+#overlay{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  transition:.3s;
+}
+
 /* DEGRADÊ */
-.video-wrap::after{
+#overlay::before{
   content:"";
   position:absolute;
   inset:0;
   background:
-    linear-gradient(to right,rgba(0,0,0,.95) 20%,rgba(0,0,0,.6) 50%,transparent),
-    linear-gradient(to top,rgba(0,0,0,.9) 10%,transparent 50%);
-  transition:.3s;
-}
-.hide-ui .video-wrap::after{
-  opacity:0;
+    linear-gradient(to right,rgba(0,0,0,.9) 20%,rgba(0,0,0,.5) 50%,transparent),
+    linear-gradient(to top,rgba(0,0,0,.85) 10%,transparent 45%);
 }
 
 /* INFO */
-.details-info{
+#info{
   position:absolute;
   left:60px;
-  bottom:80px;
+  bottom:100px;
   max-width:600px;
+  pointer-events:auto;
   transition:.3s;
 }
-.details-info h1{
+#info h1{
   font-size:44px;
   margin:0 0 12px;
 }
-.details-info p{
+#info p{
   color:var(--muted);
 }
-.actions{
+#info button{
   margin-top:20px;
-}
-.actions button{
   padding:12px 22px;
   font-weight:700;
   border:none;
   cursor:pointer;
 }
-.play{
-  background:#fff;
-  color:#000;
-}
 
-/* SERIES SELECT */
-.series-selects{
-  display:none;
-  gap:12px;
-  margin-top:16px;
-}
-.series-selects select{
-  padding:10px 14px;
-  background:#111;
-  color:#fff;
-  border:1px solid #333;
-}
-
-/* ESCONDER UI */
-.hide-ui .details-info{
+/* ESCONDER INFO */
+.watching #info,
+.watching #overlay::before{
   opacity:0;
   pointer-events:none;
 }
 
-/* BOTÃO VOLTAR */
-.back{
+/* ================= SUGESTÕES ================= */
+#suggestions{
   position:absolute;
-  top:30px;
-  left:30px;
-  padding:8px 14px;
-  font-weight:700;
-  border:none;
-  cursor:pointer;
-  background:rgba(0,0,0,.6);
-  color:#fff;
+  left:0;
+  right:0;
+  bottom:0;
+  padding:20px 48px 40px;
+  display:none;
 }
-.hide-ui .back{opacity:0}
+#suggestions h3{
+  margin:0 0 12px;
+}
+.sug-row{
+  display:flex;
+  gap:14px;
+}
+.sug-row img{
+  width:160px;
+  height:240px;
+  object-fit:cover;
+  border-radius:4px;
+  cursor:pointer;
+}
 
 /* MOBILE */
 @media(max-width:900px){
-  .details-info{
+  #info{
     left:20px;
     right:20px;
-    bottom:40px;
+    bottom:120px;
   }
-  .details-info h1{font-size:28px}
+  #info h1{font-size:28px}
 }
 </style>
 </head>
 
 <body>
 
-<header>
-  <div class="logo">SESSÃO <span>99</span></div>
-</header>
-
 <div id="home"></div>
 
-<!-- DETAILS / PLAYER ÚNICO -->
-<div id="details">
-  <button class="back" onclick="fecharDetails()">⬅ Voltar</button>
+<!-- PLAYER ÚNICO -->
+<div id="player">
+  <video id="video" autoplay muted playsinline></video>
 
-  <div class="video-wrap">
-    <video id="video" muted autoplay loop playsinline></video>
+  <div id="overlay">
+    <div id="info">
+      <h1 id="titulo"></h1>
+      <p id="descricao"></p>
+      <button onclick="assistir()">▶ Assistir</button>
+    </div>
   </div>
 
-  <div class="details-info" id="detailsInfo">
-    <h1 id="detailsTitulo"></h1>
-    <p id="detailsDesc"></p>
-
-    <div class="series-selects" id="seriesSelects">
-      <select id="selTemporada"></select>
-      <select id="selEpisodio"></select>
-    </div>
-
-    <div class="actions">
-      <button class="play" onclick="assistir()">▶ Assistir</button>
-    </div>
+  <div id="suggestions">
+    <h3>Sugestões para você</h3>
+    <div class="sug-row" id="sugRow"></div>
   </div>
 </div>
 
@@ -206,15 +182,14 @@ const supabaseClient = supabase.createClient(
 );
 
 const home=document.getElementById("home");
-const details=document.getElementById("details");
+const player=document.getElementById("player");
 const video=document.getElementById("video");
-const detailsInfo=document.getElementById("detailsInfo");
+const overlay=document.getElementById("overlay");
+const info=document.getElementById("info");
+const suggestions=document.getElementById("suggestions");
+const sugRow=document.getElementById("sugRow");
 
-const seriesSelects=document.getElementById("seriesSelects");
-const selTemporada=document.getElementById("selTemporada");
-const selEpisodio=document.getElementById("selEpisodio");
-
-let dados=[],atual=null,serieAtual=[];
+let dados=[], atual=null;
 
 /* LOAD */
 async function load(){
@@ -226,10 +201,8 @@ async function load(){
 /* HOME */
 function renderHome(){
  home.innerHTML="";
- const filmes=dados.filter(d=>d.tipo==="filme");
- const series=[...new Map(dados.filter(d=>d.tipo==="serie").map(s=>[s.serie_nome,s])).values()];
- renderSection("Filmes",filmes);
- renderSection("Séries",series);
+ renderSection("Filmes",dados.filter(d=>d.tipo==="filme"));
+ renderSection("Séries",[...new Map(dados.filter(d=>d.tipo==="serie").map(s=>[s.serie_nome,s])).values()]);
 }
 function renderSection(titulo,itens){
  const sec=document.createElement("div");
@@ -241,80 +214,59 @@ function renderSection(titulo,itens){
   const c=document.createElement("div");
   c.className="card";
   c.innerHTML=`<img src="${i.capa_url}">`;
-  c.onclick=()=>abrirDetails(i);
+  c.onclick=()=>abrir(i);
   row.appendChild(c);
  });
  sec.appendChild(row);
  home.appendChild(sec);
 }
 
-/* DETAILS */
-function abrirDetails(item){
+/* ABRIR */
+function abrir(item){
  atual=item;
- details.style.display="block";
- details.classList.remove("hide-ui");
-
- document.getElementById("detailsTitulo").textContent=item.titulo||item.serie_nome;
- document.getElementById("detailsDesc").textContent=item.descricao||"";
-
+ player.style.display="block";
  video.src=item.video_url;
  video.muted=true;
- video.play().catch(()=>{});
-
- if(item.tipo==="serie"){
-  montarSerie(item.serie_nome);
-  seriesSelects.style.display="flex";
- }else{
-  seriesSelects.style.display="none";
- }
-}
-
-/* SERIES */
-function montarSerie(nome){
- serieAtual=dados.filter(d=>d.serie_nome===nome)
-   .sort((a,b)=>a.temporada-b.temporada||a.episodio-b.episodio);
- const temps=[...new Set(serieAtual.map(e=>e.temporada))];
- selTemporada.innerHTML="";
- temps.forEach(t=>selTemporada.innerHTML+=`<option value="${t}">Temporada ${t}</option>`);
- selTemporada.onchange=montarEpisodios;
- montarEpisodios();
-}
-function montarEpisodios(){
- const t=Number(selTemporada.value);
- const eps=serieAtual.filter(e=>e.temporada===t);
- selEpisodio.innerHTML="";
- eps.forEach((e,i)=>selEpisodio.innerHTML+=`<option value="${i}">Episódio ${e.episodio}</option>`);
- selEpisodio.onchange=()=>trocarVideo(eps[selEpisodio.value]);
- trocarVideo(eps[0]);
-}
-function trocarVideo(ep){
- atual=ep;
- video.src=ep.video_url;
  video.play();
+
+ document.getElementById("titulo").textContent=item.titulo||item.serie_nome;
+ document.getElementById("descricao").textContent=item.descricao||"";
+
+ document.body.classList.remove("watching");
+ suggestions.style.display="none";
 }
 
 /* ASSISTIR */
 function assistir(){
  video.muted=false;
- details.classList.add("hide-ui");
+ document.body.classList.add("watching");
+ suggestions.style.display="none";
 }
 
-/* UI EVENTS */
+/* PAUSE */
 video.addEventListener("pause",()=>{
- details.classList.remove("hide-ui");
-});
-video.addEventListener("play",()=>{
- details.classList.add("hide-ui");
+ document.body.classList.remove("watching");
+ mostrarSugestoes();
 });
 
-/* FECHAR */
-function fecharDetails(){
- video.pause();
- video.src="";
- details.style.display="none";
+/* PLAY */
+video.addEventListener("play",()=>{
+ document.body.classList.add("watching");
+ suggestions.style.display="none";
+});
+
+/* SUGESTÕES */
+function mostrarSugestoes(){
+ sugRow.innerHTML="";
+ dados.filter(d=>d.id!==atual.id).slice(0,6).forEach(s=>{
+  const img=document.createElement("img");
+  img.src=s.capa_url;
+  img.onclick=()=>abrir(s);
+  sugRow.appendChild(img);
+ });
+ suggestions.style.display="block";
 }
 
-/* INIT */
 load();
 </script>
 
