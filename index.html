@@ -129,12 +129,10 @@ section h3{margin-bottom:14px}
 video{
   width:100%;
   height:100%;
-  background:#000;
 }
 #sideInfo{
   background:#141414;
   padding:24px;
-  overflow-y:auto;
 }
 #sideInfo h2{margin-bottom:10px}
 #sideInfo .meta{color:var(--muted);margin-bottom:10px}
@@ -147,8 +145,6 @@ select{
   border:none;
   color:#fff;
 }
-
-/* CLOSE */
 #close{
   position:absolute;
   top:20px;left:20px;
@@ -158,14 +154,14 @@ select{
   font-size:18px;
   padding:10px 14px;
   cursor:pointer;
-  z-index:10;
 }
 
 /* PERFIL */
 #perfil{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.7);
+  background:rgba(0,0,0,.65);
+  backdrop-filter:blur(6px);
   display:none;
   align-items:center;
   justify-content:center;
@@ -174,10 +170,29 @@ select{
   width:420px;
   background:var(--surface);
   padding:26px;
-  border-radius:14px;
+  border-radius:16px;
+  position:relative;
 }
-#perfilBox div{margin-bottom:10px}
-#perfilBox span{font-weight:600}
+.closePerfil{
+  position:absolute;
+  top:12px;
+  right:14px;
+  background:none;
+  border:none;
+  color:#aaa;
+  font-size:18px;
+  cursor:pointer;
+}
+.closePerfil:hover{color:#fff}
+.perfil-item{margin-bottom:10px;color:#ccc}
+.perfil-item span{color:#fff;font-weight:600}
+.statusBadge{
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:12px;
+}
+.statusBadge.pendente{background:#facc15;color:#000}
+.statusBadge.ativo{background:#22c55e;color:#000}
 </style>
 </head>
 
@@ -213,7 +228,7 @@ select{
 <div id="player">
   <button id="close" onclick="fechar()">←</button>
   <div id="playerLayout">
-    <video id="video" autoplay controls></video>
+    <video id="video" controls autoplay></video>
     <div id="sideInfo">
       <h2 id="pTitle"></h2>
       <div class="meta" id="pMeta"></div>
@@ -225,14 +240,15 @@ select{
 </div>
 
 <!-- PERFIL -->
-<div id="perfil">
+<div id="perfil" onclick="clicouFora(event)">
   <div id="perfilBox">
+    <button class="closePerfil" onclick="fecharPerfil()">✕</button>
     <h3>Meu Perfil</h3>
-    <div>Email: <span id="pfEmail"></span></div>
-    <div>CPF: <span id="pfCpf"></span></div>
-    <div>WhatsApp: <span id="pfWhats"></span></div>
-    <div>Status: <span id="pfStatus"></span></div>
-    <div>Trial: <span id="pfTrial"></span></div>
+    <div class="perfil-item">Email: <span id="pfEmail"></span></div>
+    <div class="perfil-item">CPF: <span id="pfCpf"></span></div>
+    <div class="perfil-item">WhatsApp: <span id="pfWhats"></span></div>
+    <div class="perfil-item">Status: <span id="pfStatus"></span></div>
+    <div class="perfil-item">Trial: <span id="pfTrial"></span></div>
     <button onclick="logout()" style="color:#ff6b6b;background:none;border:none;margin-top:10px">Sair</button>
   </div>
 </div>
@@ -259,16 +275,13 @@ let dados=[], heroItem=null, usuario=null, serieAtual=[];
   heroImg.src=heroItem.capa_url;
 
   render();
+  setInterval(pingOnline,30000);
 })();
 
 function render(){
   gridFilmes.innerHTML="";
   gridSeries.innerHTML="";
-
-  dados.filter(d=>d.tipo==="filme").forEach(f=>{
-    gridFilmes.innerHTML+=card(f);
-  });
-
+  dados.filter(d=>d.tipo==="filme").forEach(f=>gridFilmes.innerHTML+=card(f));
   [...new Map(dados.filter(d=>d.tipo==="serie").map(s=>[s.serie_nome,s])).values()]
     .forEach(s=>gridSeries.innerHTML+=card(s));
 }
@@ -282,6 +295,13 @@ function card(i){
 
 function abrirPlayer(item){
   player.style.display="block";
+
+  sb.from("views").insert({
+    user_id: usuario.id,
+    filme_id: item.id,
+    tipo: item.tipo
+  });
+
   if(item.tipo==="filme"){
     video.src=item.video_url;
     pTitle.textContent=item.titulo;
@@ -299,7 +319,6 @@ function abrirPlayer(item){
 function montarSerie(){
   selTemporada.style.display="block";
   selEpisodio.style.display="block";
-
   const temps=[...new Set(serieAtual.map(e=>e.temporada))];
   selTemporada.innerHTML=temps.map(t=>`<option>${t}</option>`).join("");
   selTemporada.onchange=montarEpisodios;
@@ -330,9 +349,23 @@ function abrirPerfil(){
   pfCpf.textContent=usuario.cpf;
   pfWhats.textContent=usuario.whatsapp;
   pfStatus.textContent=usuario.status;
-  pfTrial.textContent=usuario.trial_expires_at;
+  pfTrial.textContent=new Date(usuario.trial_expires_at).toLocaleDateString("pt-BR");
+  pfStatus.className="statusBadge "+usuario.status;
   perfil.style.display="flex";
 }
+function fecharPerfil(){perfil.style.display="none"}
+function clicouFora(e){if(e.target.id==="perfil")fecharPerfil()}
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"&&perfil.style.display==="flex")fecharPerfil();
+});
+
+function pingOnline(){
+  sb.from("online_users").upsert({
+    user_id: usuario.id,
+    last_ping: new Date()
+  });
+}
+
 function logout(){
   localStorage.removeItem("usuario");
   location.href="login.html";
