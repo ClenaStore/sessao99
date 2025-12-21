@@ -451,6 +451,8 @@ const sb = supabase.createClient(
 
 let dados=[], heroItem=null, filtro='todos', usuario=null;
 let serieAtual=[], filmeAtual=null;
+let episodioIndexAtual = 0;
+
 const ID_PRINCIPAL = "a550f9d7-0f23-4cbf-8178-e37d064c3773";
 
 (async()=>{
@@ -651,11 +653,32 @@ function montarSerie(){
   montarEpisodios();
 }
 function montarEpisodios(){
-  const eps=serieAtual.filter(e=>e.temporada==selTemporada.value);
-  selEpisodio.innerHTML=eps.map((e,i)=>`<option value="${i}">Ep ${e.episodio}</option>`).join("");
-  selEpisodio.onchange=()=>video.src=eps[selEpisodio.value].video_url;
-  video.src=eps[0].video_url;
+  const eps = serieAtual.filter(
+    e => e.temporada == selTemporada.value
+  );
+
+  selEpisodio.innerHTML = eps
+    .map((e, i) => `<option value="${i}">Ep ${e.episodio}</option>`)
+    .join("");
+
+  episodioIndexAtual = 0;
+
+  // ▶️ reproduz o primeiro episódio
+  tocarEpisodio(eps, episodioIndexAtual);
+
+  selEpisodio.onchange = () => {
+    episodioIndexAtual = Number(selEpisodio.value);
+    tocarEpisodio(eps, episodioIndexAtual);
+  };
 }
+function tocarEpisodio(eps, index){
+  const episodio = eps[index];
+  if(!episodio) return;
+
+  video.src = episodio.video_url;
+  video.play().catch(() => {});
+}
+
 
 function fechar(){
   video.pause();video.src="";
@@ -670,6 +693,41 @@ function abrirPerfil(){
 
 function fecharPerfil(){perfilOverlay.style.display="none";}
 function logout(){localStorage.clear();location.href="login.html";}
+
+video.addEventListener("ended", () => {
+
+  // se não estiver em série, ignora
+  if (!serieAtual.length) return;
+
+  const temporadaAtual = selTemporada.value;
+  const epsDaTemp = serieAtual.filter(
+    e => e.temporada == temporadaAtual
+  );
+
+  episodioIndexAtual++;
+
+  // ▶️ ainda tem episódio na mesma temporada
+  if (episodioIndexAtual < epsDaTemp.length) {
+    selEpisodio.value = episodioIndexAtual;
+    tocarEpisodio(epsDaTemp, episodioIndexAtual);
+    return;
+  }
+
+  // 🔄 acabou a temporada → tenta próxima
+  const temporadas = [...new Set(serieAtual.map(e => e.temporada))];
+  const tempIndex = temporadas.indexOf(Number(temporadaAtual));
+
+  if (tempIndex < temporadas.length - 1) {
+    const proximaTemp = temporadas[tempIndex + 1];
+    selTemporada.value = proximaTemp;
+    montarEpisodios();
+    return;
+  }
+
+  // 🛑 acabou a série
+  console.log("Série finalizada");
+});
+
 </script>
 
 </body>
