@@ -24,32 +24,47 @@ body{
   font-family:Inter,Arial,sans-serif;
 }
 
-/* HEADER */
+/* ================= HEADER (DESKTOP / TV) ================= */
 header{
-  height:56px;
-  padding:0 16px;
+  height:64px;
+  padding:0 40px;
   display:flex;
+  justify-content:space-between;
   align-items:center;
-  gap:12px;
+  background:rgba(0,0,0,.85);
   position:fixed;
   top:0;left:0;right:0;
-  background:#000c;
   z-index:100;
 }
-header h1{color:var(--accent);font-size:18px}
+header h1{color:var(--accent)}
 header input{
-  flex:1;
-  padding:10px 14px;
+  width:320px;
+  padding:10px 16px;
   border-radius:999px;
+  background:#2b2b2b;
   border:none;
-  background:#2a2a2a;
   color:#fff;
 }
 
-/* HERO */
+/* PERFIL */
+#perfilBtn{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  cursor:pointer;
+}
+#perfilBtn img{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  object-fit:cover;
+  border:2px solid var(--accent);
+}
+
+/* ================= HERO ================= */
 .hero{
-  height:60vh;
-  padding:0 16px 32px;
+  height:85vh;
+  padding:0 40px 80px;
   display:flex;
   align-items:flex-end;
   background-size:cover;
@@ -60,94 +75,142 @@ header input{
   content:"";
   position:absolute;
   inset:0;
-  background:linear-gradient(to top,#0f0f10 20%,transparent 70%);
+  background:
+    linear-gradient(to right,rgba(0,0,0,.85) 35%,transparent 65%),
+    linear-gradient(to top,#0f0f10 15%,transparent 60%);
 }
-.hero-content{position:relative}
-.hero-content h2{font-size:26px}
-.hero-content .meta{color:var(--muted);margin:6px 0}
+.hero-content{
+  position:relative;
+  max-width:560px;
+}
+.hero-content h2{font-size:52px;margin-bottom:12px}
+.hero-content .meta{color:var(--muted);margin-bottom:12px}
+.hero-content p{line-height:1.6;margin-bottom:22px}
 .hero-content button{
-  margin-top:12px;
-  padding:12px 20px;
-  background:var(--accent);
+  padding:14px 32px;
+  font-size:16px;
+  font-weight:700;
   border:none;
   border-radius:6px;
+  cursor:pointer;
+  background:var(--accent);
   color:#fff;
-  font-weight:700;
 }
 
-/* SECTION */
-section{padding:20px 14px}
-section h3{margin-bottom:10px}
+/* ================= SECTIONS ================= */
+section{padding:40px}
+section h3{margin-bottom:16px}
 
-/* GRID */
+/* ================= GRID DESKTOP ================= */
 .grid{
   display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:10px;
+  grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+  gap:20px;
 }
-
 .card{
   background:var(--card);
-  border-radius:10px;
+  border-radius:12px;
   overflow:hidden;
-  position:relative;
+  cursor:pointer;
 }
 .card img{
   width:100%;
-  height:150px;
+  height:260px;
   object-fit:cover;
 }
 .card .title{
-  padding:6px;
-  font-size:12px;
-  text-align:center;
-}
-.badge{
-  position:absolute;
-  top:6px;left:6px;
-  background:var(--accent);
-  font-size:10px;
-  padding:2px 6px;
-  border-radius:6px;
-}
-.fav{
-  position:absolute;
-  top:6px;right:6px;
-  font-size:16px;
-  cursor:pointer;
+  padding:12px;
+  font-weight:600;
 }
 
-/* PLAYER */
+/* ================= PLAYER ================= */
 #player{
   position:fixed;
   inset:0;
   background:#000;
   display:none;
-  z-index:999;
+  z-index:5000;
 }
 #close{
   position:absolute;
-  top:10px;left:10px;
-  background:#000a;
-  border:none;
+  top:16px;left:16px;
+  padding:10px 16px;
+  background:#0008;
   color:#fff;
-  padding:8px 14px;
+  border:none;
   border-radius:999px;
+  cursor:pointer;
   z-index:10;
 }
-video{width:100%;height:60vh}
-
-#sideInfo{
-  padding:14px;
+#playerLayout{
+  display:grid;
+  grid-template-columns:3fr 1.4fr;
+  height:100%;
 }
-select{
-  width:100%;
-  padding:10px;
-  margin-bottom:8px;
+video{width:100%;height:100%}
+#sideInfo{
+  background:#111;
+  padding:32px;
+}
+
+/* ================= POPUP PERFIL ================= */
+#perfilOverlay{
+  position:fixed;
+  inset:0;
+  background:#000a;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:6000;
+}
+#perfilPopup{
   background:#1c1c1c;
-  color:#fff;
-  border:1px solid #333;
-  border-radius:6px;
+  padding:24px;
+  border-radius:12px;
+  width:90%;
+  max-width:320px;
+  text-align:center;
+}
+#perfilPopup h3{margin-bottom:8px}
+#perfilPopup p{color:var(--muted);margin-bottom:16px}
+#perfilPopup button{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border:none;
+  border-radius:8px;
+  font-weight:600;
+  cursor:pointer;
+}
+#sair{background:var(--accent);color:#fff}
+#fecharPerfil{background:#333;color:#fff}
+
+/* ================= MOBILE ONLY ================= */
+@media (max-width:768px){
+
+/* Header mobile */
+header{
+  padding:0 16px;
+  height:56px;
+}
+header input{display:none}
+
+/* Grid mobile → 3 cards */
+.grid{
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+}
+.card img{height:150px}
+.card .title{
+  font-size:12px;
+  text-align:center;
+  padding:8px;
+}
+
+/* Player mobile */
+#playerLayout{grid-template-columns:1fr}
+#sideInfo{padding:16px}
+
 }
 </style>
 </head>
@@ -156,21 +219,20 @@ select{
 
 <header>
   <h1>SESSÃO 99</h1>
-  <input id="busca" placeholder="Buscar...">
+  <input placeholder="Buscar...">
+  <div id="perfilBtn" onclick="abrirPerfil()">
+    <img src="https://ui-avatars.com/api/?name=User&background=e50914&color=fff">
+  </div>
 </header>
 
 <div class="hero" id="hero">
   <div class="hero-content">
     <h2 id="heroTitle"></h2>
     <div class="meta" id="heroMeta"></div>
+    <p id="heroDesc"></p>
     <button onclick="abrirPlayer(heroItem)">▶ Assistir</button>
   </div>
 </div>
-
-<section id="secContinuar" style="display:none">
-  <h3>Continuar Assistindo</h3>
-  <div class="grid" id="gridContinuar"></div>
-</section>
 
 <section>
   <h3>Filmes</h3>
@@ -182,122 +244,51 @@ select{
   <div class="grid" id="gridSeries"></div>
 </section>
 
+<!-- PLAYER -->
 <div id="player">
   <button id="close" onclick="fechar()">←</button>
-  <video id="video" controls autoplay></video>
-  <div id="sideInfo">
-    <h2 id="pTitle"></h2>
-    <div id="pMeta" class="meta"></div>
-    <select id="selTemporada"></select>
-    <select id="selEpisodio"></select>
+  <div id="playerLayout">
+    <video id="video" controls autoplay></video>
+    <div id="sideInfo"></div>
+  </div>
+</div>
+
+<!-- PERFIL POPUP -->
+<div id="perfilOverlay">
+  <div id="perfilPopup">
+    <h3 id="perfilNome"></h3>
+    <p id="perfilEmail"></p>
+    <button id="sair" onclick="logout()">Sair</button>
+    <button id="fecharPerfil" onclick="fecharPerfil()">Fechar</button>
   </div>
 </div>
 
 <script>
-const sb = supabase.createClient(
-  "https://dxkszikemntfusfyrzos.supabase.co",
-  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
-);
+let usuario = JSON.parse(localStorage.usuario || "{}");
 
-let usuario = JSON.parse(localStorage.usuario);
-let dados=[], heroItem=null, serieAtual=[];
+/* PERFIL */
+perfilNome.textContent = usuario.nome || "Usuário";
+perfilEmail.textContent = usuario.email || "";
 
-/* INIT */
-(async()=>{
-  const { data } = await sb.from("filmes").select("*").eq("ativo",true);
-  dados = data || [];
-
-  heroItem = dados.find(d=>d.destaque) || dados[0];
-  hero.style.backgroundImage=`url(${heroItem.capa_url})`;
-  heroTitle.textContent=heroItem.titulo||heroItem.serie_nome;
-  heroMeta.textContent=heroItem.genero;
-
-  render();
-})();
-
-/* BUSCA */
-busca.oninput=()=>render(busca.value.toLowerCase());
-
-/* RENDER */
-function render(filtro=""){
-  gridFilmes.innerHTML="";
-  gridSeries.innerHTML="";
-
-  dados.filter(d=>JSON.stringify(d).toLowerCase().includes(filtro))
-    .forEach(i=>{
-      if(i.tipo==="filme") gridFilmes.innerHTML+=card(i);
-    });
-
-  [...new Map(
-    dados.filter(d=>d.tipo==="serie")
-      .map(s=>[s.serie_nome,s])
-  ).values()]
-   .filter(s=>JSON.stringify(s).toLowerCase().includes(filtro))
-   .forEach(s=>gridSeries.innerHTML+=card(s));
+function abrirPerfil(){
+  perfilOverlay.style.display="flex";
+}
+function fecharPerfil(){
+  perfilOverlay.style.display="none";
+}
+function logout(){
+  localStorage.clear();
+  location.href="login.html";
 }
 
-/* CARD */
-function card(i){
-  const novo = i.created_at && (Date.now()-new Date(i.created_at))<604800000;
-  return `
-  <div class="card">
-    ${novo?'<div class="badge">NOVO</div>':''}
-    <div class="fav" onclick="favoritar(event,'${i.id}')">❤️</div>
-    <img src="${i.capa_url}" onclick='abrirPlayer(${JSON.stringify(i)})'>
-    <div class="title">${i.titulo||i.serie_nome}</div>
-  </div>`;
-}
-
-/* PLAYER */
-function abrirPlayer(item){
+/* ESCONDE PERFIL NO PLAYER */
+function abrirPlayer(){
+  document.getElementById("perfilBtn").style.display="none";
   player.style.display="block";
-
-  if(item.tipo==="filme"){
-    video.src=item.video_url;
-    pTitle.textContent=item.titulo;
-    selTemporada.style.display="none";
-    selEpisodio.style.display="none";
-  }else{
-    serieAtual=dados.filter(d=>d.serie_nome===item.serie_nome)
-      .sort((a,b)=>a.temporada-b.temporada||a.episodio-b.episodio);
-
-    selTemporada.style.display="block";
-    selEpisodio.style.display="block";
-    montarSerie();
-  }
-
-  sb.from("continuar_assistindo")
-    .upsert({usuario_id:usuario.id, filme_id:item.id});
 }
-
-/* SERIES */
-function montarSerie(){
-  const temps=[...new Set(serieAtual.map(e=>e.temporada))];
-  selTemporada.innerHTML=temps.map(t=>`<option>${t}</option>`).join("");
-  selTemporada.onchange=montarEpisodios;
-  montarEpisodios();
-}
-function montarEpisodios(){
-  const eps=serieAtual.filter(e=>e.temporada==selTemporada.value);
-  selEpisodio.innerHTML=eps.map((e,i)=>`<option value="${i}">Ep ${e.episodio}</option>`).join("");
-  selEpisodio.onchange=()=>video.src=eps[selEpisodio.value].video_url;
-  video.src=eps[0].video_url;
-}
-
-/* FAVORITOS */
-async function favoritar(e,id){
-  e.stopPropagation();
-  await sb.from("favoritos").upsert({
-    usuario_id:usuario.id,
-    filme_id:id
-  });
-}
-
-/* FECHAR */
 function fechar(){
-  video.pause();
-  video.src="";
   player.style.display="none";
+  document.getElementById("perfilBtn").style.display="flex";
 }
 </script>
 
