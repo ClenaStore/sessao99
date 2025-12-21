@@ -340,7 +340,6 @@ let serieAtual=[], filmeAtual=null;
 (async()=>{
   if(!localStorage.usuario){location.href="login.html";return;}
   usuario = JSON.parse(localStorage.usuario);
-  perfilNome.textContent = usuario.nome || "Usuário";
   perfilEmail.textContent = usuario.email || "";
 
   const { data } = await sb.from("filmes").select("*").eq("ativo",true);
