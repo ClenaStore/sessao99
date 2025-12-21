@@ -435,6 +435,20 @@ html, body {
     height:140px;
   }
 }
+#searchBtn{
+  display:none;
+  font-size:20px;
+  cursor:pointer;
+}
+
+@media (max-width:768px){
+  header input{
+    display:none;
+  }
+  #searchBtn{
+    display:block;
+  }
+}
 
 
 </style>
@@ -446,6 +460,8 @@ html, body {
   <h1>SESSÃO 99</h1>
   <input id="busca" placeholder="Buscar...">
   <div id="perfilBtn" onclick="abrirPerfil()"><span>US</span></div>
+  <div id="searchBtn" onclick="toggleSearch()">🔍</div>
+
 </header>
 
 <!-- 🔍 RESULTADOS DA BUSCA -->
@@ -900,6 +916,10 @@ if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("./sw.js")
     .then(() => console.log("PWA ativo"))
     .catch(err => console.error("SW erro", err));
+}
+function toggleSearch(){
+  searchResults.style.display = "block";
+  busca.focus();
 }
 
 
