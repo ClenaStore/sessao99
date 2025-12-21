@@ -19,13 +19,8 @@
   --muted:#b3b3b3;
   --accent:#e50914;
 }
-*{
-  box-sizing:border-box;
-  scrollbar-width:none; /* Firefox */
-}
-*::-webkit-scrollbar{
-  display:none; /* Chrome / Edge / Safari */
-}
+*{box-sizing:border-box;scrollbar-width:none}
+*::-webkit-scrollbar{display:none}
 
 body{
   margin:0;
@@ -48,13 +43,8 @@ header{
   backdrop-filter:blur(10px);
   z-index:40;
 }
-header h1{
-  margin:0;
-  font-size:22px;
-  color:var(--accent);
-}
+header h1{margin:0;font-size:22px;color:var(--accent)}
 
-/* BUSCA + FILTRO */
 .search-box{
   display:flex;
   gap:10px;
@@ -72,7 +62,6 @@ header h1{
 }
 .search-box input{flex:1}
 
-/* PERFIL */
 #profileBtn{
   width:42px;height:42px;
   border-radius:50%;
@@ -91,9 +80,7 @@ header h1{
   overflow-y:auto;
 }
 .section{margin-bottom:46px}
-.section h2{
-  margin:0 0 16px 48px;
-}
+.section h2{margin:0 0 16px 48px}
 .row{
   display:flex;
   gap:16px;
@@ -104,6 +91,7 @@ header h1{
   min-width:200px;
   cursor:pointer;
   transition:.25s;
+  position:relative;
 }
 .card:hover{transform:scale(1.08)}
 .card img{
@@ -112,6 +100,21 @@ header h1{
   object-fit:cover;
   border-radius:6px;
 }
+
+/* PLAY OVER CARD */
+.card::after{
+  content:"▶";
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:52px;
+  background:rgba(0,0,0,.55);
+  opacity:0;
+  transition:.25s;
+}
+.card:hover::after{opacity:1}
 
 /* PLAYER */
 #player{
@@ -127,7 +130,28 @@ header h1{
   object-fit:cover;
 }
 
-/* BOTÕES PLAYER */
+/* PLAY CENTRAL */
+.play-center{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:25;
+}
+.play-center button{
+  width:96px;
+  height:96px;
+  border-radius:50%;
+  border:none;
+  background:rgba(0,0,0,.75);
+  color:#fff;
+  font-size:40px;
+  cursor:pointer;
+  transition:.25s;
+}
+.play-center button:hover{transform:scale(1.12)}
+
 #homeBtn{
   position:absolute;
   top:20px;left:20px;
@@ -136,15 +160,17 @@ header h1{
   background:rgba(0,0,0,.6);
   color:#fff;border:none;
   cursor:pointer;
-  z-index:20;
+  z-index:30;
 }
+
+/* EP CONTROLS */
 #epControls{
   position:absolute;
   right:20px;
   bottom:120px;
-  display:flex;
+  display:none;
   gap:10px;
-  z-index:20;
+  z-index:30;
 }
 #epControls button{
   padding:10px 14px;
@@ -194,14 +220,7 @@ header h1{
   border:1px solid #333;
 }
 
-/* ESCONDER UI */
-.hide-ui #overlay,
-.hide-ui #epControls{
-  opacity:0;
-  pointer-events:none;
-}
-
-/* PERFIL MODAL */
+/* PERFIL */
 #perfilModal{
   position:fixed;
   inset:0;
@@ -241,7 +260,6 @@ header h1{
 
 <header>
   <h1>SESSÃO 99</h1>
-
   <div class="search-box">
     <input id="search" placeholder="Buscar filmes ou séries">
     <select id="filter">
@@ -250,7 +268,6 @@ header h1{
       <option value="filme">Filmes</option>
     </select>
   </div>
-
   <button id="profileBtn" onclick="abrirPerfil()">👤</button>
 </header>
 
@@ -258,13 +275,17 @@ header h1{
 
 <!-- PLAYER -->
 <div id="player">
-  <video id="video" controls autoplay playsinline></video>
+  <video id="video" playsinline></video>
+
+  <div class="play-center" id="playCenter">
+    <button onclick="assistir()">▶</button>
+  </div>
 
   <button id="homeBtn" onclick="voltarHome()">🏠</button>
 
   <div id="epControls">
-    <button id="btnPrev" onclick="anterior()">⏮</button>
-    <button id="btnNext" onclick="proximo()">⏭</button>
+    <button onclick="anterior()">⏮</button>
+    <button onclick="proximo()">⏭</button>
   </div>
 
   <div id="overlay">
@@ -299,15 +320,14 @@ header h1{
 
 <script>
 if(!localStorage.usuario) location.href="login.html";
+const usuario=JSON.parse(localStorage.usuario);
 
-/* SUPABASE */
 const sb=supabase.createClient(
  "https://dxkszikemntfusfyrzos.supabase.co",
  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-let dados=[], atual=null, serieAtual=[], indiceEp=0;
-let hideTimer=null, hls=null;
+let dados=[], atual=null, serieAtual=[], indiceEp=0, hls=null;
 
 /* LOAD */
 async function load(){
@@ -326,32 +346,22 @@ function renderHome(){
  const termo=search.value.toLowerCase();
  const tipo=filter.value;
 
- const filmes=dados.filter(d =>
-   d.tipo==="filme" &&
-   (tipo==="all"||tipo==="filme") &&
-   (d.titulo||"").toLowerCase().includes(termo)
- );
-
+ const filmes=dados.filter(d=>d.tipo==="filme"&&(tipo==="all"||tipo==="filme")&&(d.titulo||"").toLowerCase().includes(termo));
  const series=[...new Map(
-   dados.filter(d =>
-     d.tipo==="serie" &&
-     (tipo==="all"||tipo==="serie") &&
-     (d.serie_nome||"").toLowerCase().includes(termo)
-   ).map(s=>[s.serie_nome,s])
+   dados.filter(d=>d.tipo==="serie"&&(tipo==="all"||tipo==="serie")&&(d.serie_nome||"").toLowerCase().includes(termo))
+   .map(s=>[s.serie_nome,s])
  ).values()];
 
  if(filmes.length) renderSection("Filmes",filmes);
  if(series.length) renderSection("Séries",series);
 }
 
-function renderSection(titulo,itens){
+function renderSection(t,itens){
  const sec=document.createElement("div");
  sec.className="section";
- sec.innerHTML=`<h2>${titulo}</h2>`;
-
+ sec.innerHTML=`<h2>${t}</h2>`;
  const row=document.createElement("div");
  row.className="row";
-
  itens.forEach(i=>{
    const c=document.createElement("div");
    c.className="card";
@@ -359,7 +369,6 @@ function renderSection(titulo,itens){
    c.onclick=()=>abrir(i);
    row.appendChild(c);
  });
-
  sec.appendChild(row);
  home.appendChild(sec);
 }
@@ -370,17 +379,19 @@ filter.onchange=renderHome;
 /* PLAYER */
 const player=document.getElementById("player");
 const video=document.getElementById("video");
+const playCenter=document.getElementById("playCenter");
 
 function loadVideo(url){
  if(hls){hls.destroy();hls=null;}
  video.pause();video.removeAttribute("src");video.load();
 
  if(url.endsWith(".m3u8")&&Hls.isSupported()){
-   hls=new Hls();hls.loadSource(url);hls.attachMedia(video);
- }else{
-   video.src=url;
- }
- video.play();
+   hls=new Hls();
+   hls.loadSource(url);
+   hls.attachMedia(video);
+ }else video.src=url;
+
+ playCenter.style.display="flex";
 }
 
 function abrir(item){
@@ -394,25 +405,18 @@ function abrir(item){
    seriesControls.style.display="flex";
  }else{
    seriesControls.style.display="none";
-   btnPrev.style.display="none";
-   btnNext.style.display="none";
+   epControls.style.display="none";
  }
 
  loadVideo(item.video_url);
- iniciarTimer();
 }
 
 function assistir(){
  video.play();
- document.body.classList.add("hide-ui");
- clearTimeout(hideTimer);
+ playCenter.style.display="none";
 }
 
-function voltarHome(){
- if(hls){hls.destroy();hls=null;}
- video.pause();video.src="";
- player.style.display="none";
-}
+video.addEventListener("pause",()=>playCenter.style.display="flex");
 
 /* SERIES */
 function montarSerie(nome){
@@ -437,26 +441,23 @@ function trocarEpisodio(eps,i){
  indiceEp=i;
  atual=eps[i];
  loadVideo(atual.video_url);
- btnPrev.style.display=i>0?"block":"none";
- btnNext.style.display=i<eps.length-1?"block":"none";
+ epControls.style.display="flex";
 }
 function anterior(){if(indiceEp>0)trocarEpisodio(serieAtual,indiceEp-1);}
 function proximo(){if(indiceEp<serieAtual.length-1)trocarEpisodio(serieAtual,indiceEp+1);}
 
-/* TIMER */
-function iniciarTimer(){
- clearTimeout(hideTimer);
- hideTimer=setTimeout(()=>document.body.classList.add("hide-ui"),30000);
+function voltarHome(){
+ if(hls){hls.destroy();hls=null;}
+ video.pause();video.src="";
+ player.style.display="none";
 }
-video.addEventListener("pause",()=>document.body.classList.remove("hide-ui"));
 
 /* PERFIL */
 function abrirPerfil(){
- const u=JSON.parse(localStorage.usuario);
- p_email.textContent=u.email;
- p_cpf.textContent=u.cpf;
- p_whats.textContent=u.whatsapp;
- p_status.textContent=u.status;
+ p_email.textContent=usuario.email;
+ p_cpf.textContent=usuario.cpf;
+ p_whats.textContent=usuario.whatsapp;
+ p_status.textContent=usuario.status;
  perfilModal.style.display="flex";
 }
 function fecharPerfil(){perfilModal.style.display="none";}
@@ -465,11 +466,10 @@ function logout(){
  location.href="login.html";
 }
 
-/* CONTROLE TV */
 document.addEventListener("keydown",e=>{
+ if(e.key==="Enter") video.paused?assistir():video.pause();
  if(e.key==="ArrowRight") proximo();
  if(e.key==="ArrowLeft") anterior();
- if(e.key==="Enter") video.paused?video.play():video.pause();
 });
 
 load();
