@@ -283,8 +283,8 @@ function renderRow(t,it,cb){
 function renderCategorias(tipo){
   categoriasBox.innerHTML="";
   filtroCategoria="all";
-  const lista = dados.filter(d=>d.tipo===tipo);
-  const cats = [...new Set(lista.map(i=>i.categoria).filter(Boolean)]);
+  const lista=dados.filter(d=>d.tipo===tipo);
+  const cats=[...new Set(lista.map(i=>i.categoria).filter(Boolean))];
   if(!cats.length){categoriasBox.style.display="none";return;}
   categoriasBox.style.display="flex";
   criarBotaoCategoria("Todos","all",true);
@@ -370,7 +370,7 @@ function tocar(e){
 /* UI CONTROL */
 function abrirPlayer(){
   player.style.display="block";
-  video.controls = true;        // controles visíveis
+  video.controls = true;
   mostrarUI();
 }
 function fechar(){
@@ -387,7 +387,7 @@ function iniciarAutoHide(){
   clearTimeout(hideTimer);
   hideTimer=setTimeout(()=>{
     player.classList.add("hide-ui");
-    video.controls = false;     // esconde controles junto com UI
+    video.controls = false;
   },30000);
 }
 
@@ -395,7 +395,7 @@ function iniciarAutoHide(){
 video.addEventListener("pause", mostrarUI);
 video.addEventListener("play", iniciarAutoHide);
 
-/* CLICK / SPACE */
+/* CLICK / SPACE / ESC */
 video.addEventListener("click",()=>video.paused?video.play():video.pause());
 document.addEventListener("keydown",e=>{
   if(e.code==="Space"){
