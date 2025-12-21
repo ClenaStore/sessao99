@@ -22,6 +22,68 @@ body{
   color:var(--text);
   font-family:Inter,Arial,sans-serif;
 }
+.hidden{display:none}
+
+/* ================= LOGIN ================= */
+#login{
+  position:fixed;
+  inset:0;
+  background:#000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:500;
+}
+.login-box{
+  background:#111;
+  padding:40px;
+  width:320px;
+  border-radius:8px;
+}
+.login-box h1{margin:0 0 20px}
+.login-box input{
+  width:100%;
+  padding:12px;
+  margin-bottom:12px;
+  border:none;
+  background:#222;
+  color:#fff;
+}
+.login-box button{
+  width:100%;
+  padding:12px;
+  border:none;
+  background:var(--accent);
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+}
+
+/* ================= PERFIS ================= */
+#profiles{
+  position:fixed;
+  inset:0;
+  background:#000;
+  z-index:400;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+}
+.profile-list{
+  display:flex;
+  gap:40px;
+}
+.profile{
+  cursor:pointer;
+  text-align:center;
+}
+.profile img{
+  width:120px;
+  height:120px;
+  border-radius:8px;
+}
+.profile span{display:block;margin-top:10px}
 
 /* ================= HEADER ================= */
 header{
@@ -31,37 +93,30 @@ header{
   padding:18px 48px;
   display:flex;
   justify-content:space-between;
-  align-items:center;
-  background:linear-gradient(to bottom,rgba(0,0,0,.95),rgba(0,0,0,.6),transparent);
+  background:linear-gradient(to bottom,rgba(0,0,0,.95),transparent);
 }
 .logo{font-size:26px;font-weight:900}
 .logo span{color:var(--accent)}
-header input{
-  width:320px;
-  padding:12px 18px;
-  border-radius:999px;
-  border:none;
-  background:#111;
-  color:#fff;
-}
 
 /* ================= HOME ================= */
-#home{padding-top:110px;padding-bottom:80px}
+#home{
+  padding-top:110px;
+  padding-bottom:80px;
+}
 .section{margin-bottom:46px}
-.section h2{margin:0 0 16px 48px;font-size:22px}
+.section h2{
+  margin:0 0 16px 48px;
+  font-size:22px;
+}
 .row{
   display:flex;
   gap:16px;
   padding:0 48px;
   overflow-x:auto;
 }
-.row::-webkit-scrollbar{display:none}
-
-/* ================= CARD ================= */
 .card{
   min-width:200px;
   cursor:pointer;
-  transition:.3s;
   position:relative;
 }
 .card img{
@@ -70,241 +125,225 @@ header input{
   object-fit:cover;
   border-radius:4px;
 }
-.card:hover{transform:scale(1.12);z-index:10}
-
-/* PROGRESS BAR */
-.progress{
-  position:absolute;
-  bottom:0;
-  left:0;
-  height:4px;
-  background:var(--accent);
-}
-
-/* BADGE */
-.badge{
-  position:absolute;
-  top:8px;
-  left:8px;
-  background:rgba(0,0,0,.7);
-  padding:4px 8px;
-  border-radius:4px;
-  font-size:12px;
+.card:focus{
+  outline:4px solid var(--accent);
+  transform:scale(1.1);
 }
 
 /* ================= DETAILS ================= */
 #details{
-  display:none;
   position:fixed;
   inset:0;
-  z-index:200;
   background:#000;
-  overflow:hidden;
+  z-index:200;
+  display:none;
 }
-.details-bg{position:absolute;inset:0;z-index:1}
-.details-bg video{width:100%;height:100%;object-fit:cover}
+.details-bg video{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
 .details-bg::after{
   content:"";
   position:absolute;
   inset:0;
   background:
-    linear-gradient(to right,rgba(0,0,0,.95) 18%,rgba(0,0,0,.6) 48%,transparent),
-    linear-gradient(to top,rgba(0,0,0,.95) 12%,transparent 50%);
+    linear-gradient(to right,rgba(0,0,0,.95) 20%,rgba(0,0,0,.6) 50%,transparent),
+    linear-gradient(to top,rgba(0,0,0,.9) 10%,transparent 50%);
 }
 .details-info{
   position:relative;
-  z-index:2;
-  padding:130px 60px;
+  padding:140px 60px;
   max-width:640px;
 }
-.details-info h1{font-size:44px;margin:0 0 16px}
-.details-info p{color:var(--muted);line-height:1.5;margin-bottom:24px}
-.meta{color:var(--green);margin-bottom:12px}
-
-/* ACTIONS */
-.actions{display:flex;gap:14px}
+.details-info h1{font-size:44px;margin:0}
+.details-info p{color:var(--muted)}
+.actions{
+  display:flex;
+  gap:12px;
+  margin-top:20px;
+}
 .actions button{
-  padding:14px 26px;
-  font-size:16px;
+  padding:12px 20px;
   font-weight:700;
-  border-radius:6px;
-  border:none;
   cursor:pointer;
-}
-.play{background:#fff;color:#000}
-.sound{background:rgba(255,255,255,.15);color:#fff}
-
-/* CLOSE */
-.close{
-  position:absolute;
-  top:24px;
-  left:24px;
-  z-index:3;
-  background:rgba(0,0,0,.6);
   border:none;
-  color:#fff;
-  font-size:22px;
-  padding:8px 14px;
-  border-radius:999px;
 }
+.play{background:#fff}
+.like{background:#222;color:#fff}
+.dislike{background:#222;color:#fff}
 
-/* ================= PLAYER FULL ================= */
+/* ================= PLAYER ================= */
 #player{
-  display:none;
   position:fixed;
   inset:0;
-  z-index:300;
   background:#000;
+  z-index:300;
+  display:none;
 }
-#player video{width:100%;height:100%}
+#player video{
+  width:100%;
+  height:100%;
+}
 
-/* MOBILE */
+/* ================= MOBILE ================= */
 @media(max-width:900px){
-  header{padding:14px 20px}
   .details-info{padding:110px 20px}
-  .details-info h1{font-size:30px}
-  .row{padding:0 20px}
-  .section h2{margin-left:20px}
 }
 </style>
 </head>
 
 <body>
 
-<header>
+<!-- LOGIN -->
+<div id="login">
+  <div class="login-box">
+    <h1>Entrar</h1>
+    <input id="email" placeholder="Email">
+    <input id="senha" type="password" placeholder="Senha">
+    <button onclick="login()">Entrar</button>
+  </div>
+</div>
+
+<!-- PERFIS -->
+<div id="profiles" class="hidden">
+  <h1>Quem está assistindo?</h1>
+  <div class="profile-list" id="profileList"></div>
+</div>
+
+<header class="hidden" id="header">
   <div class="logo">SESSÃO <span>99</span></div>
-  <input id="search" placeholder="Buscar">
 </header>
 
-<div id="home"></div>
+<div id="home" class="hidden"></div>
 
 <!-- DETAILS -->
 <div id="details">
-  <button class="close" onclick="fecharDetails()">⬅</button>
   <div class="details-bg">
     <video id="previewVideo" muted autoplay loop playsinline></video>
   </div>
   <div class="details-info">
-    <div class="meta" id="detailsMeta"></div>
     <h1 id="detailsTitulo"></h1>
     <p id="detailsDesc"></p>
     <div class="actions">
       <button class="play" onclick="abrirPlayer()">▶ Assistir</button>
-      <button class="sound" onclick="toggleSom()">🔊 Som</button>
+      <button class="like" onclick="avaliar(1)">👍</button>
+      <button class="dislike" onclick="avaliar(-1)">👎</button>
     </div>
   </div>
 </div>
 
 <!-- PLAYER -->
 <div id="player">
-  <button class="close" onclick="fecharPlayer()">⬅</button>
   <video id="playerVideo" controls></video>
 </div>
 
 <script>
-const supabaseClient=supabase.createClient(
- "https://dxkszikemntfusfyrzos.supabase.co",
- "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
-);
+/* ================= STATE ================= */
+let perfil=null,usuario=null,atual=null;
+let progresso={},avaliacoes={};
 
-const home=document.getElementById("home");
-const previewVideo=document.getElementById("previewVideo");
-const player=document.getElementById("player");
-const playerVideo=document.getElementById("playerVideo");
-
-let dados=[],atual=null,somAtivo=false,progress={};
-
-/* LOAD */
-async function load(){
- const saved=localStorage.getItem("progress");
- progress=saved?JSON.parse(saved):{};
- const {data}=await supabaseClient.from("filmes").select("*").eq("ativo",true);
- dados=data||[];
- renderHome();
+/* LOGIN */
+function login(){
+  usuario={email:email.value};
+  localStorage.setItem("usuario",JSON.stringify(usuario));
+  document.getElementById("login").style.display="none";
+  abrirPerfis();
 }
 
-/* HOME */
-function renderHome(){
- home.innerHTML="";
- renderSection("Continuar Assistindo",dados.filter(d=>progress[d.id]));
- renderSection("Filmes",dados.filter(d=>d.tipo==="filme"));
- renderSection("Séries",[...new Map(dados.filter(d=>d.tipo==="serie").map(s=>[s.serie_nome,s])).values()]);
+/* PERFIS */
+function abrirPerfis(){
+  document.getElementById("profiles").classList.remove("hidden");
+  const list=document.getElementById("profileList");
+  list.innerHTML="";
+  ["Ana","Carlos","Kids"].forEach(nome=>{
+    const p=document.createElement("div");
+    p.className="profile";
+    p.innerHTML=`<img src="https://i.pravatar.cc/150?u=${nome}"><span>${nome}</span>`;
+    p.onclick=()=>selecionarPerfil(nome);
+    list.appendChild(p);
+  });
+}
+function selecionarPerfil(nome){
+  perfil=nome;
+  document.getElementById("profiles").style.display="none";
+  document.getElementById("header").classList.remove("hidden");
+  document.getElementById("home").classList.remove("hidden");
+  carregar();
 }
 
+/* HOME MOCK */
+function carregar(){
+  renderSection("Filmes",[{
+    id:1,titulo:"Filme Exemplo",
+    descricao:"Descrição do filme",
+    capa_url:"https://picsum.photos/300/450",
+    video_url:"https://www.w3schools.com/html/mov_bbb.mp4"
+  }]);
+}
 function renderSection(titulo,itens){
- if(!itens.length)return;
- const sec=document.createElement("div");
- sec.className="section";
- sec.innerHTML=`<h2>${titulo}</h2>`;
- const row=document.createElement("div");
- row.className="row";
- itens.forEach(i=>{
-  const c=document.createElement("div");
-  c.className="card";
-  let p=progress[i.id]||0;
-  c.innerHTML=`
-    <img src="${i.capa_url}">
-    ${p?`<div class="progress" style="width:${p}%"></div>`:""}
-    ${p?`<div class="badge">Continuar</div>`:""}
-  `;
-  c.onclick=()=>abrirDetails(i);
-  row.appendChild(c);
- });
- sec.appendChild(row);
- home.appendChild(sec);
+  const home=document.getElementById("home");
+  home.innerHTML="";
+  const sec=document.createElement("div");
+  sec.className="section";
+  sec.innerHTML=`<h2>${titulo}</h2>`;
+  const row=document.createElement("div");
+  row.className="row";
+  itens.forEach(i=>{
+    const c=document.createElement("div");
+    c.className="card";
+    c.tabIndex=0;
+    c.innerHTML=`<img src="${i.capa_url}">`;
+    c.onclick=()=>abrirDetails(i);
+    row.appendChild(c);
+  });
+  sec.appendChild(row);
+  home.appendChild(sec);
 }
 
 /* DETAILS */
 function abrirDetails(item){
- atual=item;
- document.getElementById("detailsTitulo").textContent=item.titulo||item.serie_nome;
- document.getElementById("detailsDesc").textContent=item.descricao||"";
- document.getElementById("detailsMeta").textContent=item.tipo==="serie"?"Série":"Filme";
- previewVideo.src=item.video_url;
- previewVideo.muted=true;
- previewVideo.play().catch(()=>{});
- details.style.display="block";
-}
-
-/* SOM */
-function toggleSom(){
- somAtivo=!somAtivo;
- previewVideo.muted=!somAtivo;
+  atual=item;
+  document.getElementById("detailsTitulo").textContent=item.titulo;
+  document.getElementById("detailsDesc").textContent=item.descricao;
+  previewVideo.src=item.video_url;
+  previewVideo.play();
+  document.getElementById("details").style.display="block";
 }
 
 /* PLAYER */
 function abrirPlayer(){
- playerVideo.src=atual.video_url;
- player.style.display="block";
- playerVideo.currentTime=(progress[atual.id]||0)/100*playerVideo.duration||0;
- playerVideo.play();
-}
-playerVideo.addEventListener("timeupdate",()=>{
- if(!atual||!playerVideo.duration)return;
- progress[atual.id]=(playerVideo.currentTime/playerVideo.duration*100)|0;
- localStorage.setItem("progress",JSON.stringify(progress));
-});
-
-/* CLOSE */
-function fecharPlayer(){
- playerVideo.pause();
- player.style.display="none";
- renderHome();
-}
-function fecharDetails(){
- previewVideo.pause();
- details.style.display="none";
+  playerVideo.src=atual.video_url;
+  document.getElementById("player").style.display="block";
+  playerVideo.play();
 }
 
-/* TECLADO */
+/* AVALIAÇÃO */
+function avaliar(v){
+  avaliacoes[perfil]=avaliacoes[perfil]||{};
+  avaliacoes[perfil][atual.id]=v;
+  alert(v===1?"Curtido":"Não curti");
+}
+
+/* TECLADO / CONTROLE */
 document.addEventListener("keydown",e=>{
- if(e.key==="Escape"){
-  fecharPlayer();
-  fecharDetails();
- }
+  const focus=document.activeElement;
+  if(e.key==="ArrowRight" && focus.nextElementSibling) focus.nextElementSibling.focus();
+  if(e.key==="ArrowLeft" && focus.previousElementSibling) focus.previousElementSibling.focus();
+  if(e.key==="Escape"){
+    document.getElementById("player").style.display="none";
+    document.getElementById("details").style.display="none";
+  }
 });
 
-load();
+/* INIT */
+if(localStorage.usuario){
+  usuario=JSON.parse(localStorage.usuario);
+  document.getElementById("login").style.display="none";
+  abrirPerfis();
+}
 </script>
 
 </body>
