@@ -17,6 +17,7 @@
   --muted:#aaa;
 }
 
+*{box-sizing:border-box}
 body{
   margin:0;
   font-family:Inter,Arial,sans-serif;
@@ -29,6 +30,7 @@ header{
   background:#000;
   position:sticky;
   top:0;
+  z-index:10;
 }
 header h1{margin:0;color:var(--accent)}
 
@@ -38,6 +40,7 @@ main{
   gap:32px;
 }
 
+/* KPI */
 .kpis{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
@@ -51,14 +54,12 @@ main{
 .kpi span{color:var(--muted);font-size:13px}
 .kpi strong{font-size:34px;display:block;margin-top:6px}
 
-.section h2{margin:0 0 14px;font-size:20px}
-
+/* GRID */
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
   gap:18px;
 }
-
 .card{
   background:var(--card);
   border-radius:14px;
@@ -69,22 +70,18 @@ main{
   height:260px;
   object-fit:cover;
 }
-.card-info{
-  padding:12px;
-}
+.card-info{padding:12px}
 .card-info strong{display:block}
 .card-info span{font-size:12px;color:var(--muted)}
+.badge{margin-top:6px;font-size:12px}
 
-footer{
-  text-align:right;
+/* SECTIONS */
+.section h2{margin:0 0 14px;font-size:20px}
+canvas{background:var(--card);border-radius:14px;padding:12px}
+
+.update{
   font-size:12px;
   color:var(--muted);
-}
-
-canvas{
-  background:var(--card);
-  border-radius:14px;
-  padding:10px;
 }
 </style>
 </head>
@@ -93,24 +90,16 @@ canvas{
 
 <header>
   <h1>📊 Dashboard • Sessão 99</h1>
+  <div class="update" id="ultimaAtualizacao"></div>
 </header>
 
 <main>
 
 <!-- KPIs -->
 <div class="kpis">
-  <div class="kpi">
-    <span>👀 Online agora</span>
-    <strong id="kpiOnline">0</strong>
-  </div>
-  <div class="kpi">
-    <span>▶ Visualizações hoje</span>
-    <strong id="kpiHoje">0</strong>
-  </div>
-  <div class="kpi">
-    <span>📅 Visualizações semana</span>
-    <strong id="kpiSemana">0</strong>
-  </div>
+  <div class="kpi"><span>👀 Online agora</span><strong id="kpiOnline">0</strong></div>
+  <div class="kpi"><span>▶ Visualizações hoje</span><strong id="kpiHoje">0</strong></div>
+  <div class="kpi"><span>📅 Visualizações semana</span><strong id="kpiSemana">0</strong></div>
 </div>
 
 <!-- TOP AGORA -->
@@ -142,10 +131,6 @@ canvas{
   <canvas id="chartGeneros"></canvas>
 </div>
 
-<footer>
-  Última atualização: <span id="lastUpdate">--</span>
-</footer>
-
 </main>
 
 <script>
@@ -157,97 +142,92 @@ const sb = supabase.createClient(
 let chartCat, chartGen;
 
 async function loadDashboard(){
-  const now = new Date();
+  const agora = new Date();
   const hoje = new Date(); hoje.setHours(0,0,0,0);
   const semana = new Date(); semana.setDate(semana.getDate()-7);
 
-  document.getElementById("lastUpdate").textContent =
-    new Date().toLocaleString();
+  ultimaAtualizacao.textContent =
+    "Última atualização: " + new Date().toLocaleTimeString();
 
   /* ONLINE AGORA */
   const { data: online } = await sb
     .from("assistindo_agora")
-    .select("usuario_id, filme_id, last_ping")
+    .select("filme_id")
     .gte("last_ping", new Date(Date.now()-30000).toISOString());
 
-  document.getElementById("kpiOnline").textContent = online.length;
-
-  /* FILMES */
-  const { data: filmes } = await sb.from("filmes").select("*");
-
-  /* TOP AGORA (assistindo_agora) */
-  const mapAgora = {};
-  online.forEach(o=>{
-    mapAgora[o.filme_id]=(mapAgora[o.filme_id]||0)+1;
-  });
-
-  renderTop(
-    "topAgora",
-    mapAgora,
-    filmes,
-    "👀 assistindo agora"
-  );
+  kpiOnline.textContent = online.length;
 
   /* VISUALIZAÇÕES */
   const { data: vis } = await sb
     .from("visualizacoes")
     .select("filme_id, created_at");
 
-  document.getElementById("kpiHoje").textContent =
-    vis.filter(v=>new Date(v.created_at)>=hoje).length;
+  kpiHoje.textContent = vis.filter(v=>new Date(v.created_at)>=hoje).length;
+  kpiSemana.textContent = vis.filter(v=>new Date(v.created_at)>=semana).length;
 
-  document.getElementById("kpiSemana").textContent =
-    vis.filter(v=>new Date(v.created_at)>=semana).length;
+  /* FILMES */
+  const { data: filmes } = await sb.from("filmes").select("*");
+
+  /* TOP AGORA (fallback para hoje se vazio) */
+  let baseAgora = online;
+  if(baseAgora.length === 0){
+    baseAgora = vis.filter(v=>new Date(v.created_at)>=hoje);
+  }
+
+  renderTop(topAgora, baseAgora, filmes);
 
   renderTop(
-    "topDia",
-    countBy(vis.filter(v=>new Date(v.created_at)>=hoje)),
-    filmes,
-    "👁 hoje"
+    topDia,
+    vis.filter(v=>new Date(v.created_at)>=hoje),
+    filmes
   );
 
   renderTop(
-    "topSemana",
-    countBy(vis.filter(v=>new Date(v.created_at)>=semana)),
-    filmes,
-    "👁 semana"
+    topSemana,
+    vis.filter(v=>new Date(v.created_at)>=semana),
+    filmes
   );
 
   renderCharts(vis, filmes);
 }
 
-function countBy(list){
+function renderTop(container, lista, filmes){
   const map={};
-  list.forEach(v=>map[v.filme_id]=(map[v.filme_id]||0)+1);
-  return map;
-}
+  lista.forEach(v=>map[v.filme_id]=(map[v.filme_id]||0)+1);
 
-function renderTop(containerId, map, filmes, label){
-  const container = document.getElementById(containerId);
-  container.innerHTML="";
-  Object.entries(map)
+  const top = Object.entries(map)
     .sort((a,b)=>b[1]-a[1])
     .slice(0,10)
-    .forEach(([id,total])=>{
-      const f = filmes.find(x=>x.id===id);
-      if(!f) return;
-      container.innerHTML+=`
-        <div class="card">
-          <img src="${f.capa_url}">
-          <div class="card-info">
-            <strong>${f.titulo}</strong>
-            <span>${f.categoria}</span>
-            <div>${label}: ${total}</div>
-          </div>
-        </div>`;
-    });
+    .map(([id,total])=>{
+      const f=filmes.find(x=>x.id===id);
+      return f?{...f,total}:null;
+    })
+    .filter(Boolean);
+
+  container.innerHTML="";
+  if(top.length===0){
+    container.innerHTML="<span style='color:#aaa'>Sem dados</span>";
+    return;
+  }
+
+  top.forEach(f=>{
+    container.innerHTML+=`
+      <div class="card">
+        <img src="${f.capa_url}">
+        <div class="card-info">
+          <strong>${f.titulo||f.serie_nome}</strong>
+          <span>${f.categoria||""}</span>
+          <div class="badge">👁 ${f.total}</div>
+        </div>
+      </div>`;
+  });
 }
 
 function renderCharts(vis, filmes){
   const cat={}, gen={};
 
   vis.forEach(v=>{
-    const f = filmes.find(x=>x.id===v.filme_id);
+    const f=filmes.find(x=>x.id===v.filme_id);
     if(!f) return;
     if(f.categoria) cat[f.categoria]=(cat[f.categoria]||0)+1;
     if(f.genero) gen[f.genero]=(gen[f.genero]||0)+1;
@@ -256,16 +236,15 @@ function renderCharts(vis, filmes){
   if(chartCat) chartCat.destroy();
   if(chartGen) chartGen.destroy();
 
-  chartCat = new Chart(chartCategorias,{
+  chartCat=new Chart(chartCategorias,{
     type:"bar",
     data:{labels:Object.keys(cat),datasets:[{data:Object.values(cat),backgroundColor:"#e50914"}]},
     options:{plugins:{legend:{display:false}}}
   });
 
-  chartGen = new Chart(chartGeneros,{
+  chartGen=new Chart(chartGeneros,{
     type:"doughnut",
-    data:{labels:Object.keys(gen),datasets:[{data:Object.values(gen)}]},
-    options:{plugins:{legend:{position:"bottom"}}}
+    data:{labels:Object.keys(gen),datasets:[{data:Object.values(gen),backgroundColor:["#e50914","#f97316","#22c55e","#3b82f6","#a855f7"]}]}
   });
 }
 
