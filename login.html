@@ -2,159 +2,69 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Login | Sessão 99</title>
+<title>Teste UI</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-
 <style>
 body{
   margin:0;
   height:100vh;
   background:#000;
   color:#fff;
-  font-family:Arial,Inter,sans-serif;
+  font-family:Arial;
   display:flex;
   align-items:center;
   justify-content:center;
 }
-.container{width:380px}
+.container{width:360px}
 input,button{
   width:100%;
   padding:14px;
-  margin-bottom:14px;
+  margin-bottom:12px;
   background:#111;
   border:1px solid #333;
   color:#fff;
 }
-button{
-  background:#7c3aed;
-  font-weight:bold;
-  cursor:pointer;
-}
+button{background:#7c3aed;font-weight:bold}
 .link{text-align:center;cursor:pointer;color:#ccc}
-.msg{color:#facc15;height:20px}
-
-/* MODAL */
 .modal{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.85);
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.8);
   display:none;
   align-items:center;
   justify-content:center;
 }
-.modal-box{
-  width:380px;
-  background:#111;
-  padding:20px;
-}
+.box{background:#111;padding:20px;width:360px}
 </style>
 </head>
-
 <body>
 
 <div class="container">
   <h2>Login</h2>
-
-  <input id="email" placeholder="Email">
-  <input id="senha" type="password" placeholder="Senha">
-
-  <button id="btnLogin">Entrar</button>
-
-  <div class="link" id="abrirCadastro">Ainda não tenho conta</div>
-  <div class="msg" id="msg"></div>
+  <input placeholder="Email">
+  <input placeholder="Senha">
+  <button onclick="alert('Clique OK')">Entrar</button>
+  <div class="link" onclick="openModal()">Ainda não tenho conta</div>
 </div>
 
-<!-- CADASTRO -->
-<div class="modal" id="modal">
-  <div class="modal-box">
-    <h3>Criar conta</h3>
-    <input id="c_email" placeholder="Email">
-    <input id="c_cpf" placeholder="CPF">
-    <input id="c_whats" placeholder="WhatsApp">
-    <input id="c_senha" type="password" placeholder="Senha">
-    <input id="c_confirma" type="password" placeholder="Confirmar senha">
-    <button id="btnCadastro">Cadastrar</button>
-    <div class="link" id="fecharCadastro">Cancelar</div>
+<div class="modal" id="modal" onclick="closeModal(event)">
+  <div class="box">
+    <h3>Cadastro</h3>
+    <input placeholder="Email">
+    <input placeholder="Senha">
+    <button onclick="alert('Cadastro OK')">Cadastrar</button>
+    <div class="link" onclick="closeModal()">Cancelar</div>
   </div>
 </div>
 
 <script>
-const supabase = supabase.createClient(
- "https://dxkszikemntfusfyrzos.supabase.co",
- "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
-);
-
-const msg = document.getElementById("msg");
-const modal = document.getElementById("modal");
-
-/* MODAL */
-abrirCadastro.onclick = ()=> modal.style.display="flex";
-fecharCadastro.onclick = ()=> modal.style.display="none";
-modal.onclick = e=>{ if(e.target===modal) modal.style.display="none"; };
-
-/* LOGIN */
-btnLogin.onclick = async ()=>{
-  msg.textContent="";
-
-  const e = email.value.trim();
-  const s = senha.value;
-
-  if(!e || !s){
-    msg.textContent="Preencha email e senha";
-    return;
+function openModal(){
+  document.getElementById("modal").style.display="flex";
+}
+function closeModal(e){
+  if(!e || e.target.id==="modal"){
+    document.getElementById("modal").style.display="none";
   }
-
-  btnLogin.disabled=true;
-
-  const { data, error } = await supabase
-    .from("usuarios")
-    .select("*")
-    .eq("email", e)
-    .eq("senha", s)
-    .single();
-
-  btnLogin.disabled=false;
-
-  if(error || !data){
-    msg.textContent="Usuário ou senha inválidos";
-    return;
-  }
-
-  localStorage.usuario = JSON.stringify(data);
-  window.location.href="index.html";
-};
-
-/* CADASTRO */
-btnCadastro.onclick = async ()=>{
-  if(c_senha.value!==c_confirma.value){
-    alert("Senhas não conferem");
-    return;
-  }
-
-  btnCadastro.disabled=true;
-
-  const trial = new Date(Date.now()+86400000);
-
-  const { error } = await supabase.from("usuarios").insert({
-    email:c_email.value,
-    cpf:c_cpf.value,
-    whatsapp:c_whats.value,
-    senha:c_senha.value,
-    status:"pendente",
-    trial_expires_at:trial.toISOString()
-  });
-
-  btnCadastro.disabled=false;
-
-  if(error){
-    alert("Erro ao cadastrar");
-    return;
-  }
-
-  alert("Cadastro criado. Teste liberado.");
-  modal.style.display="none";
-};
+}
 </script>
 
 </body>
