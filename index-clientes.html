@@ -8,7 +8,7 @@
 <!-- SUPABASE -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
-<!-- HLS (para .m3u8 no Chrome/Edge) -->
+<!-- HLS -->
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
 <style>
@@ -41,16 +41,25 @@ body{
 
 /* HOME BUTTON */
 #homeBtn{
-  position:absolute;top:20px;left:20px;
-  padding:10px 14px;font-size:20px;
+  position:absolute;
+  top:20px;
+  left:20px;
+  padding:10px 14px;
+  font-size:20px;
   background:rgba(0,0,0,.6);
-  color:#fff;border:none;cursor:pointer;display:none;z-index:5
+  color:#fff;
+  border:none;
+  cursor:pointer;
+  display:none;
+  z-index:10;
 }
 
 /* OVERLAY */
 #overlay{position:absolute;inset:0}
 #overlay::before{
-  content:"";position:absolute;inset:0;
+  content:"";
+  position:absolute;
+  inset:0;
   background:
     linear-gradient(to right,rgba(0,0,0,.9) 20%,rgba(0,0,0,.5) 50%,transparent),
     linear-gradient(to top,rgba(0,0,0,.85) 10%,transparent 45%);
@@ -72,6 +81,7 @@ body{
 .hide-ui #overlay,
 .hide-ui #info{opacity:0;pointer-events:none}
 
+/* MOBILE */
 @media(max-width:900px){
   #info{left:20px;right:20px}
   #info h1{font-size:26px}
@@ -121,20 +131,18 @@ const selTemporada=document.getElementById("selTemporada");
 const selEpisodio=document.getElementById("selEpisodio");
 
 let dados=[], atual=null, serieAtual=[], indiceEp=0;
-let hideTimer=null, audioUnlocked=false;
-let hls=null;
+let hideTimer=null, audioUnlocked=false, hls=null;
 
-/* ================= VIDEO LOADER (CRÍTICO) ================= */
+/* VIDEO LOADER */
 function loadVideo(url){
   if(hls){ hls.destroy(); hls=null; }
-
   video.pause();
   video.removeAttribute("src");
   video.load();
 
   if(url.endsWith(".m3u8")){
     if(Hls.isSupported()){
-      hls=new Hls({ enableWorker:true });
+      hls=new Hls();
       hls.loadSource(url);
       hls.attachMedia(video);
     }else if(video.canPlayType("application/vnd.apple.mpegurl")){
@@ -157,7 +165,10 @@ async function load(){
 function renderHome(){
  home.innerHTML="";
  renderSection("Filmes",dados.filter(d=>d.tipo==="filme"));
- renderSection("Séries",[...new Map(dados.filter(d=>d.tipo==="serie").map(s=>[s.serie_nome,s])).values()]);
+ renderSection(
+  "Séries",
+  [...new Map(dados.filter(d=>d.tipo==="serie").map(s=>[s.serie_nome,s])).values()]
+ );
 }
 function renderSection(t,itens){
  const sec=document.createElement("div");
@@ -181,8 +192,9 @@ function abrir(item){
  clearTimeout(hideTimer);
  atual=item;
  player.style.display="block";
- homeBtn.style.display="none";
  document.body.classList.remove("hide-ui");
+
+ homeBtn.style.display="block"; // 🏠 aparece junto com info
 
  document.getElementById("titulo").textContent=item.titulo||item.serie_nome;
  document.getElementById("descricao").textContent=item.descricao||"";
@@ -201,12 +213,13 @@ function abrir(item){
  iniciarTimer();
 }
 
-/* ASSISTIR (LIBERA ÁUDIO) */
+/* ASSISTIR */
 function assistir(){
  audioUnlocked=true;
  video.muted=false;
  video.play();
  document.body.classList.add("hide-ui");
+ homeBtn.style.display="none"; // some ao esconder UI
  clearTimeout(hideTimer);
 }
 
@@ -250,7 +263,10 @@ video.addEventListener("ended",()=>{
 /* TIMER */
 function iniciarTimer(){
  clearTimeout(hideTimer);
- hideTimer=setTimeout(()=>document.body.classList.add("hide-ui"),30000);
+ hideTimer=setTimeout(()=>{
+  document.body.classList.add("hide-ui");
+  homeBtn.style.display="none";
+ },30000);
 }
 
 /* PLAY / PAUSE */
@@ -260,7 +276,9 @@ video.addEventListener("pause",()=>{
  homeBtn.style.display="block";
 });
 video.addEventListener("play",()=>{
- homeBtn.style.display="none";
+ if(!document.body.classList.contains("hide-ui")){
+   homeBtn.style.display="block";
+ }
  iniciarTimer();
 });
 
