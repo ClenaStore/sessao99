@@ -153,6 +153,7 @@ let serieAtual = [];
 let episodioAtual = null;
 let pingTimer = null;
 
+/* ================= TRACKING ================= */
 async function registrar(acao){
   if(!episodioAtual || !video.duration) return;
 
@@ -160,8 +161,9 @@ async function registrar(acao){
   const duration = Math.floor(video.duration);
   const percent = Math.round((played / duration) * 100);
   const remaining = Math.max(duration - played, 0);
+  const now = new Date().toISOString();
 
-  /* HISTÓRICO */
+  /* HISTÓRICO (NUNCA APAGA) */
   await supabaseClient.from("rs_play_events").insert({
     user_id: USER_ID,
     content_id: episodioAtual.id,
@@ -171,10 +173,11 @@ async function registrar(acao){
     serie_nome: episodioAtual.serie_nome,
     played_seconds: played,
     duration_seconds: duration,
-    progress_percent: percent
+    progress_percent: percent,
+    created_at: now
   });
 
-  /* PROGRESSO CONSOLIDADO */
+  /* PROGRESSO CONSOLIDADO (UPSERT) */
   await supabaseClient.from("rs_user_progress").upsert({
     user_id: USER_ID,
     content_id: episodioAtual.id,
@@ -182,10 +185,10 @@ async function registrar(acao){
     tipo: episodioAtual.tipo,
     max_progress: percent,
     remaining_seconds: remaining,
-    updated_at: new Date().toISOString()
+    updated_at: now
   });
 
-  /* SESSÃO ONLINE (SÓ SE PLAY/PING) */
+  /* SESSÃO ONLINE — SOMENTE PLAY/PING */
   if(acao === "play" || acao === "ping"){
     await supabaseClient.from("rs_sessions").upsert({
       user_id: USER_ID,
@@ -193,11 +196,11 @@ async function registrar(acao){
       content_tipo: episodioAtual.tipo,
       titulo: episodioAtual.titulo,
       serie_nome: episodioAtual.serie_nome,
-      last_ping: new Date().toISOString()
+      last_ping: now
     });
   }
 
-  /* REMOVE SESSÃO SE PAROU */
+  /* REMOVE ONLINE SE PAROU */
   if(acao === "stop"){
     await supabaseClient
       .from("rs_sessions")
@@ -205,8 +208,6 @@ async function registrar(acao){
       .eq("user_id", USER_ID);
   }
 }
-
-
 
 /* ================= LOAD ================= */
 async function load(){
@@ -306,14 +307,14 @@ video.addEventListener("play",()=>{
   pingTimer = setInterval(()=>registrar("ping"),15000);
 });
 
-
 video.addEventListener("pause",()=>{
   clearInterval(pingTimer);
-  registrar("pause");
+  registrar("stop");
 });
 
-
-window.addEventListener("beforeunload",()=>registrar("stop"));
+window.addEventListener("beforeunload",()=>{
+  registrar("stop");
+});
 
 function fechar(){
   clearInterval(pingTimer);
@@ -322,7 +323,6 @@ function fechar(){
   video.src="";
   player.style.display="none";
 }
-
 
 /* ================= SEARCH ================= */
 search.oninput = ()=>{
