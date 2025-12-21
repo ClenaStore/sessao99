@@ -5,339 +5,409 @@
 <title>SESSÃO 99</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- SUPABASE -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-
-<!-- HLS -->
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
 <style>
 :root{
   --bg:#000;
+  --panel:#0b0b0b;
   --text:#fff;
-  --muted:#b3b3b3;
-  --badge:#222;
+  --muted:#aaa;
+  --accent:#e50914;
 }
-*{box-sizing:border-box}
+*{
+  box-sizing:border-box;
+  scrollbar-width:none;
+}
+*::-webkit-scrollbar{display:none}
+
 body{
   margin:0;
-  background:#000;
-  color:#fff;
+  background:var(--bg);
+  color:var(--text);
   font-family:Inter,Arial,sans-serif;
   overflow:hidden;
 }
 
-/* PERFIL */
-#profileBtn{
-  position:absolute;
-  top:20px;
-  right:20px;
-  width:44px;
-  height:44px;
+/* ================= HEADER ================= */
+header{
+  position:fixed;
+  top:0;left:0;right:0;
+  height:72px;
+  display:flex;
+  align-items:center;
+  gap:18px;
+  padding:0 24px;
+  background:rgba(0,0,0,.85);
+  backdrop-filter:blur(10px);
+  z-index:50;
+}
+.logo{
+  font-size:22px;
+  font-weight:800;
+  color:var(--accent);
+}
+.search{
+  flex:1;
+  max-width:520px;
+}
+.search input{
+  width:100%;
+  height:42px;
+  border-radius:20px;
+  border:1px solid #333;
+  background:#111;
+  color:#fff;
+  padding:0 18px;
+}
+.profile{
+  width:42px;height:42px;
   border-radius:50%;
   background:#222;
-  color:#fff;
   border:none;
-  font-size:20px;
+  color:#fff;
+  font-size:18px;
   cursor:pointer;
-  z-index:20;
 }
 
-/* HOME */
-#home{position:absolute;inset:0;padding-top:90px;overflow-y:auto}
-.section{margin-bottom:46px}
-.section h2{margin:0 0 16px 48px}
-.row{display:flex;gap:16px;padding:0 48px;overflow-x:auto}
-.card{min-width:200px;cursor:pointer}
-.card img{width:100%;height:300px;object-fit:cover;border-radius:4px}
+/* ================= NAV ================= */
+.nav{
+  margin-top:72px;
+  padding:14px 24px;
+  display:flex;
+  gap:26px;
+  border-bottom:1px solid #222;
+}
+.nav button{
+  background:none;
+  border:none;
+  color:#aaa;
+  font-size:16px;
+  cursor:pointer;
+}
+.nav button.active{
+  color:#fff;
+  font-weight:700;
+}
 
-/* PLAYER */
-#player{position:fixed;inset:0;background:#000;display:none}
-#player video{width:100%;height:100%;object-fit:cover}
+/* ================= FILTERS ================= */
+.filters{
+  padding:12px 24px;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.filters button{
+  padding:8px 16px;
+  border-radius:20px;
+  border:1px solid #333;
+  background:#111;
+  color:#fff;
+  cursor:pointer;
+}
+.filters button.active{
+  background:var(--accent);
+  border-color:var(--accent);
+}
 
-/* HOME BUTTON */
+/* ================= HOME ================= */
+#home{
+  padding:20px 0 60px;
+  overflow-y:auto;
+  height:calc(100vh - 160px);
+}
+.section{
+  margin-bottom:40px;
+}
+.section h2{
+  margin:0 0 14px 24px;
+}
+.row{
+  display:flex;
+  gap:14px;
+  padding:0 24px;
+  overflow-x:auto;
+}
+.card{
+  min-width:160px;
+  cursor:pointer;
+  transition:.25s;
+}
+.card:hover{transform:scale(1.08)}
+.card img{
+  width:100%;
+  height:240px;
+  object-fit:cover;
+  border-radius:10px;
+}
+
+/* TOP 10 */
+.top{
+  position:relative;
+}
+.rank{
+  position:absolute;
+  bottom:-10px;
+  left:-10px;
+  font-size:64px;
+  font-weight:900;
+  color:#fff;
+}
+
+/* ================= PLAYER ================= */
+#player{
+  position:fixed;
+  inset:0;
+  background:#000;
+  display:none;
+  z-index:100;
+}
+#player video{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
 #homeBtn{
   position:absolute;
-  top:20px;
-  left:20px;
-  padding:10px 14px;
-  font-size:20px;
+  top:20px;left:20px;
   background:rgba(0,0,0,.6);
-  color:#fff;
   border:none;
+  color:#fff;
+  font-size:20px;
+  padding:10px 14px;
   cursor:pointer;
-  display:none;
   z-index:10;
 }
 
+/* EP CONTROLS */
+#epControls{
+  position:absolute;
+  right:20px;
+  bottom:120px;
+  display:none;
+  gap:10px;
+  z-index:10;
+}
+#epControls button{
+  background:rgba(0,0,0,.6);
+  border:none;
+  color:#fff;
+  font-size:22px;
+  padding:10px 14px;
+  cursor:pointer;
+}
+
 /* OVERLAY */
-#overlay{position:absolute;inset:0}
+#overlay{
+  position:absolute;
+  inset:0;
+}
 #overlay::before{
   content:"";
   position:absolute;
   inset:0;
   background:
-    linear-gradient(to right,rgba(0,0,0,.9) 20%,rgba(0,0,0,.5) 50%,transparent),
-    linear-gradient(to top,rgba(0,0,0,.85) 10%,transparent 45%);
+    linear-gradient(to right,rgba(0,0,0,.85) 25%,transparent 60%),
+    linear-gradient(to top,rgba(0,0,0,.9) 15%,transparent 50%);
+}
+#info{
+  position:absolute;
+  left:40px;
+  bottom:120px;
+  max-width:520px;
+}
+#info h1{margin:0 0 10px}
+#info p{color:var(--muted)}
+#info button{
+  margin-top:16px;
+  padding:12px 22px;
+  border:none;
+  font-weight:700;
+  cursor:pointer;
 }
 
-/* INFO */
-#info{position:absolute;left:60px;bottom:120px;max-width:640px}
-.badge{display:inline-block;padding:4px 10px;background:var(--badge);font-size:12px;margin-bottom:8px}
-#info h1{font-size:40px;margin:0 0 12px}
-#info p{color:var(--muted)}
-.actions{margin-top:16px}
-.actions button{padding:12px 22px;font-weight:700;border:none;cursor:pointer}
-
-/* SERIES */
-.series-controls{display:none;gap:10px;margin-top:14px}
-.series-controls select{padding:10px;background:#111;color:#fff;border:1px solid #333}
-
-/* STATES */
-.hide-ui #overlay,
-.hide-ui #info{opacity:0;pointer-events:none}
-
-/* MOBILE */
-@media(max-width:900px){
-  #info{left:20px;right:20px}
-  #info h1{font-size:26px}
+/* ================= PERFIL ================= */
+#perfilModal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.65);
+  backdrop-filter:blur(8px);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:120;
+}
+#perfilBox{
+  width:420px;
+  background:#111;
+  border-radius:18px;
+  padding:26px;
+  position:relative;
+}
+#perfilClose{
+  position:absolute;
+  top:12px;
+  right:14px;
+  cursor:pointer;
+  font-size:18px;
+}
+.perfil-item{margin-bottom:10px;color:#ccc}
+.perfil-footer{text-align:right}
+.perfil-footer button{
+  background:none;
+  border:none;
+  color:#ff6b6b;
+  cursor:pointer;
 }
 </style>
 </head>
 
 <body>
 
-<button id="profileBtn" onclick="abrirPerfil()">👤</button>
+<header>
+  <div class="logo">SESSÃO 99</div>
+  <div class="search">
+    <input id="search" placeholder="Buscar...">
+  </div>
+  <button class="profile" onclick="abrirPerfil()">👤</button>
+</header>
 
-<div id="home"></div>
+<div class="nav">
+  <button class="active">Para você</button>
+  <button>Filmes</button>
+  <button>Séries</button>
+  <button>Infantil</button>
+</div>
 
+<div class="filters">
+  <button class="active">Todos</button>
+  <button>Ação</button>
+  <button>Comédia</button>
+  <button>Drama</button>
+  <button>Terror</button>
+</div>
+
+<div id="home">
+  <div class="section">
+    <h2>TOP 10</h2>
+    <div class="row" id="top10"></div>
+  </div>
+  <div class="section">
+    <h2>Você pode curtir</h2>
+    <div class="row" id="lista"></div>
+  </div>
+</div>
+
+<!-- PLAYER -->
 <div id="player">
-  <video id="video" controls autoplay playsinline></video>
-  <button id="homeBtn" onclick="voltarHome()">🏠</button>
+  <video id="video" autoplay playsinline></video>
+  <button id="homeBtn" onclick="fecharPlayer()">🏠</button>
+
+  <div id="epControls">
+    <button id="btnPrev">⏮</button>
+    <button id="btnNext">⏭</button>
+  </div>
 
   <div id="overlay">
     <div id="info">
-      <div class="badge" id="tipoBadge"></div>
       <h1 id="titulo"></h1>
       <p id="descricao"></p>
+      <button onclick="assistir()">▶ Assistir</button>
+    </div>
+  </div>
+</div>
 
-      <div class="series-controls" id="seriesControls">
-        <select id="selTemporada"></select>
-        <select id="selEpisodio"></select>
-      </div>
-
-      <div class="actions">
-        <button onclick="assistir()">▶ Assistir</button>
-      </div>
+<!-- PERFIL -->
+<div id="perfilModal">
+  <div id="perfilBox">
+    <div id="perfilClose" onclick="fecharPerfil()">✕</div>
+    <h2>Meu Perfil</h2>
+    <div class="perfil-item" id="p_email"></div>
+    <div class="perfil-footer">
+      <button onclick="logout()">Sair</button>
     </div>
   </div>
 </div>
 
 <script>
-/* ================= SUPABASE ================= */
-const supabaseClient = supabase.createClient(
+if(!localStorage.usuario) location.href="login.html";
+
+const sb=supabase.createClient(
  "https://dxkszikemntfusfyrzos.supabase.co",
  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-/* ================= AUTH GUARD ================= */
-async function protegerIndex(){
-  const raw = localStorage.getItem("usuario");
-  if(!raw){
-    window.location.href = "login.html";
-    return;
-  }
-
-  const localUser = JSON.parse(raw);
-
-  const { data } = await supabaseClient
-    .from("usuarios")
-    .select("*")
-    .eq("email", localUser.email)
-    .single();
-
-  if(!data){
-    localStorage.removeItem("usuario");
-    window.location.href = "login.html";
-    return;
-  }
-
-  const agora = new Date();
-  if(data.status === "pendente"){
-    const expira = new Date(data.trial_expires_at);
-    if(agora > expira){
-      alert("Seu acesso expirou.");
-      localStorage.removeItem("usuario");
-      window.location.href = "login.html";
-    }
-  }
-}
-
-/* PERFIL */
-function abrirPerfil(){
-  window.location.href = "perfil.html";
-}
-
-protegerIndex();
-
-/* ================= PLAYER APP ================= */
-const home=document.getElementById("home");
-const player=document.getElementById("player");
+const top10=document.getElementById("top10");
+const lista=document.getElementById("lista");
 const video=document.getElementById("video");
-const homeBtn=document.getElementById("homeBtn");
-const tipoBadge=document.getElementById("tipoBadge");
-const seriesControls=document.getElementById("seriesControls");
-const selTemporada=document.getElementById("selTemporada");
-const selEpisodio=document.getElementById("selEpisodio");
+const epControls=document.getElementById("epControls");
+const btnPrev=document.getElementById("btnPrev");
+const btnNext=document.getElementById("btnNext");
 
 let dados=[], atual=null, serieAtual=[], indiceEp=0;
-let hideTimer=null, audioUnlocked=false, hls=null;
 
-/* VIDEO LOADER */
-function loadVideo(url){
-  if(hls){ hls.destroy(); hls=null; }
-  video.pause();
-  video.removeAttribute("src");
-  video.load();
-
-  if(url.endsWith(".m3u8")){
-    if(Hls.isSupported()){
-      hls=new Hls();
-      hls.loadSource(url);
-      hls.attachMedia(video);
-    }else if(video.canPlayType("application/vnd.apple.mpegurl")){
-      video.src=url;
-    }
-  }else{
-    video.src=url;
-  }
-
-  video.muted=!audioUnlocked;
-  video.play();
-}
-
-/* LOAD CONTENT */
 async function load(){
- const {data}=await supabaseClient.from("filmes").select("*").eq("ativo",true);
+ const {data}=await sb.from("filmes").select("*").eq("ativo",true);
  dados=data||[];
- renderHome();
-}
-function renderHome(){
- home.innerHTML="";
- renderSection("Filmes",dados.filter(d=>d.tipo==="filme"));
- renderSection(
-  "Séries",
-  [...new Map(dados.filter(d=>d.tipo==="serie").map(s=>[s.serie_nome,s])).values()]
- );
-}
-function renderSection(t,itens){
- const sec=document.createElement("div");
- sec.className="section";
- sec.innerHTML=`<h2>${t}</h2>`;
- const row=document.createElement("div");
- row.className="row";
- itens.forEach(i=>{
-  const c=document.createElement("div");
-  c.className="card";
-  c.innerHTML=`<img src="${i.capa_url}">`;
-  c.onclick=()=>abrir(i);
-  row.appendChild(c);
+
+ data.forEach((f,i)=>{
+   const c=document.createElement("div");
+   c.className="card top";
+   c.innerHTML=`<img src="${f.capa_url}"><div class="rank">${i+1}</div>`;
+   c.onclick=()=>abrir(f);
+   if(i<10) top10.appendChild(c);
+   else lista.appendChild(c.cloneNode(true));
  });
- sec.appendChild(row);
- home.appendChild(sec);
 }
+load();
 
-/* ABRIR */
 function abrir(item){
- clearTimeout(hideTimer);
  atual=item;
- player.style.display="block";
- document.body.classList.remove("hide-ui");
- homeBtn.style.display="block";
- document.getElementById("profileBtn").style.display="none";
-
+ document.getElementById("player").style.display="block";
  document.getElementById("titulo").textContent=item.titulo||item.serie_nome;
  document.getElementById("descricao").textContent=item.descricao||"";
-
- if(item.tipo==="serie"){
-  tipoBadge.textContent="📺 Série";
-  montarSerie(item.serie_nome);
-  seriesControls.style.display="flex";
- }else{
-  tipoBadge.textContent="🎬 Filme";
-  seriesControls.style.display="none";
- }
-
- audioUnlocked=false;
- loadVideo(item.video_url);
- iniciarTimer();
-}
-
-/* ASSISTIR */
-function assistir(){
- audioUnlocked=true;
- video.muted=false;
+ video.src=item.video_url;
  video.play();
- document.body.classList.add("hide-ui");
- homeBtn.style.display="none";
- clearTimeout(hideTimer);
 }
 
-/* SERIES */
-function montarSerie(nome){
- serieAtual=dados.filter(d=>d.serie_nome===nome)
-  .sort((a,b)=>a.temporada-b.temporada||a.episodio-b.episodio);
- const temps=[...new Set(serieAtual.map(e=>e.temporada))];
- selTemporada.innerHTML="";
- temps.forEach(t=>selTemporada.innerHTML+=`<option value="${t}">Temporada ${t}</option>`);
- selTemporada.onchange=montarEpisodios;
- montarEpisodios();
-}
-function montarEpisodios(){
- const t=Number(selTemporada.value);
- const eps=serieAtual.filter(e=>e.temporada===t);
- selEpisodio.innerHTML="";
- eps.forEach((e,i)=>selEpisodio.innerHTML+=`<option value="${i}">Episódio ${e.episodio}</option>`);
- selEpisodio.onchange=()=>trocarEpisodio(eps,selEpisodio.value);
- trocarEpisodio(eps,0);
-}
-function trocarEpisodio(eps,i){
- indiceEp=i;
- atual=eps[i];
- loadVideo(atual.video_url);
- iniciarTimer();
+function assistir(){
+ video.play();
 }
 
-/* TIMER */
-function iniciarTimer(){
- clearTimeout(hideTimer);
- hideTimer=setTimeout(()=>{
-  document.body.classList.add("hide-ui");
-  homeBtn.style.display="none";
- },30000);
-}
-
-/* PLAY / PAUSE */
 video.addEventListener("pause",()=>{
- clearTimeout(hideTimer);
- document.body.classList.remove("hide-ui");
- homeBtn.style.display="block";
+ if(atual.tipo==="serie"){
+   epControls.style.display="flex";
+ }
 });
-video.addEventListener("play",()=> iniciarTimer());
+video.addEventListener("play",()=>{
+ epControls.style.display="none";
+});
 
-/* HOME */
-function voltarHome(){
- if(hls){ hls.destroy(); hls=null; }
+btnPrev.onclick=()=>{/* lógica episódio anterior */};
+btnNext.onclick=()=>{/* lógica próximo episódio */};
+
+function fecharPlayer(){
  video.pause();
- video.removeAttribute("src");
- video.load();
- player.style.display="none";
- homeBtn.style.display="none";
- document.getElementById("profileBtn").style.display="block";
+ document.getElementById("player").style.display="none";
 }
 
-/* START */
-load();
+function abrirPerfil(){
+ const u=JSON.parse(localStorage.usuario);
+ p_email.textContent=u.email;
+ perfilModal.style.display="flex";
+}
+function fecharPerfil(){perfilModal.style.display="none";}
+function logout(){
+ localStorage.removeItem("usuario");
+ location.href="login.html";
+}
+
+document.addEventListener("keydown",e=>{
+ if(e.key==="ArrowLeft") btnPrev.click();
+ if(e.key==="ArrowRight") btnNext.click();
+ if(e.key==="Enter") video.paused?video.play():video.pause();
+});
 </script>
 
 </body>
