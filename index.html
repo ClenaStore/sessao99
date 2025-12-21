@@ -73,10 +73,7 @@ header input{
 
 /* HOME */
 section{padding:24px 32px}
-section h2{
-  margin:0 0 14px;
-  font-size:18px;
-}
+section h2{margin:0 0 14px;font-size:18px}
 
 .row{
   display:flex;
@@ -214,23 +211,23 @@ const sb = supabase.createClient(
 
   const u = JSON.parse(session);
 
-  const { data } = await sb
+  const { data:user } = await sb
     .from("usuarios")
-    .select("status, trial_expires_at")
+    .select("id,status,trial_expires_at")
     .eq("id", u.id)
     .single();
 
-  if(!data){
+  if(!user){
     bloquear("Conta não encontrada.");
     return;
   }
 
   const agora = new Date();
-  const expira = new Date(data.trial_expires_at);
+  const expira = new Date(user.trial_expires_at);
 
-  if(data.status==="ativo" || (data.status==="pendente" && agora<=expira)){
+  if(user.status==="ativo" || (user.status==="pendente" && agora <= expira)){
     document.getElementById("gate").style.display="none";
-    load();
+    iniciar();
   }else{
     bloquear("Seu período de teste gratuito expirou.");
   }
@@ -242,7 +239,7 @@ function bloquear(msg){
 }
 
 /* ================= USER ================= */
-const USER_ID = localStorage.user_id || crypto.randomUUID();
+const USER_ID = localStorage.user_id || ("u_"+Date.now());
 localStorage.user_id = USER_ID;
 
 /* ================= ELEMENTOS ================= */
@@ -258,14 +255,13 @@ const video=document.getElementById("video");
 /* ================= STATE ================= */
 let dados=[], serieAtual=[], episodioAtual=null, pingTimer=null;
 
-/* ================= TRACKING (INALTERADO) ================= */
+/* ================= TRACKING ================= */
 async function registrar(acao){
   if(!episodioAtual || !video.duration) return;
-  const played=Math.floor(video.currentTime);
-  const duration=Math.floor(video.duration);
-  const percent=Math.round((played/duration)*100);
-  const remaining=Math.max(duration-played,0);
-  const now=new Date().toISOString();
+
+  const played=Math.floor(video.currentTime||0);
+  const duration=Math.floor(video.duration||0);
+  if(!duration) return;
 
   await sb.from("rs_play_events").insert({
     user_id:USER_ID,
@@ -276,23 +272,13 @@ async function registrar(acao){
     serie_nome:episodioAtual.serie_nome,
     played_seconds:played,
     duration_seconds:duration,
-    progress_percent:percent,
-    created_at:now
-  });
-
-  await sb.from("rs_user_progress").upsert({
-    user_id:USER_ID,
-    content_id:episodioAtual.id,
-    titulo:episodioAtual.titulo,
-    tipo:episodioAtual.tipo,
-    max_progress:percent,
-    remaining_seconds:remaining,
-    updated_at:now
+    progress_percent:Math.round((played/duration)*100),
+    created_at:new Date().toISOString()
   });
 }
 
-/* ================= LOAD ================= */
-async function load(){
+/* ================= INIT ================= */
+async function iniciar(){
   const { data } = await sb.from("filmes").select("*").eq("ativo",true);
   dados=data||[];
   renderHome(dados);
@@ -302,7 +288,7 @@ async function load(){
 function renderHome(list){
   home.innerHTML="";
   const filmes=list.filter(i=>i.tipo==="filme");
-  const series=[...new Map(list.filter(i=>i.tipo==="serie").map(s=>[s.serie_nome,s]))].map(e=>e[1]);
+  const series=[...new Map(list.filter(i=>i.tipo==="serie").map(s=>[s.serie_nome,s])).values()];
   renderRow("🎬 Filmes",filmes,playFilme);
   renderRow("📺 Séries",series,s=>abrirSerie(s.serie_nome));
 }
@@ -318,7 +304,8 @@ function renderRow(t,it,cb){
     c.onclick=()=>cb(i);
     row.appendChild(c);
   });
-  sec.appendChild(row);home.appendChild(sec);
+  sec.appendChild(row);
+  home.appendChild(sec);
 }
 
 /* ================= PLAYER ================= */
@@ -332,7 +319,10 @@ function playFilme(f){
   player.style.display="flex";
 }
 function abrirSerie(nome){
-  serieAtual=dados.filter(d=>d.serie_nome===nome).sort((a,b)=>a.temporada-b.temporada||a.episodio-b.episodio);
+  serieAtual=dados
+    .filter(d=>d.serie_nome===nome)
+    .sort((a,b)=>a.temporada-b.temporada||a.episodio-b.episodio);
+
   tituloPlayer.textContent=nome;
   capaPlayer.src=serieAtual[0].capa_url;
   montarTemporadas();
@@ -360,6 +350,7 @@ function tocar(ep){
 /* ================= EVENTS ================= */
 video.addEventListener("play",()=>{
   registrar("play");
+  clearInterval(pingTimer);
   pingTimer=setInterval(()=>registrar("ping"),15000);
 });
 video.addEventListener("pause",()=>{
