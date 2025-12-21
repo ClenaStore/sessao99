@@ -7,11 +7,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <style>
-:root{
-  --accent:#e50914;
-}
 *{box-sizing:border-box}
-
 body{
   margin:0;
   background:#000;
@@ -24,7 +20,6 @@ header{
   top:0;
   z-index:100;
   background:#000;
-  padding-bottom:10px;
 }
 .header-top{
   display:flex;
@@ -37,7 +32,6 @@ header{
   font-weight:700;
 }
 .search input{
-  width:100%;
   padding:10px 16px;
   border-radius:999px;
   border:none;
@@ -48,7 +42,7 @@ header{
 .menu{
   display:flex;
   gap:22px;
-  padding:0 32px;
+  padding:0 32px 12px;
 }
 .menu a{
   color:#aaa;
@@ -62,9 +56,7 @@ header{
 section{
   padding:20px 32px;
 }
-section h2{
-  color:#fff;
-}
+section h2{color:#fff}
 .row{
   display:flex;
   gap:14px;
@@ -102,17 +94,24 @@ video{
   object-fit:cover;
 }
 
-/* GRADIENT OVERLAY */
-.overlay{
+/* UI LAYER */
+.ui{
   position:absolute;
   inset:0;
-  background:
-    linear-gradient(to top,
-      rgba(0,0,0,.95) 0%,
-      rgba(0,0,0,.6) 25%,
-      rgba(0,0,0,.15) 45%,
-      transparent 65%);
   pointer-events:none;
+}
+
+/* GRADIENT */
+.gradient{
+  position:absolute;
+  inset:0;
+  background:linear-gradient(
+    to top,
+    rgba(0,0,0,.85) 0%,
+    rgba(0,0,0,.55) 25%,
+    rgba(0,0,0,.15) 45%,
+    transparent 60%
+  );
 }
 
 /* TOP */
@@ -120,7 +119,7 @@ video{
   position:absolute;
   top:20px;
   left:20px;
-  z-index:10;
+  pointer-events:auto;
 }
 .top button{
   background:rgba(0,0,0,.6);
@@ -134,50 +133,39 @@ video{
 /* INFO */
 .info{
   position:absolute;
-  bottom:160px;
+  bottom:150px;
   left:40px;
   color:#fff;
   max-width:520px;
-  z-index:10;
 }
 .info h1{
-  font-size:32px;
   margin:0 0 6px;
+  font-size:32px;
 }
 .info p{
   margin:0;
   opacity:.85;
 }
 
-/* CONTROLS */
+/* SELECTS */
 .selects{
   position:absolute;
   bottom:80px;
   left:40px;
   display:none;
   gap:12px;
-  z-index:10;
-  background:rgba(0,0,0,.6);
-  backdrop-filter:blur(10px);
-  padding:14px 16px;
-  border-radius:14px;
-  transition:opacity .4s;
-}
-.selects.hidden{
-  opacity:0;
-  pointer-events:none;
 }
 .selects select{
-  background:rgba(255,255,255,.12);
+  background:rgba(255,255,255,.15);
   color:#fff;
-  border:1px solid rgba(255,255,255,.25);
+  border:1px solid rgba(255,255,255,.3);
   padding:10px 16px;
   border-radius:999px;
-  font-size:14px;
-  outline:none;
 }
-select option{
-  color:#000;
+
+/* HIDE UI */
+.hide-ui .ui{
+  display:none;
 }
 </style>
 </head>
@@ -187,9 +175,7 @@ select option{
 <header>
   <div class="header-top">
     <div class="logo">Mercado Play</div>
-    <div class="search">
-      <input id="search" placeholder="Buscar">
-    </div>
+    <input id="search" placeholder="Buscar">
   </div>
   <nav class="menu">
     <a class="active" data-filter="all">Para você</a>
@@ -203,20 +189,22 @@ select option{
 <div id="player">
   <video id="video" autoplay controls></video>
 
-  <div class="overlay"></div>
+  <div class="ui">
+    <div class="gradient"></div>
 
-  <div class="top">
-    <button onclick="fechar()">← Voltar</button>
-  </div>
+    <div class="top">
+      <button onclick="fechar()">← Voltar</button>
+    </div>
 
-  <div class="info">
-    <h1 id="titulo"></h1>
-    <p id="descricao"></p>
-  </div>
+    <div class="info">
+      <h1 id="titulo"></h1>
+      <p id="descricao"></p>
+    </div>
 
-  <div class="selects" id="selects">
-    <select id="selTemporada"></select>
-    <select id="selEpisodio"></select>
+    <div class="selects" id="selects">
+      <select id="selTemporada"></select>
+      <select id="selEpisodio"></select>
+    </div>
   </div>
 </div>
 
@@ -228,22 +216,21 @@ const supabaseClient = supabase.createClient(
 
 const home=document.getElementById("home");
 const video=document.getElementById("video");
+const player=document.getElementById("player");
 const titulo=document.getElementById("titulo");
 const descricao=document.getElementById("descricao");
 const selects=document.getElementById("selects");
 const selTemporada=document.getElementById("selTemporada");
 const selEpisodio=document.getElementById("selEpisodio");
-const player=document.getElementById("player");
 
-let dados=[], serieAtual=[], hideTimer;
+let dados=[], serieAtual=[], timer;
 
 /* LOAD */
-async function load(){
+(async()=>{
   const { data } = await supabaseClient.from("filmes").select("*").eq("ativo",true);
   dados=data||[];
   renderHome(dados);
-}
-load();
+})();
 
 /* HOME */
 function renderHome(list){
@@ -274,7 +261,7 @@ function playFilme(f){
   descricao.textContent="Filme";
   video.src=f.video_url;
   selects.style.display="none";
-  abrir();
+  abrirPlayer();
 }
 function abrirSerie(s){
   serieAtual=dados.filter(d=>d.serie_nome===s.serie_nome);
@@ -282,7 +269,7 @@ function abrirSerie(s){
   descricao.textContent="Série";
   montarTemporadas();
   selects.style.display="flex";
-  abrir();
+  abrirPlayer();
 }
 function montarTemporadas(){
   const t=[...new Set(serieAtual.map(e=>e.temporada))];
@@ -298,24 +285,28 @@ function montarEpisodios(){
 }
 function tocar(e){ video.src=e.video_url; video.play(); }
 
-function abrir(){
+/* UI CONTROL */
+function abrirPlayer(){
   player.style.display="block";
-  iniciarAutoHide();
+  player.classList.remove("hide-ui");
+  iniciarTimer();
 }
 function fechar(){
   video.pause(); video.src="";
   player.style.display="none";
 }
-
-/* AUTO HIDE */
-function iniciarAutoHide(){
-  clearTimeout(hideTimer);
-  selects.classList.remove("hidden");
-  hideTimer=setTimeout(()=>selects.classList.add("hidden"),30000);
+function iniciarTimer(){
+  clearTimeout(timer);
+  timer=setTimeout(()=>{
+    player.classList.add("hide-ui");
+  },30000);
 }
-video.addEventListener("pause",()=>selects.classList.remove("hidden"));
-video.addEventListener("play",iniciarAutoHide);
-player.addEventListener("mousemove",iniciarAutoHide);
+
+/* EVENTS */
+video.addEventListener("pause",()=>{
+  player.classList.remove("hide-ui");
+});
+video.addEventListener("play",iniciarTimer);
 </script>
 
 </body>
