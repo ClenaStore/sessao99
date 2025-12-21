@@ -153,17 +153,17 @@ let serieAtual = [];
 let episodioAtual = null;
 let pingTimer = null;
 
-/* ================= TRACKING CORE ================= */
+/* ================= TRACKING ================= */
 async function registrar(acao){
   if(!episodioAtual || !video.duration) return;
 
-  const now = new Date().toISOString();
   const played = Math.floor(video.currentTime);
   const duration = Math.floor(video.duration);
   const percent = Math.round((played / duration) * 100);
   const remaining = Math.max(duration - played, 0);
+  const now = new Date().toISOString();
 
-  /* HISTÓRICO */
+  /* HISTÓRICO (NUNCA APAGA) */
   await supabaseClient.from("rs_play_events").insert({
     user_id: USER_ID,
     content_id: episodioAtual.id,
@@ -177,7 +177,7 @@ async function registrar(acao){
     created_at: now
   });
 
-  /* PROGRESSO CONSOLIDADO */
+  /* PROGRESSO CONSOLIDADO (UPSERT) */
   await supabaseClient.from("rs_user_progress").upsert({
     user_id: USER_ID,
     content_id: episodioAtual.id,
@@ -188,29 +188,19 @@ async function registrar(acao){
     updated_at: now
   });
 
-  /* SESSÃO ONLINE */
+  /* SESSÃO ONLINE — SOMENTE PLAY/PING */
   if(acao === "play" || acao === "ping"){
     await supabaseClient.from("rs_sessions").upsert({
       user_id: USER_ID,
       content_id: episodioAtual.id,
       content_tipo: episodioAtual.tipo,
+      titulo: episodioAtual.titulo,
       serie_nome: episodioAtual.serie_nome,
-      temporada: episodioAtual.temporada || null,
-      episodio: episodioAtual.episodio || null,
-      started_at: now,
-      last_ping: now,
-      status: "playing",
-      user_agent: navigator.userAgent
+      last_ping: now
     });
   }
 
-  if(acao === "pause"){
-    await supabaseClient
-      .from("rs_sessions")
-      .update({ status:"paused", last_ping: now })
-      .eq("user_id", USER_ID);
-  }
-
+  /* REMOVE ONLINE SE PAROU */
   if(acao === "stop"){
     await supabaseClient
       .from("rs_sessions")
@@ -319,7 +309,7 @@ video.addEventListener("play",()=>{
 
 video.addEventListener("pause",()=>{
   clearInterval(pingTimer);
-  registrar("pause");
+  registrar("stop");
 });
 
 window.addEventListener("beforeunload",()=>{
