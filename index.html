@@ -38,7 +38,10 @@ header{
   top:0;
   z-index:100;
 }
-header h1{color:var(--accent);letter-spacing:1px}
+header h1{
+  color:var(--accent);
+  letter-spacing:1px;
+}
 header input{
   width:320px;
   padding:10px 16px;
@@ -103,19 +106,20 @@ header input{
 }
 
 /* SECTIONS */
-section{padding:36px 40px}
+section{
+  padding:36px 40px;
+}
 section h3{
   margin-bottom:16px;
   font-size:20px;
 }
 
+/* GRID / CARDS */
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
   gap:20px;
 }
-
-/* CARD */
 .card{
   background:var(--card);
   border-radius:12px;
@@ -173,7 +177,7 @@ select{
   border-radius:6px;
 }
 
-/* CLOSE */
+/* CLOSE PLAYER */
 #close{
   position:absolute;
   top:20px;left:20px;
@@ -195,6 +199,7 @@ select{
   display:none;
   align-items:center;
   justify-content:center;
+  z-index:6000;
 }
 #perfilBox{
   width:420px;
@@ -204,8 +209,14 @@ select{
   position:relative;
 }
 #perfilBox h3{margin-bottom:14px}
-#perfilBox div{margin-bottom:10px;color:#ccc}
-#perfilBox span{font-weight:600;color:#fff}
+#perfilBox div{
+  margin-bottom:10px;
+  color:#ccc;
+}
+#perfilBox span{
+  font-weight:600;
+  color:#fff;
+}
 .closePerfil{
   position:absolute;
   top:14px;right:16px;
@@ -272,7 +283,9 @@ select{
     <div>WhatsApp: <span id="pfWhats"></span></div>
     <div>Status: <span id="pfStatus"></span></div>
     <div>Trial: <span id="pfTrial"></span></div>
-    <button onclick="logout()" style="color:#ff6b6b;background:none;border:none;margin-top:14px">Sair</button>
+    <button onclick="logout()" style="color:#ff6b6b;background:none;border:none;margin-top:14px">
+      Sair
+    </button>
   </div>
 </div>
 
@@ -285,10 +298,18 @@ const sb = supabase.createClient(
 let dados=[], heroItem=null, usuario=null, serieAtual=[];
 
 (async()=>{
-  if(!localStorage.usuario){location.href="login.html";return;}
+  if(!localStorage.usuario){
+    location.href="login.html";
+    return;
+  }
+
   usuario=JSON.parse(localStorage.usuario);
 
-  const {data}=await sb.from("filmes").select("*").eq("ativo",true);
+  const {data}=await sb
+    .from("filmes")
+    .select("*")
+    .eq("ativo",true);
+
   dados=data||[];
 
   heroItem=dados.find(d=>d.destaque)||dados[0];
@@ -303,13 +324,20 @@ let dados=[], heroItem=null, usuario=null, serieAtual=[];
 function render(){
   gridFilmes.innerHTML="";
   gridSeries.innerHTML="";
-  dados.filter(d=>d.tipo==="filme").forEach(f=>gridFilmes.innerHTML+=card(f));
-  [...new Map(dados.filter(d=>d.tipo==="serie").map(s=>[s.serie_nome,s])).values()]
+
+  dados.filter(d=>d.tipo==="filme")
+    .forEach(f=>gridFilmes.innerHTML+=card(f));
+
+  [...new Map(
+    dados.filter(d=>d.tipo==="serie")
+      .map(s=>[s.serie_nome,s])
+  ).values()]
     .forEach(s=>gridSeries.innerHTML+=card(s));
 }
 
 function card(i){
-  return `<div class="card" onclick='abrirPlayer(${JSON.stringify(i)})'>
+  return `
+  <div class="card" onclick='abrirPlayer(${JSON.stringify(i)})'>
     <img src="${i.capa_url}">
     <div class="title">${i.titulo||i.serie_nome}</div>
   </div>`;
@@ -317,6 +345,7 @@ function card(i){
 
 function abrirPlayer(item){
   player.style.display="block";
+
   if(item.tipo==="filme"){
     video.src=item.video_url;
     pTitle.textContent=item.titulo;
@@ -325,7 +354,8 @@ function abrirPlayer(item){
     selTemporada.style.display="none";
     selEpisodio.style.display="none";
   }else{
-    serieAtual=dados.filter(d=>d.serie_nome===item.serie_nome)
+    serieAtual=dados
+      .filter(d=>d.serie_nome===item.serie_nome)
       .sort((a,b)=>a.temporada-b.temporada||a.episodio-b.episodio);
     montarSerie();
   }
@@ -334,6 +364,7 @@ function abrirPlayer(item){
 function montarSerie(){
   selTemporada.style.display="block";
   selEpisodio.style.display="block";
+
   const temps=[...new Set(serieAtual.map(e=>e.temporada))];
   selTemporada.innerHTML=temps.map(t=>`<option>${t}</option>`).join("");
   selTemporada.onchange=montarEpisodios;
@@ -367,7 +398,16 @@ function abrirPerfil(){
   pfTrial.textContent=usuario.trial_expires_at;
   perfil.style.display="flex";
 }
+
 function fecharPerfil(){perfil.style.display="none"}
+
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){
+    fecharPerfil();
+    fechar();
+  }
+});
+
 function logout(){
   localStorage.removeItem("usuario");
   location.href="login.html";
