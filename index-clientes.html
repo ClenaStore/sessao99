@@ -40,11 +40,7 @@ header{
   backdrop-filter:blur(10px);
   z-index:50;
 }
-.logo{
-  font-size:22px;
-  font-weight:800;
-  color:var(--accent);
-}
+.logo{font-size:22px;font-weight:800;color:var(--accent)}
 .search{flex:1;max-width:520px}
 .search input{
   width:100%;
@@ -65,7 +61,7 @@ header{
   cursor:pointer;
 }
 
-/* ================= NAV (MERCADO PLAY) ================= */
+/* ================= NAV ================= */
 .nav{
   margin-top:70px;
   padding:16px 28px 8px;
@@ -87,7 +83,7 @@ header{
   border-bottom:2px solid var(--accent);
 }
 
-/* ================= FILTERS (CHIPS) ================= */
+/* ================= FILTERS ================= */
 .filters{
   padding:14px 28px 18px;
   display:flex;
@@ -116,10 +112,7 @@ header{
   padding:24px 0 60px;
 }
 .section{margin-bottom:46px}
-.section h2{
-  margin:0 0 14px 28px;
-  font-size:22px;
-}
+.section h2{margin:0 0 14px 28px;font-size:22px}
 .row{
   display:flex;
   gap:16px;
@@ -130,7 +123,6 @@ header{
   min-width:180px;
   cursor:pointer;
   transition:.25s;
-  position:relative;
 }
 .card:hover{transform:scale(1.08)}
 .card img{
@@ -148,11 +140,7 @@ header{
   display:none;
   z-index:100;
 }
-#player video{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-}
+#player video{width:100%;height:100%;object-fit:cover}
 #homeBtn{
   position:absolute;
   top:20px;left:20px;
@@ -172,7 +160,6 @@ header{
   bottom:120px;
   display:none;
   gap:10px;
-  z-index:10;
 }
 #epControls button{
   background:rgba(0,0,0,.6);
@@ -199,46 +186,33 @@ header{
   bottom:120px;
   max-width:520px;
 }
-#info h1{margin:0 0 10px}
 #info p{color:var(--muted)}
 #info button{
   margin-top:16px;
-  padding:12px 22px;
+  padding:12px 26px;
   border:none;
+  border-radius:999px;
   font-weight:700;
   cursor:pointer;
 }
 
-/* ================= PERFIL ================= */
-#perfilModal{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.65);
-  backdrop-filter:blur(8px);
+/* ================= SERIES CONTROLS (MELHORADOS) ================= */
+.series-controls{
   display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:120;
+  gap:10px;
+  margin-top:14px;
 }
-#perfilBox{
-  width:420px;
-  background:#111;
-  border-radius:18px;
-  padding:26px;
-  position:relative;
-}
-#perfilClose{
-  position:absolute;
-  top:12px;right:14px;
+.series-controls select{
+  padding:10px 18px;
+  border-radius:999px;
+  background:rgba(0,0,0,.6);
+  color:#fff;
+  border:1px solid #444;
   cursor:pointer;
 }
-.perfil-item{margin-bottom:10px;color:#ccc}
-.perfil-footer{text-align:right}
-.perfil-footer button{
-  background:none;
-  border:none;
-  color:#ff6b6b;
-  cursor:pointer;
+.series-controls select:focus{
+  outline:none;
+  border-color:var(--accent);
 }
 </style>
 </head>
@@ -254,14 +228,12 @@ header{
 </header>
 
 <div class="nav">
-  <button class="active">Para você</button>
-  <button>Filmes</button>
-  <button>Séries</button>
-  <button>Infantil</button>
+  <button class="active" onclick="setTipo('all',this)">Para você</button>
+  <button onclick="setTipo('filme',this)">Filmes</button>
+  <button onclick="setTipo('serie',this)">Séries</button>
 </div>
 
 <div class="filters" id="filters"></div>
-
 <div id="home"></div>
 
 <!-- PLAYER -->
@@ -289,21 +261,7 @@ header{
   </div>
 </div>
 
-<!-- PERFIL -->
-<div id="perfilModal">
-  <div id="perfilBox">
-    <div id="perfilClose" onclick="fecharPerfil()">✕</div>
-    <h2>Meu Perfil</h2>
-    <div class="perfil-item" id="p_email"></div>
-    <div class="perfil-footer">
-      <button onclick="logout()">Sair</button>
-    </div>
-  </div>
-</div>
-
 <script>
-if(!localStorage.usuario) location.href="login.html";
-
 const sb = supabase.createClient(
  "https://dxkszikemntfusfyrzos.supabase.co",
  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
@@ -312,7 +270,6 @@ const sb = supabase.createClient(
 const home=document.getElementById("home");
 const filtersBox=document.getElementById("filters");
 const search=document.getElementById("search");
-
 const video=document.getElementById("video");
 const epControls=document.getElementById("epControls");
 const btnPrev=document.getElementById("btnPrev");
@@ -320,6 +277,15 @@ const btnNext=document.getElementById("btnNext");
 
 let dados=[], atual=null, serieAtual=[], indiceEp=0;
 let filtroGenero="Todos";
+let filtroTipo="all";
+
+/* NAV */
+function setTipo(tipo,btn){
+ filtroTipo=tipo;
+ document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
+ btn.classList.add("active");
+ renderHome();
+}
 
 /* LOAD */
 async function load(){
@@ -329,7 +295,7 @@ async function load(){
  renderHome();
 }
 
-/* FILTROS DINÂMICOS */
+/* FILTROS */
 function montarFiltros(){
  const generos=[...new Set(dados.map(d=>d.genero).filter(Boolean))];
  filtersBox.innerHTML="";
@@ -351,19 +317,15 @@ function renderHome(){
  home.innerHTML="";
  const termo=search.value.toLowerCase();
 
- const filmes=dados.filter(d=>
-   d.tipo==="filme" &&
-   (filtroGenero==="Todos"||d.genero===filtroGenero) &&
-   (d.titulo||"").toLowerCase().includes(termo)
- );
+ const filtrados=dados.filter(d=>{
+   if(filtroTipo!=="all" && d.tipo!==filtroTipo) return false;
+   if(filtroGenero!=="Todos" && d.genero!==filtroGenero) return false;
+   const nome=(d.titulo||d.serie_nome||"").toLowerCase();
+   return nome.includes(termo);
+ });
 
- const series=[...new Map(
-   dados.filter(d=>
-     d.tipo==="serie" &&
-     (filtroGenero==="Todos"||d.genero===filtroGenero) &&
-     (d.serie_nome||"").toLowerCase().includes(termo)
-   ).map(s=>[s.serie_nome,s])
- ).values()];
+ const filmes=filtrados.filter(d=>d.tipo==="filme");
+ const series=[...new Map(filtrados.filter(d=>d.tipo==="serie").map(s=>[s.serie_nome,s])).values()];
 
  if(filmes.length) renderSection("Filmes",filmes);
  if(series.length) renderSection("Séries",series);
@@ -389,7 +351,7 @@ function renderSection(t,itens){
 /* PLAYER */
 function abrir(item){
  atual=item;
- document.getElementById("player").style.display="block";
+ player.style.display="block";
  titulo.textContent=item.titulo||item.serie_nome;
  descricao.textContent=item.descricao||"";
 
@@ -409,9 +371,7 @@ function carregarVideo(url){
    const hls=new Hls();
    hls.loadSource(url);
    hls.attachMedia(video);
- }else{
-   video.src=url;
- }
+ }else video.src=url;
  video.play();
 }
 
@@ -419,17 +379,14 @@ function assistir(){video.play();}
 
 /* SERIES */
 function montarSerie(nome){
- serieAtual=dados
-   .filter(d=>d.serie_nome===nome)
-   .sort((a,b)=>a.temporada-b.temporada||a.episodio-b.episodio);
-
+ serieAtual=dados.filter(d=>d.serie_nome===nome)
+ .sort((a,b)=>a.temporada-b.temporada||a.episodio-b.episodio);
  const temps=[...new Set(serieAtual.map(e=>e.temporada))];
  selTemporada.innerHTML="";
  temps.forEach(t=>selTemporada.innerHTML+=`<option value="${t}">Temporada ${t}</option>`);
  selTemporada.onchange=montarEpisodios;
  montarEpisodios();
 }
-
 function montarEpisodios(){
  const t=+selTemporada.value;
  const eps=serieAtual.filter(e=>e.temporada===t);
@@ -438,7 +395,6 @@ function montarEpisodios(){
  selEpisodio.onchange=()=>trocarEpisodio(eps,selEpisodio.value);
  trocarEpisodio(eps,0);
 }
-
 function trocarEpisodio(eps,i){
  indiceEp=i;
  atual=eps[i];
@@ -456,37 +412,6 @@ btnNext.onclick=()=>trocarEpisodio(
  serieAtual.filter(e=>e.temporada==selTemporada.value),
  indiceEp+1
 );
-
-video.addEventListener("pause",()=>{
- if(atual?.tipo==="serie") epControls.style.display="flex";
-});
-video.addEventListener("play",()=>epControls.style.display="none");
-
-/* PERFIL */
-function abrirPerfil(){
- const u=JSON.parse(localStorage.usuario);
- p_email.textContent=u.email;
- perfilModal.style.display="flex";
-}
-function fecharPerfil(){perfilModal.style.display="none";}
-function logout(){
- localStorage.removeItem("usuario");
- location.href="login.html";
-}
-
-/* TECLADO */
-document.addEventListener("keydown",e=>{
- if(e.key==="ArrowLeft"&&btnPrev.style.display!=="none")btnPrev.click();
- if(e.key==="ArrowRight"&&btnNext.style.display!=="none")btnNext.click();
- if(e.key==="Enter") video.paused?video.play():video.pause();
-});
-
-/* FECHAR */
-function fecharPlayer(){
- video.pause();
- video.src="";
- document.getElementById("player").style.display="none";
-}
 
 search.oninput=renderHome;
 load();
