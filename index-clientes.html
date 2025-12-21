@@ -153,15 +153,15 @@ let serieAtual = [];
 let episodioAtual = null;
 let pingTimer = null;
 
-/* ================= TRACKING ================= */
 async function registrar(acao){
   if(!episodioAtual || !video.duration) return;
 
   const played = Math.floor(video.currentTime);
   const duration = Math.floor(video.duration);
   const percent = Math.round((played / duration) * 100);
+  const remaining = Math.max(duration - played, 0);
 
-  /* EVENTO (histórico, NUNCA some) */
+  /* HISTÓRICO */
   await supabaseClient.from("rs_play_events").insert({
     user_id: USER_ID,
     content_id: episodioAtual.id,
@@ -169,31 +169,43 @@ async function registrar(acao){
     tipo: episodioAtual.tipo,
     titulo: episodioAtual.titulo,
     serie_nome: episodioAtual.serie_nome,
-    temporada: episodioAtual.temporada,
-    episodio: episodioAtual.episodio,
     played_seconds: played,
     duration_seconds: duration,
-    progress_percent: percent,
-    user_agent: navigator.userAgent
+    progress_percent: percent
   });
 
-  /* STATUS DA SESSÃO */
-  let status = "playing";
-  if(acao === "pause") status = "paused";
-  if(acao === "stop" && percent >= 95) status = "finished";
-  if(acao === "stop" && percent < 95) status = "left";
-
-  await supabaseClient.from("rs_sessions").upsert({
+  /* PROGRESSO CONSOLIDADO */
+  await supabaseClient.from("rs_user_progress").upsert({
     user_id: USER_ID,
     content_id: episodioAtual.id,
-    content_tipo: episodioAtual.tipo,
-    serie_nome: episodioAtual.serie_nome,
-    status,
-    last_ping: new Date().toISOString()
-  },{
-    onConflict:"user_id"
+    titulo: episodioAtual.titulo,
+    tipo: episodioAtual.tipo,
+    max_progress: percent,
+    remaining_seconds: remaining,
+    updated_at: new Date().toISOString()
   });
+
+  /* SESSÃO ONLINE (SÓ SE PLAY/PING) */
+  if(acao === "play" || acao === "ping"){
+    await supabaseClient.from("rs_sessions").upsert({
+      user_id: USER_ID,
+      content_id: episodioAtual.id,
+      content_tipo: episodioAtual.tipo,
+      titulo: episodioAtual.titulo,
+      serie_nome: episodioAtual.serie_nome,
+      last_ping: new Date().toISOString()
+    });
+  }
+
+  /* REMOVE SESSÃO SE PAROU */
+  if(acao === "stop"){
+    await supabaseClient
+      .from("rs_sessions")
+      .delete()
+      .eq("user_id", USER_ID);
+  }
 }
+
 
 
 /* ================= LOAD ================= */
