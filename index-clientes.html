@@ -13,7 +13,6 @@
   --text:#fff;
   --muted:#b3b3b3;
   --accent:#e50914;
-  --green:#46d369;
 }
 *{box-sizing:border-box}
 body{
@@ -30,17 +29,24 @@ header{
   top:0;left:0;right:0;
   z-index:100;
   padding:18px 48px;
-  display:flex;
-  justify-content:space-between;
   background:linear-gradient(to bottom,rgba(0,0,0,.95),transparent);
 }
-.logo{font-size:26px;font-weight:900}
+.logo{
+  font-size:26px;
+  font-weight:900;
+}
 .logo span{color:var(--accent)}
 
 /* ================= HOME ================= */
-#home{padding-top:110px;padding-bottom:80px}
+#home{
+  padding-top:110px;
+  padding-bottom:80px;
+}
 .section{margin-bottom:46px}
-.section h2{margin:0 0 16px 48px;font-size:22px}
+.section h2{
+  margin:0 0 16px 48px;
+  font-size:22px;
+}
 .row{
   display:flex;
   gap:16px;
@@ -62,8 +68,8 @@ header{
 #details{
   position:fixed;
   inset:0;
-  z-index:200;
   background:#000;
+  z-index:200;
   display:none;
 }
 .details-bg video{
@@ -86,11 +92,15 @@ header{
   padding:140px 60px;
   max-width:640px;
 }
-.details-info h1{font-size:44px;margin:0}
-.details-info p{color:var(--muted);margin:16px 0}
-.meta{color:var(--green);margin-bottom:12px}
+.details-info h1{
+  font-size:44px;
+  margin:0 0 12px;
+}
+.details-info p{
+  color:var(--muted);
+}
 
-/* SELECTS DE SÉRIE */
+/* SERIES SELECT */
 .series-selects{
   display:none;
   gap:12px;
@@ -105,51 +115,59 @@ header{
 
 /* ACTIONS */
 .actions{
-  display:flex;
-  gap:12px;
   margin-top:20px;
 }
 .actions button{
   padding:12px 20px;
   font-weight:700;
-  cursor:pointer;
   border:none;
+  cursor:pointer;
 }
-.play{background:#fff;color:#000}
+.play{
+  background:#fff;
+  color:#000;
+}
 
-/* ================= PLAYER FULL ================= */
+/* ================= PLAYER ================= */
 #player{
   position:fixed;
   inset:0;
-  z-index:300;
   background:#000;
+  z-index:300;
   display:none;
 }
 #player video{
   width:100%;
   height:100%;
 }
-.player-overlay{
+
+/* PLAYER UI */
+.player-ui{
   position:absolute;
   inset:0;
   pointer-events:none;
+  transition:opacity .3s;
 }
-.player-ui{
-  pointer-events:auto;
+.player-ui.visible{
+  opacity:1;
+}
+.player-ui.hidden{
+  opacity:0;
+}
+.player-top{
   position:absolute;
-  bottom:40px;
-  left:40px;
+  top:30px;
+  left:30px;
+  pointer-events:auto;
 }
-.player-ui h2{margin:0 0 10px}
-.player-ui button{
-  padding:10px 18px;
+.player-top h2{
+  margin:0 0 10px;
+}
+.player-top button{
+  padding:8px 14px;
   font-weight:700;
   border:none;
   cursor:pointer;
-}
-.fade{
-  opacity:0;
-  transition:.5s;
 }
 
 /* MOBILE */
@@ -172,12 +190,11 @@ header{
   <div class="details-bg">
     <video id="previewVideo" muted autoplay loop playsinline></video>
   </div>
-  <div class="details-info" id="detailsInfo">
-    <div class="meta" id="detailsMeta"></div>
+
+  <div class="details-info">
     <h1 id="detailsTitulo"></h1>
     <p id="detailsDesc"></p>
 
-    <!-- SERIES SELECT -->
     <div class="series-selects" id="seriesSelects">
       <select id="selTemporada"></select>
       <select id="selEpisodio"></select>
@@ -193,8 +210,8 @@ header{
 <div id="player">
   <video id="playerVideo" controls></video>
 
-  <div class="player-overlay" id="playerOverlay">
-    <div class="player-ui" id="playerUI">
+  <div class="player-ui visible" id="playerUI">
+    <div class="player-top">
       <h2 id="playerTitulo"></h2>
       <button onclick="fecharPlayer()">⬅ Voltar</button>
     </div>
@@ -210,16 +227,16 @@ const supabaseClient = supabase.createClient(
 const home=document.getElementById("home");
 const previewVideo=document.getElementById("previewVideo");
 const details=document.getElementById("details");
-const detailsInfo=document.getElementById("detailsInfo");
-const seriesSelects=document.getElementById("seriesSelects");
-const selTemporada=document.getElementById("selTemporada");
-const selEpisodio=document.getElementById("selEpisodio");
 
 const player=document.getElementById("player");
 const playerVideo=document.getElementById("playerVideo");
 const playerUI=document.getElementById("playerUI");
 
-let dados=[],atual=null,serieAtual=[],hideTimer=null;
+const seriesSelects=document.getElementById("seriesSelects");
+const selTemporada=document.getElementById("selTemporada");
+const selEpisodio=document.getElementById("selEpisodio");
+
+let dados=[],atual=null,serieAtual=[];
 
 /* LOAD */
 async function load(){
@@ -259,8 +276,6 @@ function abrirDetails(item){
  details.style.display="block";
  document.getElementById("detailsTitulo").textContent=item.titulo||item.serie_nome;
  document.getElementById("detailsDesc").textContent=item.descricao||"";
- document.getElementById("detailsMeta").textContent=item.tipo==="serie"?"Série":"Filme";
-
  previewVideo.src=item.video_url;
  previewVideo.play().catch(()=>{});
 
@@ -296,27 +311,30 @@ function abrirPlayer(){
  details.style.display="none";
  player.style.display="block";
  playerVideo.src=atual.video_url;
- playerTitulo.textContent=atual.titulo||atual.serie_nome;
+ document.getElementById("playerTitulo").textContent=atual.titulo||atual.serie_nome;
  playerVideo.play();
- iniciarAutoHide();
+ esconderUI();
 }
 function fecharPlayer(){
  playerVideo.pause();
  player.style.display="none";
 }
 
-/* AUTO HIDE */
-function iniciarAutoHide(){
- clearTimeout(hideTimer);
- hideTimer=setTimeout(()=>{
-  playerUI.classList.add("fade");
- },30000);
+/* UI CONTROL */
+function esconderUI(){
+ playerUI.classList.remove("visible");
+ playerUI.classList.add("hidden");
 }
-playerVideo.addEventListener("pause",()=>{
- playerUI.classList.remove("fade");
- clearTimeout(hideTimer);
-});
-playerVideo.addEventListener("play",iniciarAutoHide);
+function mostrarUI(){
+ playerUI.classList.remove("hidden");
+ playerUI.classList.add("visible");
+}
+
+/* EVENTS */
+playerVideo.addEventListener("play",esconderUI);
+playerVideo.addEventListener("pause",mostrarUI);
+player.addEventListener("mousemove",mostrarUI);
+player.addEventListener("click",mostrarUI);
 
 load();
 </script>
