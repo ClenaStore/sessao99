@@ -655,13 +655,10 @@ function formatarData(data){
 }
 
 function abrirPlayer(item){
+  const dados = encodeURIComponent(JSON.stringify(item));
+  location.href = `player.html?item=${dados}`;
+}
 
-  // ⛔ PARA O PREVIEW DO HERO (FUNDO)
-  const heroVideo = document.getElementById("heroVideo");
-  if (heroVideo) {
-    heroVideo.pause();
-    heroVideo.src = "";
-  }
 
   // 🎬 ABRE PLAYER FULLSCREEN
   document.getElementById("perfilBtn").style.display = "none";
