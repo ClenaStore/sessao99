@@ -8,15 +8,30 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-*{box-sizing:border-box;font-family:Inter,Arial,sans-serif}
+*{
+  box-sizing:border-box;
+  font-family:Inter,Arial,sans-serif;
+}
+
+:root{
+  --bg:#0f0f10;
+  --surface:#1b1b1e;
+  --card:#232326;
+  --accent:#e50914;
+  --text:#ffffff;
+  --muted:#b5b5b5;
+  --border:#2b2b2b;
+}
+
 body{
   margin:0;
   height:100vh;
   overflow:hidden;
-  color:#fff;
+  background:var(--bg);
+  color:var(--text);
 }
 
-/* VIDEO FUNDO */
+/* 🎬 VÍDEO FUNDO */
 video{
   position:fixed;
   inset:0;
@@ -25,43 +40,83 @@ video{
   object-fit:cover;
   z-index:-2;
 }
+
+/* GRADIENTE OVERLAY (IGUAL HERO) */
 .bg{
   position:fixed;
   inset:0;
-  background:linear-gradient(90deg,rgba(0,0,0,.85) 40%,rgba(0,0,0,.4));
+  background:
+    linear-gradient(
+      to right,
+      rgba(0,0,0,.88) 0%,
+      rgba(0,0,0,.75) 40%,
+      rgba(0,0,0,.45) 60%,
+      rgba(0,0,0,.15) 75%,
+      rgba(0,0,0,0) 90%
+    ),
+    linear-gradient(
+      to top,
+      rgba(0,0,0,.65) 0%,
+      rgba(0,0,0,.35) 35%,
+      rgba(0,0,0,0) 65%
+    );
   z-index:-1;
 }
 
-/* CONTAINER */
+/* 🧱 CONTAINER LOGIN */
 .container{
   position:absolute;
   top:50%;
   left:50%;
   transform:translate(-50%,-50%);
   width:420px;
-  background:rgba(0,0,0,.55);
-  backdrop-filter:blur(12px);
-  padding:40px;
+  max-width:92%;
+  background:rgba(27,27,30,.75);
+  backdrop-filter:blur(14px);
+  padding:42px;
   border-radius:18px;
+  box-shadow:0 40px 80px rgba(0,0,0,.6);
+}
+
+/* 🧠 TÍTULO */
+h1{
+  margin:0 0 30px;
+  font-size:38px;
+  font-weight:800;
+  letter-spacing:.5px;
+}
+h1 span{
+  color:var(--accent);
 }
 
 /* FORM */
-h1{margin:0 0 30px;font-size:38px}
-h1 span{color:#a855f7}
+.group{
+  margin-bottom:22px;
+}
 
-.group{margin-bottom:22px}
-label{font-size:14px;color:#cbd5f5;margin-bottom:6px;display:block}
+label{
+  font-size:14px;
+  color:var(--muted);
+  margin-bottom:6px;
+  display:block;
+}
 
 input{
   width:100%;
   padding:14px 16px;
   font-size:15px;
   border-radius:12px;
-  border:1px solid rgba(255,255,255,.15);
-  background:rgba(0,0,0,.4);
-  color:#fff;
+  border:1px solid var(--border);
+  background:rgba(0,0,0,.45);
+  color:var(--text);
+  outline:none;
 }
 
+input:focus{
+  border-color:var(--accent);
+}
+
+/* 🔴 BOTÃO */
 .btn{
   margin-top:10px;
   width:100%;
@@ -69,27 +124,35 @@ input{
   font-size:16px;
   border:none;
   border-radius:14px;
-  background:linear-gradient(135deg,#7c3aed,#ec4899);
+  background:var(--accent);
   color:white;
   font-weight:700;
   cursor:pointer;
   position:relative;
+  transition:.25s;
 }
+
+.btn:hover{
+  filter:brightness(1.05);
+}
+
 .btn.loading{
   pointer-events:none;
   opacity:.85;
 }
+
 .btn.loading::after{
   content:"Aguarde...";
   position:absolute;
   inset:0;
-  background:linear-gradient(135deg,#7c3aed,#ec4899);
+  background:var(--accent);
   display:flex;
   align-items:center;
   justify-content:center;
   border-radius:14px;
 }
 
+/* LINKS */
 .link{
   margin-top:18px;
   text-align:center;
@@ -99,13 +162,15 @@ input{
   text-decoration:underline;
 }
 
+/* MENSAGEM */
 .msg{
   margin-top:14px;
   min-height:18px;
   color:#facc15;
+  font-size:14px;
 }
 
-/* MODAL */
+/* 🪟 MODAL CADASTRO */
 .modal{
   position:fixed;
   inset:0;
@@ -113,13 +178,36 @@ input{
   display:none;
   align-items:center;
   justify-content:center;
+  z-index:50;
 }
+
 .modal-box{
   width:420px;
-  background:#0b0b0b;
+  max-width:92%;
+  background:var(--surface);
   padding:34px;
   border-radius:18px;
+  box-shadow:0 30px 60px rgba(0,0,0,.6);
 }
+
+.modal-box h2{
+  margin-top:0;
+  margin-bottom:22px;
+  font-size:26px;
+  color:var(--text);
+}
+
+/* MOBILE */
+@media(max-width:480px){
+  .container{
+    padding:32px 26px;
+  }
+
+  h1{
+    font-size:30px;
+  }
+}
+
 </style>
 </head>
 
