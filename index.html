@@ -4,18 +4,27 @@
 <meta charset="UTF-8">
 <title>Mercado Play</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <style>
-*{box-sizing:border-box}
-body{
-  margin:0;
-  background:#000;
-  font-family:Inter,Arial,sans-serif;
-  color:#fff;
+:root{
+  --bg:#000;
+  --panel:#0b0b0b;
+  --text:#fff;
+  --muted:#aaa;
+  --accent:#fff;
 }
 
-/* GATE */
+*{box-sizing:border-box}
+html,body{
+  margin:0;
+  background:var(--bg);
+  font-family:Inter,Arial,sans-serif;
+  color:var(--text);
+}
+
+/* ===== GATE ===== */
 #gate{
   position:fixed;
   inset:0;
@@ -26,81 +35,94 @@ body{
   flex-direction:column;
   z-index:20000;
 }
-#gate.hidden{display:none}
 #gate h1{margin:0 0 10px}
 #gate p{opacity:.7;max-width:420px;text-align:center}
 
-/* HEADER */
+/* ===== HEADER ===== */
 header{
   position:sticky;
   top:0;
   z-index:100;
-  background:#000;
+  background:linear-gradient(to bottom,#000 80%,transparent);
 }
 .header-top{
   display:flex;
   align-items:center;
   gap:24px;
-  padding:14px 32px;
+  padding:16px 36px;
 }
-.logo{color:#fff;font-size:20px;font-weight:700}
+.logo{
+  font-size:22px;
+  font-weight:800;
+}
 .search input{
-  padding:10px 16px;
+  padding:10px 18px;
   border-radius:999px;
   border:none;
   outline:none;
+  background:#111;
+  color:#fff;
 }
 
-/* MENU */
+/* ===== MENU ===== */
 .menu{
   display:flex;
-  gap:22px;
-  padding:0 32px 6px;
+  gap:26px;
+  padding:0 36px 12px;
 }
-.menu a{color:#aaa;cursor:pointer}
+.menu a{
+  color:var(--muted);
+  cursor:pointer;
+  font-weight:500;
+}
 .menu a.active{color:#fff}
 
-/* CATEGORIAS */
+/* ===== CATEGORIAS ===== */
 .categorias{
   display:none;
   gap:10px;
-  padding:0 32px 12px;
+  padding:0 36px 16px;
   flex-wrap:wrap;
 }
 .categorias button{
   background:#111;
   color:#fff;
   border:1px solid #333;
-  padding:6px 14px;
+  padding:6px 16px;
   border-radius:999px;
   cursor:pointer;
-  font-size:13px;
 }
 .categorias button.active{
   background:#fff;
   color:#000;
 }
 
-/* HOME */
-section{padding:20px 32px}
-section h2{color:#fff}
+/* ===== HOME ===== */
+section{padding:24px 36px}
+section h2{margin:0 0 12px}
 .row{
   display:flex;
   gap:14px;
   overflow-x:auto;
 }
 .row::-webkit-scrollbar{display:none}
-.card{min-width:160px;cursor:pointer}
+.card{
+  min-width:170px;
+  cursor:pointer;
+}
 .card img{
   width:100%;
-  height:240px;
+  height:255px;
   object-fit:cover;
-  border-radius:8px;
-  transition:.3s;
+  border-radius:10px;
+  transition:.35s;
 }
-.card:hover img{transform:scale(1.05)}
+.card:hover img{
+  transform:scale(1.08);
+  box-shadow:0 20px 40px rgba(0,0,0,.8);
+}
 
-/* PLAYER */
+/* ===== PLAYER ===== */
 #player{
   position:fixed;
   inset:0;
@@ -114,82 +136,94 @@ section h2{color:#fff}
   object-fit:cover;
 }
 
-/* OVERLAY + UI */
-.overlay{position:absolute;inset:0;pointer-events:none}
-.ui{position:absolute;inset:0;pointer-events:none;color:#fff}
-
-/* GRADIENT */
+/* ===== OVERLAY ===== */
+.overlay{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+}
 .gradient{
   position:absolute;
   inset:0;
   background:linear-gradient(
     to top,
-    rgba(0,0,0,.9) 0%,
-    rgba(0,0,0,.6) 25%,
-    rgba(0,0,0,.25) 45%,
-    transparent 65%
+    rgba(0,0,0,.95) 0%,
+    rgba(0,0,0,.7) 30%,
+    rgba(0,0,0,.35) 55%,
+    transparent 70%
   );
 }
 
+/* ===== UI ===== */
+.ui{
+  position:absolute;
+  inset:0;
+  color:#fff;
+  pointer-events:none;
+}
+
 /* TOP */
-.top{position:absolute;top:20px;left:20px;pointer-events:auto}
+.top{
+  position:absolute;
+  top:24px;
+  left:24px;
+  pointer-events:auto;
+}
 .top button{
   background:rgba(0,0,0,.6);
-  color:#fff;
   border:none;
   padding:10px 18px;
   border-radius:999px;
+  color:#fff;
   cursor:pointer;
 }
 
 /* INFO */
 .info{
   position:absolute;
-  bottom:170px;
-  left:40px;
-  max-width:520px;
+  bottom:190px;
+  left:46px;
+  max-width:560px;
 }
-.info h1{margin:0 0 6px;font-size:32px}
-.info p{margin:0;opacity:.85}
+.info h1{font-size:34px;margin:0}
+.info p{opacity:.8;margin:6px 0 0}
 
 /* ACTIONS */
 .actions{
   position:absolute;
-  bottom:120px;
-  left:40px;
-  display:flex;
-  gap:14px;
+  bottom:135px;
+  left:46px;
   pointer-events:auto;
 }
 .actions button{
-  padding:10px 18px;
+  padding:12px 26px;
   border-radius:999px;
   border:none;
+  font-size:15px;
   cursor:pointer;
 }
 .actions .play{
   background:#fff;
   color:#000;
-  font-weight:600;
+  font-weight:700;
 }
 
 /* SELECTS */
 .selects{
   position:absolute;
-  bottom:70px;
-  left:40px;
+  bottom:80px;
+  left:46px;
   display:none;
   gap:12px;
   pointer-events:auto;
 }
 .selects select{
   background:rgba(255,255,255,.15);
+  border:1px solid rgba(255,255,255,.35);
   color:#fff;
-  border:1px solid rgba(255,255,255,.3);
   padding:10px 16px;
   border-radius:999px;
 }
-select option{color:#000}
 
 /* HIDE UI */
 .hide-ui .overlay,
@@ -199,10 +233,9 @@ select option{color:#000}
 
 <body>
 
-<!-- GATE -->
 <div id="gate">
   <h1>Mercado Play</h1>
-  <p>Verificando seu acesso...</p>
+  <p>Verificando seu acesso…</p>
 </div>
 
 <header>
@@ -228,6 +261,7 @@ select option{color:#000}
 <!-- PLAYER -->
 <div id="player">
   <video id="video" autoplay></video>
+
   <div class="overlay"><div class="gradient"></div></div>
 
   <div class="ui">
@@ -258,42 +292,27 @@ const sb = supabase.createClient(
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-/* ================= AUTH / TRIAL ================= */
-(async function verificarAcesso(){
-  const session = localStorage.getItem("session_user");
-  if(!session){
-    window.location.href="login.html";
-    return;
-  }
+/* ================= AUTH ================= */
+(async()=>{
+  const session=localStorage.getItem("session_user");
+  if(!session){location.href="login.html";return;}
+  const u=JSON.parse(session);
 
-  const user = JSON.parse(session);
-
-  const { data, error } = await sb
+  const {data}=await sb
     .from("usuarios")
-    .select("status, trial_expires_at")
-    .eq("id", user.id)
+    .select("status,trial_expires_at")
+    .eq("id",u.id)
     .single();
 
-  if(error || !data){
-    bloquear("Não foi possível validar sua conta.");
+  if(!data || (data.status==="pendente" && new Date()>new Date(data.trial_expires_at))){
+    document.getElementById("gate").innerHTML=
+      "<h1>Acesso bloqueado</h1><p>Seu teste expirou.</p>";
     return;
   }
 
-  const agora = new Date();
-  const expira = new Date(data.trial_expires_at);
-
-  if(data.status==="ativo" || (data.status==="pendente" && agora<=expira)){
-    document.getElementById("gate").classList.add("hidden");
-    carregarCatalogo();
-  }else{
-    bloquear("Seu período de teste gratuito expirou. Entre em contato para liberar o acesso.");
-  }
+  document.getElementById("gate").style.display="none";
+  carregar();
 })();
-
-function bloquear(msg){
-  const g=document.getElementById("gate");
-  g.innerHTML=`<h1>Acesso bloqueado</h1><p>${msg}</p>`;
-}
 
 /* ================= CATÁLOGO ================= */
 const home=document.getElementById("home");
@@ -302,15 +321,42 @@ const categoriasBox=document.getElementById("categorias");
 
 let dados=[],serieAtual=[],filtroTipo="all",filtroCategoria="all";
 
-async function carregarCatalogo(){
-  const { data } = await sb.from("filmes").select("*").eq("ativo",true);
+async function carregar(){
+  const {data}=await sb.from("filmes").select("*").eq("ativo",true);
   dados=data||[];
-  aplicarFiltros();
+  aplicar();
 }
 
-/* (todo o restante do JS de catálogo, player, filtros e UI permanece exatamente como você já tinha — não foi removido nada) */
+function aplicar(){
+  let l=[...dados];
+  if(filtroTipo!=="all") l=l.filter(i=>i.tipo===filtroTipo);
+  if(filtroCategoria!=="all") l=l.filter(i=>i.categoria===filtroCategoria);
+  render(l);
+}
 
-/* --- PLAYER / FILTROS / UI --- */
+function render(list){
+  home.innerHTML="";
+  const filmes=list.filter(i=>i.tipo==="filme");
+  const series=[...new Map(list.filter(i=>i.tipo==="serie").map(s=>[s.serie_nome,s])).values()];
+  if(filmes.length) sec("Filmes",filmes,playFilme);
+  if(series.length) sec("Séries",series,abrirSerie);
+}
+
+function sec(t,it,cb){
+  const s=document.createElement("section");
+  s.innerHTML=`<h2>${t}</h2>`;
+  const r=document.createElement("div");r.className="row";
+  it.forEach(i=>{
+    const c=document.createElement("div");
+    c.className="card";
+    c.innerHTML=`<img src="${i.capa_url}">`;
+    c.onclick=()=>cb(i);
+    r.appendChild(c);
+  });
+  s.appendChild(r);home.appendChild(s);
+}
+
+/* ================= PLAYER ================= */
 const player=document.getElementById("player");
 const video=document.getElementById("video");
 const titulo=document.getElementById("titulo");
@@ -321,7 +367,68 @@ const selEpisodio=document.getElementById("selEpisodio");
 
 let hideTimer=null;
 
-/* (o restante do código é idêntico ao que você enviou) */
+function playFilme(f){
+  titulo.textContent=f.titulo;
+  descricao.textContent="Filme";
+  selects.style.display="none";
+  tocar(f);
+  abrirPlayer();
+}
+function abrirSerie(s){
+  serieAtual=dados.filter(d=>d.serie_nome===s.serie_nome);
+  titulo.textContent=s.serie_nome;
+  descricao.textContent="Série";
+  montarTemporadas();
+  selects.style.display="flex";
+  abrirPlayer();
+}
+function montarTemporadas(){
+  const t=[...new Set(serieAtual.map(e=>e.temporada))];
+  selTemporada.innerHTML=t.map(x=>`<option>Temporada ${x}</option>`).join("");
+  montarEpisodios();
+  selTemporada.onchange=montarEpisodios;
+}
+function montarEpisodios(){
+  const eps=serieAtual.filter(e=>e.temporada==selTemporada.value.replace("Temporada ",""));
+  selEpisodio.innerHTML=eps.map((e,i)=>`<option value="${i}">Episódio ${e.episodio}</option>`).join("");
+  tocar(eps[0]);
+  selEpisodio.onchange=()=>tocar(eps[selEpisodio.value]);
+}
+function tocar(e){
+  video.src=e.video_url;
+  video.play();
+}
+function abrirPlayer(){
+  player.style.display="block";
+  video.controls=true;
+}
+function fechar(){
+  video.pause();
+  player.style.display="none";
+}
+function assistirAgora(){
+  player.classList.add("hide-ui");
+  video.controls=false;
+}
+
+/* CONTROLES */
+video.addEventListener("pause",()=>{
+  player.classList.remove("hide-ui");
+  video.controls=true;
+});
+video.addEventListener("play",()=>{
+  clearTimeout(hideTimer);
+  hideTimer=setTimeout(()=>{
+    if(!video.paused){
+      player.classList.add("hide-ui");
+      video.controls=false;
+    }
+  },30000);
+});
+document.addEventListener("keydown",e=>{
+  if(e.code==="Space"){e.preventDefault();video.paused?video.play():video.pause();}
+  if(e.code==="Escape") fechar();
+});
 </script>
 
 </body>
