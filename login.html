@@ -2,69 +2,233 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Teste UI</title>
+<title>Login | Sessão 99</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
 <style>
+*{box-sizing:border-box}
 body{
   margin:0;
   height:100vh;
-  background:#000;
+  font-family:Inter,Arial,sans-serif;
   color:#fff;
-  font-family:Arial;
   display:flex;
   align-items:center;
   justify-content:center;
+  overflow:hidden;
 }
-.container{width:360px}
-input,button{
+
+/* VIDEO FUNDO */
+#bgVideo{
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  z-index:-2;
+}
+#bgOverlay{
+  position:fixed;
+  inset:0;
+  background:linear-gradient(to right,rgba(0,0,0,.9) 40%,rgba(0,0,0,.5));
+  z-index:-1;
+}
+
+/* CONTAINER */
+.container{
+  width:420px;
+  background:rgba(0,0,0,.55);
+  padding:36px;
+  border-radius:16px;
+  backdrop-filter:blur(10px);
+}
+
+h1{
+  font-size:40px;
+  margin:0 0 26px;
+}
+h1 span{color:#a855f7}
+
+label{
+  display:block;
+  margin-bottom:6px;
+  font-size:14px;
+}
+
+input{
   width:100%;
   padding:14px;
-  margin-bottom:12px;
-  background:#111;
+  margin-bottom:16px;
+  border-radius:10px;
   border:1px solid #333;
+  background:#0b0b0b;
   color:#fff;
 }
-button{background:#7c3aed;font-weight:bold}
-.link{text-align:center;cursor:pointer;color:#ccc}
+
+button{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  background:linear-gradient(90deg,#7c3aed,#ec4899);
+  color:#fff;
+  font-size:16px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.link{
+  margin-top:16px;
+  text-align:center;
+  cursor:pointer;
+  text-decoration:underline;
+  color:#ddd;
+}
+
+.msg{
+  margin-top:14px;
+  color:#facc15;
+  min-height:18px;
+}
+
+/* MODAL */
 .modal{
-  position:fixed;inset:0;
-  background:rgba(0,0,0,.8);
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.85);
   display:none;
   align-items:center;
   justify-content:center;
 }
-.box{background:#111;padding:20px;width:360px}
+.modal-box{
+  width:420px;
+  background:#0b0b0b;
+  padding:30px;
+  border-radius:16px;
+}
+.modal-box h2{margin-top:0}
 </style>
 </head>
+
 <body>
 
+<!-- VIDEO FUNDO -->
+<video id="bgVideo" autoplay muted loop playsinline>
+  <source src="SEU_VIDEO_AQUI.mp4" type="video/mp4">
+</video>
+<div id="bgOverlay"></div>
+
 <div class="container">
-  <h2>Login</h2>
-  <input placeholder="Email">
-  <input placeholder="Senha">
-  <button onclick="alert('Clique OK')">Entrar</button>
-  <div class="link" onclick="openModal()">Ainda não tenho conta</div>
+  <h1>Sessão <span>99</span></h1>
+
+  <label>Email</label>
+  <input id="email" type="email">
+
+  <label>Senha</label>
+  <input id="senha" type="password">
+
+  <button id="btnLogin">Entrar</button>
+
+  <div class="link" id="abrirCadastro">Ainda não tenho uma conta</div>
+
+  <div class="msg" id="msg"></div>
 </div>
 
-<div class="modal" id="modal" onclick="closeModal(event)">
-  <div class="box">
-    <h3>Cadastro</h3>
-    <input placeholder="Email">
-    <input placeholder="Senha">
-    <button onclick="alert('Cadastro OK')">Cadastrar</button>
-    <div class="link" onclick="closeModal()">Cancelar</div>
+<!-- CADASTRO -->
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <h2>Criar conta</h2>
+
+    <input id="c_email" placeholder="Email">
+    <input id="c_cpf" placeholder="CPF">
+    <input id="c_whats" placeholder="WhatsApp">
+    <input id="c_senha" type="password" placeholder="Senha">
+    <input id="c_confirma" type="password" placeholder="Confirmar senha">
+
+    <button id="btnCadastro">Cadastrar</button>
+    <div class="link" id="fecharCadastro">Cancelar</div>
   </div>
 </div>
 
 <script>
-function openModal(){
-  document.getElementById("modal").style.display="flex";
-}
-function closeModal(e){
-  if(!e || e.target.id==="modal"){
-    document.getElementById("modal").style.display="none";
+/* SUPABASE */
+const supabase = supabase.createClient(
+  "https://dxkszikemntfusfyrzos.supabase.co",
+  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+);
+
+/* ELEMENTOS */
+const modal = document.getElementById("modal");
+const msg = document.getElementById("msg");
+
+/* MODAL */
+abrirCadastro.onclick = ()=> modal.style.display="flex";
+fecharCadastro.onclick = ()=> modal.style.display="none";
+modal.onclick = e=>{ if(e.target===modal) modal.style.display="none"; };
+
+/* LOGIN */
+btnLogin.onclick = async ()=>{
+  msg.textContent="";
+
+  const e = email.value.trim();
+  const s = senha.value;
+
+  if(!e || !s){
+    msg.textContent="Preencha email e senha";
+    return;
   }
-}
+
+  const { data, error } = await supabase
+    .from("usuarios")
+    .select("*")
+    .eq("email", e)
+    .eq("senha", s)
+    .single();
+
+  if(error || !data){
+    msg.textContent="Usuário ou senha inválidos";
+    return;
+  }
+
+  const agora = new Date();
+  const expira = new Date(data.trial_expires_at);
+
+  if(data.status==="aprovado" || agora <= expira){
+    localStorage.usuario = JSON.stringify(data);
+    window.location.href = "index.html";
+  }else{
+    msg.textContent="Seu teste expirou. Aguarde aprovação.";
+  }
+};
+
+/* CADASTRO */
+btnCadastro.onclick = async ()=>{
+  if(c_senha.value !== c_confirma.value){
+    alert("Senhas não conferem");
+    return;
+  }
+
+  const trial = new Date(Date.now() + 86400000);
+
+  const { error } = await supabase.from("usuarios").insert({
+    email: c_email.value.trim(),
+    cpf: c_cpf.value.trim(),
+    whatsapp: c_whats.value.trim(),
+    senha: c_senha.value,
+    status: "pendente",
+    trial_expires_at: trial.toISOString()
+  });
+
+  if(error){
+    alert("Erro ao cadastrar. Email ou CPF já existe.");
+    return;
+  }
+
+  alert("Cadastro criado! Você tem 1 dia de teste.");
+  modal.style.display="none";
+};
 </script>
 
 </body>
