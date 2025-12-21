@@ -54,7 +54,8 @@ header{
   width:42px;height:42px;
   border-radius:50%;
   background:#222;
-  border:none;color:#fff;
+  border:none;
+  color:#fff;
   cursor:pointer;
 }
 
@@ -67,8 +68,11 @@ header{
   border-bottom:1px solid #222;
 }
 .nav button{
-  background:none;border:none;color:#aaa;
-  font-size:16px;cursor:pointer;
+  background:none;
+  border:none;
+  color:#aaa;
+  font-size:16px;
+  cursor:pointer;
 }
 .nav button.active{color:#fff;font-weight:700}
 
@@ -119,16 +123,6 @@ header{
   border-radius:10px;
 }
 
-/* TOP 10 */
-.top{position:relative}
-.rank{
-  position:absolute;
-  bottom:-10px;
-  left:-10px;
-  font-size:64px;
-  font-weight:900;
-}
-
 /* PLAYER */
 #player{
   position:fixed;
@@ -141,39 +135,15 @@ header{
   width:100%;
   height:100%;
   object-fit:cover;
-}
-
-/* HOME BTN */
-#homeBtn{
-  position:absolute;
-  top:20px;left:20px;
-  padding:10px 14px;
-  font-size:20px;
-  background:rgba(0,0,0,.6);
-  color:#fff;border:none;
-  cursor:pointer;
-  z-index:10;
-}
-
-/* EP CONTROLS */
-#epControls{
-  position:absolute;
-  right:20px;
-  bottom:120px;
-  display:none;
-  gap:10px;
-}
-#epControls button{
-  background:rgba(0,0,0,.6);
-  border:none;
-  color:#fff;
-  font-size:22px;
-  padding:10px 14px;
   cursor:pointer;
 }
 
 /* OVERLAY */
-#overlay{position:absolute;inset:0}
+#overlay{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+}
 #overlay::before{
   content:"";
   position:absolute;
@@ -187,6 +157,7 @@ header{
   left:40px;
   bottom:120px;
   max-width:520px;
+  pointer-events:auto;
 }
 #info p{color:var(--muted)}
 #info button{
@@ -210,11 +181,27 @@ header{
   border:1px solid #333;
 }
 
+/* CONTROLES EP */
+#epControls{
+  position:absolute;
+  right:20px;
+  bottom:120px;
+  display:none;
+  gap:10px;
+}
+#epControls button{
+  background:rgba(0,0,0,.6);
+  border:none;
+  color:#fff;
+  font-size:22px;
+  padding:10px 14px;
+  cursor:pointer;
+}
+
 /* HIDE UI */
 .hide-ui #overlay,
 .hide-ui #info,
-.hide-ui #epControls,
-.hide-ui #homeBtn{
+.hide-ui #epControls{
   opacity:0;
   pointer-events:none;
 }
@@ -252,7 +239,6 @@ header{
 
 <div id="player">
   <video id="video" playsinline></video>
-  <button id="homeBtn" onclick="fecharPlayer()">🏠</button>
 
   <div id="epControls">
     <button onclick="anterior()">⏮</button>
@@ -282,12 +268,9 @@ const sb=supabase.createClient(
  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-const top10=document.getElementById("top10");
-const lista=document.getElementById("lista");
 const video=document.getElementById("video");
-
 let dados=[], atual=null, serieAtual=[], indiceEp=0;
-let hideTimer=null, hls=null;
+let hls=null;
 let filtroTipo="all", filtroGenero="Todos";
 
 /* LOAD */
@@ -300,21 +283,26 @@ async function load(){
 }
 load();
 
+/* PLAYER CLICK = PLAY / PAUSE */
+video.onclick=()=>{
+ video.paused ? video.play() : video.pause();
+};
+
+/* PAUSE = MOSTRA UI | PLAY = ESCONDE */
+video.addEventListener("pause",()=>document.body.classList.remove("hide-ui"));
+video.addEventListener("play",()=>document.body.classList.add("hide-ui"));
+
 /* FILTROS */
 function montarFiltros(){
- const generos=[...new Set(dados.map(d=>d.genero).filter(Boolean))];
  const box=document.getElementById("filters");
+ const generos=[...new Set(dados.map(d=>d.genero).filter(Boolean))];
  box.innerHTML="";
  ["Todos",...generos].forEach(g=>{
-   const b=document.createElement("button");
-   b.textContent=g;
-   if(g===filtroGenero) b.classList.add("active");
-   b.onclick=()=>{
-     filtroGenero=g;
-     montarFiltros();
-     renderHome();
-   };
-   box.appendChild(b);
+  const b=document.createElement("button");
+  b.textContent=g;
+  if(g===filtroGenero) b.classList.add("active");
+  b.onclick=()=>{filtroGenero=g; montarFiltros(); renderHome();}
+  box.appendChild(b);
  });
 }
 
@@ -328,35 +316,35 @@ function setTipo(t,btn){
 
 /* HOME */
 function renderHome(){
+ const lista=document.getElementById("lista");
  lista.innerHTML="";
- const termo=document.getElementById("search").value.toLowerCase();
-
  dados.filter(d=>{
-   if(filtroTipo!=="all" && d.tipo!==filtroTipo) return false;
-   if(filtroGenero!=="Todos" && d.genero!==filtroGenero) return false;
-   return (d.titulo||d.serie_nome||"").toLowerCase().includes(termo);
+  if(filtroTipo!=="all" && d.tipo!==filtroTipo) return false;
+  if(filtroGenero!=="Todos" && d.genero!==filtroGenero) return false;
+  return true;
  }).forEach(d=>{
-   const c=document.createElement("div");
-   c.className="card";
-   c.innerHTML=`<img src="${d.capa_url}">`;
-   c.onclick=()=>abrir(d);
-   lista.appendChild(c);
+  const c=document.createElement("div");
+  c.className="card";
+  c.innerHTML=`<img src="${d.capa_url}">`;
+  c.onclick=()=>abrir(d);
+  lista.appendChild(c);
  });
 }
 
 /* TOP 10 */
 function renderTop(){
- top10.innerHTML="";
+ const top=document.getElementById("top10");
+ top.innerHTML="";
  dados.slice(0,10).forEach((f,i)=>{
-   const c=document.createElement("div");
-   c.className="card top";
-   c.innerHTML=`<img src="${f.capa_url}"><div class="rank">${i+1}</div>`;
-   c.onclick=()=>abrir(f);
-   top10.appendChild(c);
+  const c=document.createElement("div");
+  c.className="card";
+  c.innerHTML=`<img src="${f.capa_url}">`;
+  c.onclick=()=>abrir(f);
+  top.appendChild(c);
  });
 }
 
-/* PLAYER */
+/* ABRIR */
 function abrir(item){
  atual=item;
  document.getElementById("player").style.display="block";
@@ -365,41 +353,29 @@ function abrir(item){
  descricao.textContent=item.descricao||"";
 
  if(item.tipo==="serie"){
-   montarSerie(item.serie_nome);
-   document.getElementById("seriesControls").style.display="flex";
+  montarSerie(item.serie_nome);
+  document.getElementById("seriesControls").style.display="flex";
  }else{
-   document.getElementById("seriesControls").style.display="none";
+  document.getElementById("seriesControls").style.display="none";
  }
 
- carregarVideo(item.video_url);
- iniciarTimer();
+ carregar(item.video_url);
 }
 
-function carregarVideo(url){
+/* VIDEO */
+function carregar(url){
  if(hls){hls.destroy();hls=null;}
  if(url.endsWith(".m3u8") && Hls.isSupported()){
-   hls=new Hls();hls.loadSource(url);hls.attachMedia(video);
+  hls=new Hls(); hls.loadSource(url); hls.attachMedia(video);
  }else video.src=url;
  video.play();
 }
 
 /* ASSISTIR */
 function assistir(){
+ video.play();
  document.body.classList.add("hide-ui");
- iniciarTimer();
 }
-
-/* TIMER */
-function iniciarTimer(){
- clearTimeout(hideTimer);
- hideTimer=setTimeout(()=>document.body.classList.add("hide-ui"),30000);
-}
-
-/* UI EVENTS */
-video.addEventListener("pause",()=>document.body.classList.remove("hide-ui"));
-document.getElementById("player").addEventListener("mousemove",()=>{
- document.body.classList.remove("hide-ui"); iniciarTimer();
-});
 
 /* SERIES */
 function montarSerie(nome){
@@ -420,7 +396,7 @@ function montarEpisodios(){
 }
 function trocar(eps,i){
  indiceEp=i;
- carregarVideo(eps[i].video_url);
+ carregar(eps[i].video_url);
 }
 
 /* CONTROLES */
@@ -432,12 +408,6 @@ document.addEventListener("keydown",e=>{
  if(e.key==="ArrowLeft") anterior();
  if(e.key==="ArrowRight") proximo();
 });
-
-function fecharPlayer(){
- video.pause();
- document.getElementById("player").style.display="none";
- document.body.classList.remove("hide-ui");
-}
 
 function logout(){
  localStorage.removeItem("usuario");
