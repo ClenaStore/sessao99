@@ -34,11 +34,7 @@ header{
   align-items:center;
   background:linear-gradient(to bottom,rgba(0,0,0,.95),rgba(0,0,0,.6),transparent);
 }
-.logo{
-  font-size:26px;
-  font-weight:900;
-  letter-spacing:1px;
-}
+.logo{font-size:26px;font-weight:900}
 .logo span{color:var(--accent)}
 header input{
   width:320px;
@@ -50,17 +46,9 @@ header input{
 }
 
 /* ================= HOME ================= */
-#home{
-  padding-top:110px;
-  padding-bottom:80px;
-}
-.section{
-  margin-bottom:46px;
-}
-.section h2{
-  margin:0 0 16px 48px;
-  font-size:22px;
-}
+#home{padding-top:110px;padding-bottom:80px}
+.section{margin-bottom:46px}
+.section h2{margin:0 0 16px 48px;font-size:22px}
 .row{
   display:flex;
   gap:16px;
@@ -82,9 +70,26 @@ header input{
   object-fit:cover;
   border-radius:4px;
 }
-.card:hover{
-  transform:scale(1.12);
-  z-index:10;
+.card:hover{transform:scale(1.12);z-index:10}
+
+/* PROGRESS BAR */
+.progress{
+  position:absolute;
+  bottom:0;
+  left:0;
+  height:4px;
+  background:var(--accent);
+}
+
+/* BADGE */
+.badge{
+  position:absolute;
+  top:8px;
+  left:8px;
+  background:rgba(0,0,0,.7);
+  padding:4px 8px;
+  border-radius:4px;
+  font-size:12px;
 }
 
 /* ================= DETAILS ================= */
@@ -96,20 +101,8 @@ header input{
   background:#000;
   overflow:hidden;
 }
-
-/* BACKGROUND VIDEO */
-.details-bg{
-  position:absolute;
-  inset:0;
-  z-index:1;
-}
-.details-bg video{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-}
-
-/* DEGRADÊ CINEMATOGRÁFICO */
+.details-bg{position:absolute;inset:0;z-index:1}
+.details-bg video{width:100%;height:100%;object-fit:cover}
 .details-bg::after{
   content:"";
   position:absolute;
@@ -118,51 +111,28 @@ header input{
     linear-gradient(to right,rgba(0,0,0,.95) 18%,rgba(0,0,0,.6) 48%,transparent),
     linear-gradient(to top,rgba(0,0,0,.95) 12%,transparent 50%);
 }
-
-/* INFO */
 .details-info{
   position:relative;
   z-index:2;
   padding:130px 60px;
   max-width:640px;
 }
-.details-info h1{
-  font-size:44px;
-  margin:0 0 16px;
-}
-.meta{
-  color:var(--green);
-  font-weight:600;
-  margin-bottom:14px;
-}
-.details-info p{
-  color:var(--muted);
-  line-height:1.5;
-  font-size:16px;
-  margin-bottom:24px;
-}
+.details-info h1{font-size:44px;margin:0 0 16px}
+.details-info p{color:var(--muted);line-height:1.5;margin-bottom:24px}
+.meta{color:var(--green);margin-bottom:12px}
 
 /* ACTIONS */
-.actions{
-  display:flex;
-  gap:14px;
-}
+.actions{display:flex;gap:14px}
 .actions button{
-  border:none;
-  cursor:pointer;
   padding:14px 26px;
   font-size:16px;
   font-weight:700;
   border-radius:6px;
+  border:none;
+  cursor:pointer;
 }
-.play{
-  background:#fff;
-  color:#000;
-}
-.sound{
-  background:rgba(255,255,255,.15);
-  color:#fff;
-}
+.play{background:#fff;color:#000}
+.sound{background:rgba(255,255,255,.15);color:#fff}
 
 /* CLOSE */
 .close{
@@ -176,21 +146,7 @@ header input{
   font-size:22px;
   padding:8px 14px;
   border-radius:999px;
-  cursor:pointer;
 }
-
-/* ================= RECOMENDAÇÕES ================= */
-.reco{
-  position:absolute;
-  bottom:0;
-  left:0;
-  right:0;
-  padding-bottom:40px;
-}
-.reco h2{
-  margin:0 0 12px 48px;
-}
-.reco .row{padding:0 48px}
 
 /* ================= PLAYER FULL ================= */
 #player{
@@ -200,25 +156,15 @@ header input{
   z-index:300;
   background:#000;
 }
-#player video{
-  width:100%;
-  height:100%;
-}
-#player .close{
-  top:20px;
-  left:20px;
-}
+#player video{width:100%;height:100%}
 
 /* MOBILE */
 @media(max-width:900px){
   header{padding:14px 20px}
-  .details-info{
-    padding:110px 20px;
-    max-width:100%;
-  }
+  .details-info{padding:110px 20px}
   .details-info h1{font-size:30px}
   .row{padding:0 20px}
-  .section h2,.reco h2{margin-left:20px}
+  .section h2{margin-left:20px}
 }
 </style>
 </head>
@@ -227,7 +173,7 @@ header input{
 
 <header>
   <div class="logo">SESSÃO <span>99</span></div>
-  <input id="search" placeholder="Buscar filmes ou séries">
+  <input id="search" placeholder="Buscar">
 </header>
 
 <div id="home"></div>
@@ -235,146 +181,128 @@ header input{
 <!-- DETAILS -->
 <div id="details">
   <button class="close" onclick="fecharDetails()">⬅</button>
-
   <div class="details-bg">
-    <video id="previewVideo" muted autoplay loop playsinline preload="auto"></video>
+    <video id="previewVideo" muted autoplay loop playsinline></video>
   </div>
-
   <div class="details-info">
     <div class="meta" id="detailsMeta"></div>
     <h1 id="detailsTitulo"></h1>
     <p id="detailsDesc"></p>
-
     <div class="actions">
       <button class="play" onclick="abrirPlayer()">▶ Assistir</button>
       <button class="sound" onclick="toggleSom()">🔊 Som</button>
     </div>
   </div>
-
-  <div class="reco">
-    <h2>Recomendações</h2>
-    <div class="row" id="recoRow"></div>
-  </div>
 </div>
 
-<!-- PLAYER FULL -->
+<!-- PLAYER -->
 <div id="player">
   <button class="close" onclick="fecharPlayer()">⬅</button>
   <video id="playerVideo" controls></video>
 </div>
 
 <script>
-/* ================= SUPABASE ================= */
-const supabaseClient = supabase.createClient(
-  "https://dxkszikemntfusfyrzos.supabase.co",
-  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+const supabaseClient=supabase.createClient(
+ "https://dxkszikemntfusfyrzos.supabase.co",
+ "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
 const home=document.getElementById("home");
-const details=document.getElementById("details");
 const previewVideo=document.getElementById("previewVideo");
 const player=document.getElementById("player");
 const playerVideo=document.getElementById("playerVideo");
 
-let dados=[], atual=null, somAtivo=false;
+let dados=[],atual=null,somAtivo=false,progress={};
 
 /* LOAD */
 async function load(){
-  const {data}=await supabaseClient
-    .from("filmes")
-    .select("*")
-    .eq("ativo",true);
-
-  dados=data||[];
-  renderHome(dados);
+ const saved=localStorage.getItem("progress");
+ progress=saved?JSON.parse(saved):{};
+ const {data}=await supabaseClient.from("filmes").select("*").eq("ativo",true);
+ dados=data||[];
+ renderHome();
 }
 
 /* HOME */
-function renderHome(list){
-  home.innerHTML="";
-  const filmes=list.filter(i=>i.tipo==="filme");
-  const series=[...new Map(
-    list.filter(i=>i.tipo==="serie").map(s=>[s.serie_nome,s])
-  ).values()];
-
-  renderSection("Filmes",filmes);
-  renderSection("Séries",series);
+function renderHome(){
+ home.innerHTML="";
+ renderSection("Continuar Assistindo",dados.filter(d=>progress[d.id]));
+ renderSection("Filmes",dados.filter(d=>d.tipo==="filme"));
+ renderSection("Séries",[...new Map(dados.filter(d=>d.tipo==="serie").map(s=>[s.serie_nome,s])).values()]);
 }
 
 function renderSection(titulo,itens){
-  if(!itens.length)return;
-  const sec=document.createElement("div");
-  sec.className="section";
-  sec.innerHTML=`<h2>${titulo}</h2>`;
-  const row=document.createElement("div");
-  row.className="row";
-
-  itens.forEach(i=>{
-    const c=document.createElement("div");
-    c.className="card";
-    c.innerHTML=`<img src="${i.capa_url}">`;
-    c.onclick=()=>abrirDetails(i);
-    row.appendChild(c);
-  });
-
-  sec.appendChild(row);
-  home.appendChild(sec);
+ if(!itens.length)return;
+ const sec=document.createElement("div");
+ sec.className="section";
+ sec.innerHTML=`<h2>${titulo}</h2>`;
+ const row=document.createElement("div");
+ row.className="row";
+ itens.forEach(i=>{
+  const c=document.createElement("div");
+  c.className="card";
+  let p=progress[i.id]||0;
+  c.innerHTML=`
+    <img src="${i.capa_url}">
+    ${p?`<div class="progress" style="width:${p}%"></div>`:""}
+    ${p?`<div class="badge">Continuar</div>`:""}
+  `;
+  c.onclick=()=>abrirDetails(i);
+  row.appendChild(c);
+ });
+ sec.appendChild(row);
+ home.appendChild(sec);
 }
 
 /* DETAILS */
 function abrirDetails(item){
-  atual=item;
-  document.getElementById("detailsTitulo").textContent=item.titulo||item.serie_nome;
-  document.getElementById("detailsDesc").textContent=item.descricao||"Sem descrição disponível.";
-  document.getElementById("detailsMeta").textContent=item.tipo==="serie"?"Série":"Filme";
-
-  previewVideo.pause();
-  previewVideo.src=item.video_url;
-  previewVideo.muted=true;
-  previewVideo.load();
-  previewVideo.play().catch(()=>{});
-
-  renderRecomendacoes(item);
-  details.style.display="block";
+ atual=item;
+ document.getElementById("detailsTitulo").textContent=item.titulo||item.serie_nome;
+ document.getElementById("detailsDesc").textContent=item.descricao||"";
+ document.getElementById("detailsMeta").textContent=item.tipo==="serie"?"Série":"Filme";
+ previewVideo.src=item.video_url;
+ previewVideo.muted=true;
+ previewVideo.play().catch(()=>{});
+ details.style.display="block";
 }
 
-/* RECOMENDAÇÕES */
-function renderRecomendacoes(item){
-  const row=document.getElementById("recoRow");
-  row.innerHTML="";
-  dados.filter(d=>d.id!==item.id).slice(0,10).forEach(r=>{
-    const c=document.createElement("div");
-    c.className="card";
-    c.innerHTML=`<img src="${r.capa_url}">`;
-    c.onclick=()=>abrirDetails(r);
-    row.appendChild(c);
-  });
-}
-
-/* SOM PREVIEW */
+/* SOM */
 function toggleSom(){
-  somAtivo=!somAtivo;
-  previewVideo.muted=!somAtivo;
+ somAtivo=!somAtivo;
+ previewVideo.muted=!somAtivo;
 }
 
-/* PLAYER FULL */
+/* PLAYER */
 function abrirPlayer(){
-  playerVideo.src=atual.video_url;
-  player.style.display="block";
-  playerVideo.play();
+ playerVideo.src=atual.video_url;
+ player.style.display="block";
+ playerVideo.currentTime=(progress[atual.id]||0)/100*playerVideo.duration||0;
+ playerVideo.play();
 }
+playerVideo.addEventListener("timeupdate",()=>{
+ if(!atual||!playerVideo.duration)return;
+ progress[atual.id]=(playerVideo.currentTime/playerVideo.duration*100)|0;
+ localStorage.setItem("progress",JSON.stringify(progress));
+});
+
+/* CLOSE */
 function fecharPlayer(){
-  playerVideo.pause();
-  playerVideo.src="";
-  player.style.display="none";
+ playerVideo.pause();
+ player.style.display="none";
+ renderHome();
+}
+function fecharDetails(){
+ previewVideo.pause();
+ details.style.display="none";
 }
 
-/* FECHAR DETAILS */
-function fecharDetails(){
-  previewVideo.pause();
-  previewVideo.src="";
-  details.style.display="none";
-}
+/* TECLADO */
+document.addEventListener("keydown",e=>{
+ if(e.key==="Escape"){
+  fecharPlayer();
+  fecharDetails();
+ }
+});
 
 load();
 </script>
