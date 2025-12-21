@@ -348,7 +348,7 @@ let serieAtual=[], filmeAtual=null;
   heroItem = dados.find(d=>d.destaque) || dados[0];
   hero.style.backgroundImage=`url(${heroItem.capa_url})`;
   heroTitle.textContent=heroItem.titulo||heroItem.serie_nome;
-  heroMeta.textContent=`${heroItem.genero} • ${heroItem.tipo}`;
+  heroMeta.textContent = `${heroItem.categoria} • ${heroItem.tipo}`;
   heroDesc.textContent=heroItem.descricao||"";
 
   render();
@@ -470,7 +470,7 @@ function abrirPlayer(item){
   if(item.tipo==="filme"){
     video.src=item.video_url;
     pTitle.textContent=item.titulo;
-    pMeta.textContent=`${item.genero} • Filme`;
+    pMeta.textContent = `${item.categoria} • Filme`;
     pDesc.textContent=item.descricao||"";
     serieControls.style.display="none";
   }else{
