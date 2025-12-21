@@ -8,11 +8,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-*{
-  box-sizing:border-box;
-  font-family:Inter,Arial,sans-serif;
-}
-
+*{box-sizing:border-box;font-family:Inter,Arial,sans-serif}
 body{
   margin:0;
   height:100vh;
@@ -20,7 +16,7 @@ body{
   color:#fff;
 }
 
-/* ===== VIDEO FUNDO ===== */
+/* VIDEO FUNDO */
 video{
   position:fixed;
   inset:0;
@@ -29,7 +25,6 @@ video{
   object-fit:cover;
   z-index:-2;
 }
-
 .bg{
   position:fixed;
   inset:0;
@@ -37,7 +32,7 @@ video{
   z-index:-1;
 }
 
-/* ===== CONTAINER ===== */
+/* CONTAINER */
 .container{
   position:absolute;
   top:50%;
@@ -50,23 +45,12 @@ video{
   border-radius:18px;
 }
 
-/* ===== FORM ===== */
-h1{
-  margin:0 0 30px;
-  font-size:38px;
-}
+/* FORM */
+h1{margin:0 0 30px;font-size:38px}
 h1 span{color:#a855f7}
 
-.group{
-  margin-bottom:22px;
-}
-
-label{
-  font-size:14px;
-  color:#cbd5f5;
-  margin-bottom:6px;
-  display:block;
-}
+.group{margin-bottom:22px}
+label{font-size:14px;color:#cbd5f5;margin-bottom:6px;display:block}
 
 input{
   width:100%;
@@ -78,12 +62,6 @@ input{
   color:#fff;
 }
 
-input:focus{
-  outline:none;
-  border-color:#a855f7;
-}
-
-/* ===== BOTÃO ===== */
 .btn{
   margin-top:10px;
   width:100%;
@@ -97,8 +75,6 @@ input:focus{
   cursor:pointer;
   position:relative;
 }
-
-/* Loading local (IGUAL AO INDEX QUE FUNCIONA) */
 .btn.loading{
   pointer-events:none;
   opacity:.85;
@@ -114,7 +90,6 @@ input:focus{
   border-radius:14px;
 }
 
-/* ===== LINKS ===== */
 .link{
   margin-top:18px;
   text-align:center;
@@ -130,7 +105,7 @@ input:focus{
   color:#facc15;
 }
 
-/* ===== MODAL ===== */
+/* MODAL */
 .modal{
   position:fixed;
   inset:0;
@@ -139,20 +114,17 @@ input:focus{
   align-items:center;
   justify-content:center;
 }
-
 .modal-box{
   width:420px;
   background:#0b0b0b;
   padding:34px;
   border-radius:18px;
 }
-.modal-box h2{margin-top:0}
 </style>
 </head>
 
 <body>
 
-<!-- VIDEO -->
 <video autoplay muted loop playsinline>
   <source src="SEU_VIDEO.mp4" type="video/mp4">
 </video>
@@ -169,7 +141,7 @@ input:focus{
 
   <div class="group">
     <label>Senha</label>
-    <input id="senha" type="password">
+    <input id="senha" type="password" minlength="4">
   </div>
 
   <button id="btnLogin" class="btn">Entrar</button>
@@ -199,13 +171,13 @@ input:focus{
     </div>
 
     <div class="group">
-      <label>Senha</label>
-      <input id="c_senha" type="password">
+      <label>Senha (mín. 4 caracteres)</label>
+      <input id="c_senha" type="password" minlength="4">
     </div>
 
     <div class="group">
       <label>Confirmar senha</label>
-      <input id="c_confirma" type="password">
+      <input id="c_confirma" type="password" minlength="4">
     </div>
 
     <button id="btnCadastro" class="btn">Cadastrar</button>
@@ -229,11 +201,11 @@ btnLogin.onclick = async () => {
   msg.textContent = "";
   btnLogin.classList.add("loading");
 
-  const e = email.value.trim();
-  const s = senha.value;
+  const emailVal = email.value.trim();
+  const senhaVal = senha.value; // ❗ NÃO usar trim aqui
 
-  if(!e || !s){
-    msg.textContent = "Preencha email e senha";
+  if(!emailVal || senhaVal.length < 4){
+    msg.textContent = "Senha deve ter no mínimo 4 caracteres";
     btnLogin.classList.remove("loading");
     return;
   }
@@ -241,13 +213,12 @@ btnLogin.onclick = async () => {
   const { data } = await sb
     .from("usuarios")
     .select("*")
-    .eq("email", e)
-    .eq("senha", s)
+    .eq("email", emailVal)
     .single();
 
   btnLogin.classList.remove("loading");
 
-  if(!data){
+  if(!data || data.senha !== senhaVal){
     msg.textContent = "Usuário ou senha inválidos";
     return;
   }
@@ -267,6 +238,12 @@ btnLogin.onclick = async () => {
 btnCadastro.onclick = async () => {
   btnCadastro.classList.add("loading");
 
+  if(c_senha.value.length < 4){
+    alert("A senha deve ter no mínimo 4 caracteres");
+    btnCadastro.classList.remove("loading");
+    return;
+  }
+
   if(c_senha.value !== c_confirma.value){
     alert("Senhas não conferem");
     btnCadastro.classList.remove("loading");
@@ -279,7 +256,7 @@ btnCadastro.onclick = async () => {
     email: c_email.value.trim(),
     cpf: c_cpf.value.trim(),
     whatsapp: c_whats.value.trim(),
-    senha: c_senha.value,
+    senha: c_senha.value, // ❗ salva exatamente como digitado
     status: "pendente",
     trial_expires_at: trial.toISOString()
   });
