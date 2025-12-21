@@ -450,6 +450,25 @@ html, body {
   }
 }
 
+#buscaMobile{
+  width:100%;
+  padding:14px 18px;
+  margin-bottom:16px;
+  border-radius:999px;
+  border:none;
+  outline:none;
+  font-size:16px;
+  background:#2b2b2b;
+  color:#fff;
+  display:none;
+}
+
+/* mobile */
+@media (max-width:768px){
+  #buscaMobile{
+    display:block;
+  }
+}
 
 </style>
 </head>
@@ -466,9 +485,16 @@ html, body {
 
 <!-- 🔍 RESULTADOS DA BUSCA -->
 <div id="searchResults">
+  <input
+    id="buscaMobile"
+    placeholder="Buscar filmes e séries..."
+    autocomplete="off"
+  >
+
   <h4>Resultados</h4>
   <div class="search-grid" id="searchGrid"></div>
 </div>
+
 
 
 <div class="hero" id="hero">
@@ -624,12 +650,13 @@ render();
 
 const searchResults = document.getElementById("searchResults");
 const searchGrid = document.getElementById("searchGrid");
+const buscaMobile = document.getElementById("buscaMobile");
 
-busca.oninput = () => {
-  const q = busca.value.trim().toLowerCase();
+buscaMobile.oninput = () => {
+  const q = buscaMobile.value.trim().toLowerCase();
 
-  if(q.length < 2){
-    searchResults.style.display = "none";
+  if (q.length < 2) {
+    searchGrid.innerHTML = "";
     return;
   }
 
@@ -641,10 +668,10 @@ busca.oninput = () => {
 
   searchGrid.innerHTML = "";
 
-  if(!resultados.length){
+  if (!resultados.length) {
     searchGrid.innerHTML =
       "<p style='color:#777'>Nenhum resultado encontrado</p>";
-  }else{
+  } else {
     resultados.forEach(r => {
       searchGrid.innerHTML += `
         <div class="search-card" onclick='abrirPlayer(${JSON.stringify(r)})'>
@@ -654,6 +681,8 @@ busca.oninput = () => {
       `;
     });
   }
+};
+
 
   searchResults.style.display = "block";
 };
@@ -919,8 +948,15 @@ if ("serviceWorker" in navigator) {
 }
 function toggleSearch(){
   searchResults.style.display = "block";
-  busca.focus();
+
+  if(window.innerWidth <= 768){
+    buscaMobile.value = "";
+    buscaMobile.focus();
+  }else{
+    busca.focus();
+  }
 }
+
 
 
 </script>
