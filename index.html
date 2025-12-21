@@ -328,19 +328,37 @@ function setFiltro(f){
   render(busca.value.toLowerCase());
 }
 
-function render(buscaTxt=""){
-  grid.innerHTML="";
-  dados
-    .filter(d=>filtro==="todos"||d.tipo===filtro)
-    .filter(d=>JSON.stringify(d).toLowerCase().includes(buscaTxt))
-    .forEach(i=>{
-      grid.innerHTML+=`
-      <div class="card" onclick='abrirPlayer(${JSON.stringify(i)})'>
-        <img src="${i.capa_url}">
-        <div class="title">${i.titulo||i.serie_nome}</div>
-      </div>`;
-    });
+function render(buscaTxt = "") {
+  grid.innerHTML = "";
+
+  // FILMES (normal)
+  if (filtro === "todos" || filtro === "filme") {
+    dados
+      .filter(d => d.tipo === "filme")
+      .filter(d => JSON.stringify(d).toLowerCase().includes(buscaTxt))
+      .forEach(f => {
+        grid.innerHTML += card(f);
+      });
+  }
+
+  // SÉRIES (AGRUPADAS POR serie_nome)
+  if (filtro === "todos" || filtro === "serie") {
+    const seriesAgrupadas = [
+      ...new Map(
+        dados
+          .filter(d => d.tipo === "serie")
+          .map(s => [s.serie_nome, s])
+      ).values()
+    ];
+
+    seriesAgrupadas
+      .filter(s => JSON.stringify(s).toLowerCase().includes(buscaTxt))
+      .forEach(s => {
+        grid.innerHTML += card(s);
+      });
+  }
 }
+
 
 function abrirPlayer(item){
   document.getElementById("perfilBtn").style.display="none";
