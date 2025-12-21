@@ -62,13 +62,12 @@ main{
   font-size:20px;
 }
 
-/* GRID FILMES */
+/* GRID */
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
   gap:18px;
 }
-
 .card{
   background:var(--card);
   border-radius:14px;
@@ -92,6 +91,27 @@ main{
 .badge{
   margin-top:6px;
   font-size:12px;
+}
+
+/* ONLINE USERS */
+.online-list{
+  display:grid;
+  gap:10px;
+}
+.online-user{
+  background:var(--card);
+  padding:12px 16px;
+  border-radius:12px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:14px;
+}
+.dot{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:#22c55e;
 }
 </style>
 </head>
@@ -118,6 +138,12 @@ main{
     <span>📅 Visualizações semana</span>
     <strong id="kpiSemana">0</strong>
   </div>
+</div>
+
+<!-- ONLINE USERS -->
+<div class="section">
+  <h2>🟢 Usuários online agora</h2>
+  <div class="online-list" id="listaOnline"></div>
 </div>
 
 <!-- MOMENTO -->
@@ -148,28 +174,37 @@ const sb = supabase.createClient(
 
 async function loadDashboard(){
   const agora = new Date();
-  const hoje = new Date();
-  hoje.setHours(0,0,0,0);
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const semana = new Date(); semana.setDate(semana.getDate()-7);
 
-  const semana = new Date();
-  semana.setDate(semana.getDate()-7);
-
-  /* ASSISTINDO AGORA */
+  /* ONLINE */
   const { data: online } = await sb
     .from("assistindo_agora")
-    .select("*")
+    .select("usuario_id, filme_id, last_ping")
     .gte("last_ping", new Date(Date.now()-30000).toISOString());
 
   kpiOnline.textContent = online.length;
 
+  listaOnline.innerHTML = "";
+  online.forEach(o=>{
+    listaOnline.innerHTML += `
+      <div class="online-user">
+        <div>Usuário: ${o.usuario_id.slice(0,8)}...</div>
+        <div class="dot"></div>
+      </div>
+    `;
+  });
+
   /* VISUALIZAÇÕES */
-  const { data: vis } = await sb.from("visualizacoes").select("filme_id, created_at");
+  const { data: vis } = await sb
+    .from("visualizacoes")
+    .select("filme_id, created_at");
 
-  const hojeCount = vis.filter(v=>new Date(v.created_at)>=hoje).length;
-  const semanaCount = vis.filter(v=>new Date(v.created_at)>=semana).length;
+  kpiHoje.textContent =
+    vis.filter(v=>new Date(v.created_at)>=hoje).length;
 
-  kpiHoje.textContent = hojeCount;
-  kpiSemana.textContent = semanaCount;
+  kpiSemana.textContent =
+    vis.filter(v=>new Date(v.created_at)>=semana).length;
 
   /* FILMES */
   const { data: filmes } = await sb.from("filmes").select("*");
@@ -184,23 +219,19 @@ async function loadDashboard(){
       .slice(0,10)
       .map(([id,total])=>{
         const f=filmes.find(x=>x.id===id);
-        return { ...f, total };
-      });
+        return f ? { ...f, total } : null;
+      }).filter(Boolean);
   }
 
-  const topAgoraList = buildTop(
-    vis.filter(v=>new Date(v.created_at)>=new Date(Date.now()-30*60000))
+  render(topAgora,
+    buildTop(vis.filter(v=>new Date(v.created_at)>=new Date(Date.now()-30*60000)))
   );
-  const topDiaList = buildTop(
-    vis.filter(v=>new Date(v.created_at)>=hoje)
+  render(topDia,
+    buildTop(vis.filter(v=>new Date(v.created_at)>=hoje))
   );
-  const topSemanaList = buildTop(
-    vis.filter(v=>new Date(v.created_at)>=semana)
+  render(topSemana,
+    buildTop(vis.filter(v=>new Date(v.created_at)>=semana))
   );
-
-  render(topAgora, topAgoraList);
-  render(topDia, topDiaList);
-  render(topSemana, topSemanaList);
 }
 
 function render(container, list){
