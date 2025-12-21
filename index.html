@@ -84,6 +84,8 @@ header input{
     linear-gradient(to right,rgba(0,0,0,.85) 35%,transparent 65%),
     linear-gradient(to top,#0f0f10 15%,transparent 60%);
 }
+
+
 .hero-content{
   position:relative;
   max-width:560px;
@@ -270,12 +272,33 @@ section{padding:20px 14px}
 </header>
 
 <div class="hero" id="hero">
+
+  <!-- 🎬 PREVIEW DE FUNDO -->
+  <video
+    id="heroVideo"
+    autoplay
+    muted
+    loop
+    playsinline
+    style="
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      z-index:0;
+    "
+  ></video>
+
   <div class="hero-content">
     <h2 id="heroTitle"></h2>
     <div class="meta" id="heroMeta"></div>
     <p id="heroDesc"></p>
     <button onclick="abrirPlayer(heroItem)">▶ Assistir</button>
   </div>
+
+</div>
+
 </div>
 
 <div class="filtros">
@@ -356,12 +379,14 @@ heroTitle.textContent = heroItem.titulo || heroItem.serie_nome;
 heroMeta.textContent = `${heroItem.categoria} • ${heroItem.tipo}`;
 heroDesc.textContent = heroItem.descricao || "";
 
-render();
+// ▶️ PREVIEW NO FUNDO (SEM FULLSCREEN)
+const heroVideo = document.getElementById("heroVideo");
+if (heroItem.video_url) {
+  heroVideo.src = heroItem.video_url;
+  heroVideo.play().catch(() => {});
+}
 
-/* ▶️ AUTOPLAY DO PRINCIPAL */
-setTimeout(() => {
-  abrirPlayer(heroItem);
-}, 600);
+render();
 
 })();
 
@@ -475,22 +500,46 @@ function formatarData(data){
 }
 
 function abrirPlayer(item){
-  document.getElementById("perfilBtn").style.display="none";
-  player.style.display="block";
 
-  if(item.tipo==="filme"){
-    video.src=item.video_url;
-    pTitle.textContent=item.titulo;
-    pMeta.textContent = `${item.categoria} • Filme`;
-    pDesc.textContent=item.descricao||"";
-    serieControls.style.display="none";
-  }else{
-    serieAtual=dados.filter(d=>d.serie_nome===item.serie_nome)
-      .sort((a,b)=>a.temporada-b.temporada||a.episodio-b.episodio);
-    serieControls.style.display="block";
-    montarSerie();
+  // ⛔ PARA O PREVIEW DO HERO (FUNDO)
+  const heroVideo = document.getElementById("heroVideo");
+  if (heroVideo) {
+    heroVideo.pause();
+    heroVideo.src = "";
   }
+
+  // 🎬 ABRE PLAYER FULLSCREEN
+  document.getElementById("perfilBtn").style.display = "none";
+  player.style.display = "block";
+
+  // 🧠 FILME
+  if (item.tipo === "filme") {
+    video.src = item.video_url;
+    video.play().catch(() => {});
+
+    pTitle.textContent = item.titulo;
+    pMeta.textContent = `${item.categoria} • Filme`;
+    pDesc.textContent = item.descricao || "";
+
+    serieControls.style.display = "none";
+    return;
+  }
+
+  // 📺 SÉRIE
+  serieAtual = dados
+    .filter(d => d.serie_nome === item.serie_nome)
+    .sort((a, b) =>
+      a.temporada - b.temporada || a.episodio - b.episodio
+    );
+
+  serieControls.style.display = "block";
+  pTitle.textContent = item.serie_nome;
+  pMeta.textContent = `${item.categoria} • Série`;
+  pDesc.textContent = item.descricao || "";
+
+  montarSerie();
 }
+
 
 function montarSerie(){
   const temps=[...new Set(serieAtual.map(e=>e.temporada))];
