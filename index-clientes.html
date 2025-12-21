@@ -93,28 +93,12 @@ body{
 
 .actions{
   margin-top:16px;
-  display:flex;
-  gap:10px;
 }
 .actions button{
   padding:12px 22px;
   font-weight:700;
   border:none;
   cursor:pointer;
-}
-
-/* ATIVAR SOM */
-#soundUnlock{
-  position:absolute;
-  right:30px;
-  bottom:140px;
-  padding:12px 18px;
-  font-weight:700;
-  background:#fff;
-  color:#000;
-  border:none;
-  cursor:pointer;
-  display:none;
 }
 
 /* SERIES CONTROLS */
@@ -172,8 +156,6 @@ body{
 <div id="player">
   <video id="video" controls autoplay playsinline></video>
 
-  <button id="soundUnlock" onclick="ativarSom()">🔊 Ativar som</button>
-
   <div id="overlay">
     <div id="info">
       <div class="badge" id="tipoBadge"></div>
@@ -205,18 +187,16 @@ const supabaseClient = supabase.createClient(
 const home=document.getElementById("home");
 const player=document.getElementById("player");
 const video=document.getElementById("video");
-const soundBtn=document.getElementById("soundUnlock");
-
 const tipoBadge=document.getElementById("tipoBadge");
 const seriesControls=document.getElementById("seriesControls");
 const selTemporada=document.getElementById("selTemporada");
 const selEpisodio=document.getElementById("selEpisodio");
-
 const suggestions=document.getElementById("suggestions");
 const sugRow=document.getElementById("sugRow");
 
 let dados=[], atual=null, serieAtual=[], indiceEp=0;
 let hideTimer=null;
+let audioUnlocked=false;
 
 /* LOAD */
 async function load(){
@@ -273,25 +253,22 @@ function abrir(item){
 
  video.src=item.video_url;
 
- if(localStorage.getItem("audioUnlocked")){
-   video.muted=false;
-   soundBtn.style.display="none";
- }else{
-   video.muted=true;
-   soundBtn.style.display="block";
- }
-
+ // PREVIEW SEMPRE MUDO
+ video.muted = true;
  video.play();
+
  iniciarTimer();
 }
 
-/* ATIVAR SOM */
-function ativarSom(){
- video.muted=false;
- video.volume=1;
+/* ASSISTIR = GESTO QUE LIBERA ÁUDIO */
+function assistir(){
+ audioUnlocked = true;
+ video.muted = false;
+ video.volume = 1;
  video.play();
- localStorage.setItem("audioUnlocked","1");
- soundBtn.style.display="none";
+
+ document.body.classList.add("hide-ui");
+ clearTimeout(hideTimer);
 }
 
 /* SERIES */
@@ -317,7 +294,7 @@ function trocarEpisodio(eps,i){
  atual=eps[i];
  video.pause();
  video.src=atual.video_url;
- if(localStorage.getItem("audioUnlocked")) video.muted=false;
+ video.muted = !audioUnlocked;
  video.play();
  iniciarTimer();
 }
@@ -338,10 +315,6 @@ video.addEventListener("ended",()=>{
 function iniciarTimer(){
  clearTimeout(hideTimer);
  hideTimer=setTimeout(()=>document.body.classList.add("hide-ui"),30000);
-}
-function assistir(){
- document.body.classList.add("hide-ui");
- clearTimeout(hideTimer);
 }
 
 /* PLAY / PAUSE */
