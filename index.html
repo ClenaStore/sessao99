@@ -431,9 +431,9 @@ html, body {
 </div>
 
 <div class="filtros">
-  <button class="active" onclick="setFiltro('todos')">Todos</button>
-  <button onclick="setFiltro('filme')">Filmes</button>
-  <button onclick="setFiltro('serie')">Séries</button>
+<button class="active" onclick="setFiltro('todos', this)">Todos</button>
+<button onclick="setFiltro('filme', this)">Filmes</button>
+<button onclick="setFiltro('serie', this)">Séries</button>
 </div>
 
 <section>
@@ -547,12 +547,17 @@ render();
 
 busca.oninput=()=>render(busca.value.toLowerCase());
 
-function setFiltro(f){
-  filtro=f;
-  document.querySelectorAll(".filtros button").forEach(b=>b.classList.remove("active"));
-  event.target.classList.add("active");
+function setFiltro(f, el){
+  filtro = f;
+
+  document
+    .querySelectorAll(".filtros button")
+    .forEach(b => b.classList.remove("active"));
+
+  el.classList.add("active");
   render(busca.value.toLowerCase());
 }
+
 
 function card(i){
   return `
