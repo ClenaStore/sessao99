@@ -408,12 +408,9 @@ function render(buscaTxt = "") {
 }
 
 async function carregarPerfil(){
-  console.log("EMAIL USADO:", usuario.email);
-
   const { data: user, error } = await sb
     .from("usuarios")
     .select(`
-      nome,
       email,
       tipo_assinatura,
       valor_assinatura,
@@ -423,9 +420,8 @@ async function carregarPerfil(){
     .eq("email", usuario.email)
     .single();
 
-  console.log("RETORNO SUPABASE:", user, error);
-
-  if(!user){
+  if(error || !user){
+    perfilEmail.textContent = usuario.email;
     perfilPlano.textContent = "-";
     perfilValor.textContent = "-";
     perfilVencimento.textContent = "-";
@@ -433,24 +429,23 @@ async function carregarPerfil(){
     return;
   }
 
-  perfilNome.textContent = user.nome || "Usuário";
   perfilEmail.textContent = user.email;
 
   perfilPlano.textContent = user.tipo_assinatura || "-";
   perfilValor.textContent = formatarReal(user.valor_assinatura);
   perfilVencimento.textContent = formatarData(user.vencimento_assinatura);
 
-  // REGRA DO PIX (2 DIAS)
-  if(user.vencimento_assinatura){
+  // REGRA DO PIX (mostrar só se faltar <= 2 dias)
+  pixBox.style.display = "none";
+
+  if(user.vencimento_assinatura && user.chave_pix){
     const hoje = new Date();
     const venc = new Date(user.vencimento_assinatura);
     const diffDias = Math.ceil((venc - hoje) / (1000 * 60 * 60 * 24));
 
-    if(diffDias <= 2 && user.chave_pix){
+    if(diffDias <= 2){
       pixBox.style.display = "block";
       perfilPix.textContent = user.chave_pix;
-    }else{
-      pixBox.style.display = "none";
     }
   }
 }
