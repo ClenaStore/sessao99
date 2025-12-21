@@ -18,10 +18,12 @@
   --radius:14px;
 }
 *{box-sizing:border-box}
+*::-webkit-scrollbar{display:none}
+
 body{
   margin:0;
   background:
-    radial-gradient(1200px 600px at 50% -200px,#11183a,transparent),
+    radial-gradient(1200px 600px at 50% -200px, #11183a, transparent),
     var(--bg);
   color:var(--text);
   font-family:Inter,Arial,sans-serif;
@@ -50,11 +52,16 @@ header{
   z-index:100;
   padding:16px 32px;
   display:flex;
+  justify-content:space-between;
   align-items:center;
-  gap:16px;
   background:rgba(5,7,15,.75);
   backdrop-filter:blur(10px);
   border-bottom:1px solid rgba(255,255,255,.05);
+}
+header .left{
+  display:flex;
+  align-items:center;
+  gap:20px;
 }
 header h1{
   color:var(--accent);
@@ -62,35 +69,33 @@ header h1{
   font-size:22px;
 }
 header input{
-  flex:1;
   background:#0f1326;
   border:1px solid rgba(255,255,255,.08);
   border-radius:999px;
   padding:10px 16px;
   color:#fff;
+  width:280px;
 }
-.profileBtn{
-  background:#111;
-  border:1px solid rgba(255,255,255,.08);
-  color:#fff;
+.profile{
+  width:38px;
+  height:38px;
   border-radius:50%;
-  width:42px;
-  height:42px;
+  border:none;
+  background:#1f2448;
+  color:#fff;
   cursor:pointer;
+  font-size:18px;
 }
 
 /* ================= HOME ================= */
 section{padding:24px 32px}
 section h2{margin:0 0 14px;font-size:18px}
+
 .row{
   display:flex;
   gap:16px;
   overflow-x:auto;
 }
-.row::-webkit-scrollbar{height:6px}
-.row::-webkit-scrollbar-thumb{background:#1f2448;border-radius:10px}
-
-/* ================= CARD ================= */
 .card{
   min-width:180px;
   border-radius:var(--radius);
@@ -113,7 +118,7 @@ section h2{margin:0 0 14px;font-size:18px}
   content:"";
   position:absolute;
   inset:0;
-  background:linear-gradient(to top,rgba(0,0,0,.7),transparent 60%);
+  background:linear-gradient(to top, rgba(0,0,0,.7), transparent 60%);
 }
 .card span{
   position:absolute;
@@ -138,7 +143,7 @@ section h2{margin:0 0 14px;font-size:18px}
   display:flex;
   align-items:center;
   gap:14px;
-  background:linear-gradient(to bottom,rgba(0,0,0,.7),transparent);
+  background:linear-gradient(to bottom, rgba(0,0,0,.7), transparent);
 }
 .top button{
   background:#111;
@@ -146,6 +151,7 @@ section h2{margin:0 0 14px;font-size:18px}
   color:#fff;
   padding:8px 14px;
   border-radius:999px;
+  cursor:pointer;
 }
 .cover{
   width:100%;
@@ -174,12 +180,12 @@ video{
 #perfilModal{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.65);
+  background:rgba(0,0,0,.7);
   backdrop-filter:blur(8px);
   display:none;
   align-items:center;
   justify-content:center;
-  z-index:30000;
+  z-index:15000;
 }
 #perfilBox{
   width:420px;
@@ -187,22 +193,19 @@ video{
   border-radius:18px;
   padding:26px;
   position:relative;
-  border:1px solid rgba(255,255,255,.06);
 }
-#perfilBox h2{margin:0 0 14px}
 #perfilClose{
   position:absolute;
   top:12px;
   right:14px;
   cursor:pointer;
 }
-.perfil-item{margin-bottom:10px;color:#cbd5f5}
-.perfil-footer{text-align:right;margin-top:20px}
+.perfil-item{margin-bottom:10px;color:#ccc}
+.perfil-footer{text-align:right}
 .perfil-footer button{
   background:none;
   border:none;
   color:#ff6b6b;
-  font-weight:600;
   cursor:pointer;
 }
 </style>
@@ -217,9 +220,11 @@ video{
 </div>
 
 <header>
-  <h1>SESSÃO 99</h1>
-  <input id="search" placeholder="Buscar filmes ou séries...">
-  <button class="profileBtn" onclick="abrirPerfil()">👤</button>
+  <div class="left">
+    <h1>SESSÃO 99</h1>
+    <input id="search" placeholder="Buscar filmes ou séries...">
+  </div>
+  <button class="profile" onclick="abrirPerfil()">👤</button>
 </header>
 
 <div id="home"></div>
@@ -239,51 +244,53 @@ video{
 </div>
 
 <!-- ================= PERFIL ================= -->
-<div id="perfilModal" onclick="fecharPerfil(event)">
+<div id="perfilModal">
   <div id="perfilBox">
     <div id="perfilClose" onclick="fecharPerfil()">✕</div>
     <h2>Meu Perfil</h2>
-    <div class="perfil-item"><strong>Email:</strong> <span id="p_email"></span></div>
-    <div class="perfil-item"><strong>Status:</strong> <span id="p_status"></span></div>
-    <div class="perfil-item"><strong>Trial até:</strong> <span id="p_trial"></span></div>
+    <div class="perfil-item" id="p_email"></div>
     <div class="perfil-footer">
-      <button onclick="logout()">Sair da sessão</button>
+      <button onclick="logout()">Sair</button>
     </div>
   </div>
 </div>
 
 <script>
 /* ================= SUPABASE ================= */
-const sb=supabase.createClient(
- "https://dxkszikemntfusfyrzos.supabase.co",
- "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+const sb = supabase.createClient(
+  "https://dxkszikemntfusfyrzos.supabase.co",
+  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-/* ================= GATE ================= */
+/* ================= AUTH / GATE ================= */
 (async()=>{
-  const s=localStorage.getItem("session_user");
-  if(!s){location.href="login.html";return;}
-  const u=JSON.parse(s);
+  const session = localStorage.getItem("session_user");
+  if(!session){ location.href="login.html"; return; }
 
-  const {data}=await sb.from("usuarios")
-    .select("status,trial_expires_at,email")
-    .eq("id",u.id).single();
+  const u = JSON.parse(session);
+  const { data } = await sb
+    .from("usuarios")
+    .select("status, trial_expires_at, email")
+    .eq("id", u.id)
+    .single();
 
-  if(!data){bloquear("Conta não encontrada.");return;}
+  if(!data){ bloquear("Conta não encontrada."); return; }
 
-  const agora=new Date();
-  const exp=new Date(data.trial_expires_at);
+  const agora = new Date();
+  const expira = new Date(data.trial_expires_at);
 
-  if(data.status==="ativo"||(data.status==="pendente"&&agora<=exp)){
+  if(data.status==="ativo" || (data.status==="pendente" && agora<=expira)){
     document.getElementById("gate").style.display="none";
+    window.usuarioLogado = data;
     load();
-    window._perfil=data;
   }else{
-    bloquear("Seu período de teste expirou.");
+    bloquear("Seu período de teste gratuito expirou.");
   }
 })();
+
 function bloquear(msg){
-  document.getElementById("gate").innerHTML=`<h1>Acesso bloqueado</h1><p>${msg}</p>`;
+  document.getElementById("gate").innerHTML=
+    `<h1>Acesso bloqueado</h1><p>${msg}</p>`;
 }
 
 /* ================= ELEMENTOS ================= */
@@ -297,25 +304,25 @@ const selEpisodio=document.getElementById("selEpisodio");
 const video=document.getElementById("video");
 
 /* ================= STATE ================= */
-let dados=[],serieAtual=[],episodioAtual=null;
+let dados=[], serieAtual=[], episodioAtual=null;
 
-/* ================= LOAD ================= */
+/* ================= HOME ================= */
 async function load(){
-  const {data}=await sb.from("filmes").select("*").eq("ativo",true);
+  const { data } = await sb.from("filmes").select("*").eq("ativo",true);
   dados=data||[];
   renderHome(dados);
 }
 
-/* ================= HOME ================= */
 function renderHome(list){
   home.innerHTML="";
   const filmes=list.filter(i=>i.tipo==="filme");
-  const series=[...new Map(list.filter(i=>i.tipo==="serie").map(s=>[s.serie_nome,s]))].map(e=>e[1]);
+  const series=[...new Map(list.filter(i=>i.tipo==="serie").map(s=>[s.serie_nome,s])).values()];
   renderRow("🎬 Filmes",filmes,playFilme);
   renderRow("📺 Séries",series,s=>abrirSerie(s.serie_nome));
 }
+
 function renderRow(t,it,cb){
-  if(!it.length)return;
+  if(!it.length) return;
   const sec=document.createElement("section");
   sec.innerHTML=`<h2>${t}</h2>`;
   const row=document.createElement("div");row.className="row";
@@ -326,7 +333,8 @@ function renderRow(t,it,cb){
     c.onclick=()=>cb(i);
     row.appendChild(c);
   });
-  sec.appendChild(row);home.appendChild(sec);
+  sec.appendChild(row);
+  home.appendChild(sec);
 }
 
 /* ================= PLAYER ================= */
@@ -339,6 +347,7 @@ function playFilme(f){
   selEpisodio.innerHTML="";
   player.style.display="flex";
 }
+
 function abrirSerie(nome){
   serieAtual=dados.filter(d=>d.serie_nome===nome)
     .sort((a,b)=>a.temporada-b.temporada||a.episodio-b.episodio);
@@ -347,12 +356,14 @@ function abrirSerie(nome){
   montarTemporadas();
   player.style.display="flex";
 }
+
 function montarTemporadas(){
   const temps=[...new Set(serieAtual.map(e=>e.temporada))];
   selTemporada.innerHTML=temps.map(t=>`<option value="${t}">Temporada ${t}</option>`).join("");
   selTemporada.onchange=montarEpisodios;
   montarEpisodios();
 }
+
 function montarEpisodios(){
   const t=+selTemporada.value;
   const eps=serieAtual.filter(e=>e.temporada===t);
@@ -360,43 +371,37 @@ function montarEpisodios(){
   selEpisodio.onchange=()=>tocar(eps[selEpisodio.value]);
   tocar(eps[0]);
 }
+
 function tocar(ep){
   episodioAtual=ep;
   video.src=ep.video_url;
   video.play();
 }
+
 function fechar(){
   video.pause();
   video.src="";
   player.style.display="none";
 }
 
-/* ================= SEARCH ================= */
-search.oninput=()=>{
-  const v=search.value.toLowerCase();
-  renderHome(dados.filter(d=>
-    d.titulo?.toLowerCase().includes(v)||
-    d.serie_nome?.toLowerCase().includes(v)
-  ));
-};
-
 /* ================= PERFIL ================= */
 function abrirPerfil(){
-  if(!window._perfil)return;
-  document.getElementById("p_email").textContent=window._perfil.email;
-  document.getElementById("p_status").textContent=window._perfil.status;
-  document.getElementById("p_trial").textContent=
-    new Date(window._perfil.trial_expires_at).toLocaleString("pt-BR");
+  document.getElementById("p_email").textContent = window.usuarioLogado.email;
   document.getElementById("perfilModal").style.display="flex";
 }
-function fecharPerfil(e){
-  if(e&&e.target.id!=="perfilModal")return;
+function fecharPerfil(){
   document.getElementById("perfilModal").style.display="none";
 }
 function logout(){
-  localStorage.clear();
+  localStorage.removeItem("session_user");
   location.href="login.html";
 }
+
+/* ================= SEARCH ================= */
+search.oninput=()=>{
+  const v=search.value.toLowerCase();
+  renderHome(dados.filter(d=>d.titulo?.toLowerCase().includes(v)||d.serie_nome?.toLowerCase().includes(v)));
+};
 </script>
 
 </body>
