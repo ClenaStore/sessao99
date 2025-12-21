@@ -4,77 +4,35 @@
 <meta charset="UTF-8">
 <title>Login | Sessão 99</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <style>
-*{box-sizing:border-box}
 body{
   margin:0;
   height:100vh;
-  font-family:Inter,Arial,sans-serif;
-  background:
-    linear-gradient(to right,rgba(0,0,0,.9) 40%,rgba(0,0,0,.4)),
-    url("https://images.unsplash.com/photo-1501785888041-af3ef285b470") center/cover;
+  background:#000;
   color:#fff;
+  font-family:Arial,Inter,sans-serif;
   display:flex;
   align-items:center;
   justify-content:center;
 }
-
-/* CONTAINER */
-.container{width:420px}
-
-/* TEXT */
-h1{font-size:42px;margin-bottom:30px}
-h1 span{color:#a855f7}
-label{display:block;margin-bottom:6px;font-size:14px}
-input{
+.container{width:380px}
+input,button{
   width:100%;
   padding:14px;
-  margin-bottom:18px;
-  border-radius:10px;
+  margin-bottom:14px;
+  background:#111;
   border:1px solid #333;
-  background:#0b0b0b;
   color:#fff;
 }
 button{
-  width:100%;
-  padding:14px;
-  border:none;
-  border-radius:12px;
-  background:linear-gradient(90deg,#7c3aed,#ec4899);
-  color:#fff;
-  font-size:16px;
-  font-weight:700;
+  background:#7c3aed;
+  font-weight:bold;
   cursor:pointer;
 }
-button:disabled{opacity:.6}
-.link{
-  margin-top:16px;
-  text-align:center;
-  cursor:pointer;
-  text-decoration:underline;
-  color:#ddd;
-}
-.msg{margin-top:14px;color:#facc15;min-height:18px}
-
-/* OVERLAY */
-#overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.75);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:20;
-}
-#overlay div{
-  background:#0b0b0b;
-  padding:22px 28px;
-  border-radius:14px;
-  font-weight:700;
-}
+.link{text-align:center;cursor:pointer;color:#ccc}
+.msg{color:#facc15;height:20px}
 
 /* MODAL */
 .modal{
@@ -84,124 +42,87 @@ button:disabled{opacity:.6}
   display:none;
   align-items:center;
   justify-content:center;
-  z-index:15;
 }
-.modal-content{
-  width:420px;
-  background:#0b0b0b;
-  padding:30px;
-  border-radius:14px;
+.modal-box{
+  width:380px;
+  background:#111;
+  padding:20px;
 }
 </style>
 </head>
 
 <body>
 
-<!-- OVERLAY -->
-<div id="overlay"><div id="overlayText">Aguarde...</div></div>
-
 <div class="container">
-  <h1>Faça seu Login<span>.</span></h1>
+  <h2>Login</h2>
 
-  <label>Email</label>
-  <input id="email" type="email">
-
-  <label>Senha</label>
-  <input id="senha" type="password">
+  <input id="email" placeholder="Email">
+  <input id="senha" type="password" placeholder="Senha">
 
   <button id="btnLogin">Entrar</button>
 
-  <div class="link" id="openCadastro">Ainda não tenho uma conta</div>
+  <div class="link" id="abrirCadastro">Ainda não tenho conta</div>
   <div class="msg" id="msg"></div>
 </div>
 
 <!-- CADASTRO -->
 <div class="modal" id="modal">
-  <div class="modal-content">
-    <h2>Criar conta</h2>
+  <div class="modal-box">
+    <h3>Criar conta</h3>
     <input id="c_email" placeholder="Email">
     <input id="c_cpf" placeholder="CPF">
     <input id="c_whats" placeholder="WhatsApp">
     <input id="c_senha" type="password" placeholder="Senha">
     <input id="c_confirma" type="password" placeholder="Confirmar senha">
     <button id="btnCadastro">Cadastrar</button>
-    <div class="link" id="closeCadastro">Cancelar</div>
+    <div class="link" id="fecharCadastro">Cancelar</div>
   </div>
 </div>
 
 <script>
 const supabase = supabase.createClient(
-  "https://dxkszikemntfusfyrzos.supabase.co",
-  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+ "https://dxkszikemntfusfyrzos.supabase.co",
+ "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-const overlay = document.getElementById("overlay");
-const overlayText = document.getElementById("overlayText");
-const modal = document.getElementById("modal");
 const msg = document.getElementById("msg");
-const btnLogin = document.getElementById("btnLogin");
-const btnCadastro = document.getElementById("btnCadastro");
-
-/* HELPERS */
-function showOverlay(text){
-  overlayText.textContent = text;
-  overlay.style.display = "flex";
-}
-function hideOverlay(){
-  overlay.style.display = "none";
-}
-function showMsg(text){
-  msg.textContent = text;
-}
+const modal = document.getElementById("modal");
 
 /* MODAL */
-openCadastro.onclick = ()=> modal.style.display="flex";
-closeCadastro.onclick = ()=> modal.style.display="none";
+abrirCadastro.onclick = ()=> modal.style.display="flex";
+fecharCadastro.onclick = ()=> modal.style.display="none";
 modal.onclick = e=>{ if(e.target===modal) modal.style.display="none"; };
 
 /* LOGIN */
 btnLogin.onclick = async ()=>{
-  showMsg("");
-  const emailVal = email.value.trim();
-  const senhaVal = senha.value;
+  msg.textContent="";
 
-  if(!emailVal || !senhaVal){
-    showMsg("Preencha email e senha");
+  const e = email.value.trim();
+  const s = senha.value;
+
+  if(!e || !s){
+    msg.textContent="Preencha email e senha";
     return;
   }
 
-  btnLogin.disabled = true;
-  showOverlay("Verificando acesso...");
+  btnLogin.disabled=true;
 
-  try{
-    const { data, error } = await supabase
-      .from("usuarios")
-      .select("*")
-      .eq("email", emailVal)
-      .eq("senha", senhaVal)
-      .single();
+  const { data, error } = await supabase
+    .from("usuarios")
+    .select("*")
+    .eq("email", e)
+    .eq("senha", s)
+    .single();
 
-    if(error || !data){
-      showMsg("Usuário ou senha inválidos");
-      return;
-    }
+  btnLogin.disabled=false;
 
-    const agora = new Date();
-    const expira = new Date(data.trial_expires_at);
-
-    if(data.status==="aprovado" || agora<=expira){
-      localStorage.usuario = JSON.stringify(data);
-      window.location.href = "index.html";
-    }else{
-      showMsg("Teste expirado. Aguarde aprovação.");
-    }
-
-  }catch(e){
-    showMsg("Erro de conexão");
-  }finally{
-    hideOverlay();
-    btnLogin.disabled = false;
+  if(error || !data){
+    msg.textContent="Usuário ou senha inválidos";
+    return;
   }
+
+  localStorage.usuario = JSON.stringify(data);
+  window.location.href="index.html";
 };
 
 /* CADASTRO */
@@ -211,35 +132,28 @@ btnCadastro.onclick = async ()=>{
     return;
   }
 
-  btnCadastro.disabled = true;
-  showOverlay("Criando conta...");
+  btnCadastro.disabled=true;
 
-  try{
-    const trial = new Date(Date.now()+86400000);
+  const trial = new Date(Date.now()+86400000);
 
-    const { error } = await supabase
-      .from("usuarios")
-      .insert({
-        email:c_email.value,
-        cpf:c_cpf.value,
-        whatsapp:c_whats.value,
-        senha:c_senha.value,
-        status:"pendente",
-        trial_expires_at:trial.toISOString()
-      });
+  const { error } = await supabase.from("usuarios").insert({
+    email:c_email.value,
+    cpf:c_cpf.value,
+    whatsapp:c_whats.value,
+    senha:c_senha.value,
+    status:"pendente",
+    trial_expires_at:trial.toISOString()
+  });
 
-    if(error){
-      alert("Erro ao cadastrar");
-      return;
-    }
+  btnCadastro.disabled=false;
 
-    alert("Cadastro realizado! Teste liberado por 1 dia.");
-    modal.style.display="none";
-
-  }finally{
-    hideOverlay();
-    btnCadastro.disabled = false;
+  if(error){
+    alert("Erro ao cadastrar");
+    return;
   }
+
+  alert("Cadastro criado. Teste liberado.");
+  modal.style.display="none";
 };
 </script>
 
