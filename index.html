@@ -109,6 +109,25 @@ header input{
 }
 dth:560px;
 }
+@media (min-width:1024px){
+  .hero::before{
+    background:
+      linear-gradient(
+        to right,
+        rgba(0,0,0,.92) 0%,
+        rgba(0,0,0,.8) 40%,
+        rgba(0,0,0,.45) 60%,
+        rgba(0,0,0,0) 85%
+      ),
+      linear-gradient(
+        to top,
+        rgba(0,0,0,.7) 0%,
+        rgba(0,0,0,.4) 30%,
+        rgba(0,0,0,0) 60%
+      );
+  }
+}
+
 .hero-content h2{font-size:52px;margin-bottom:12px}
 .hero-content .meta{color:var(--muted);margin-bottom:12px}
 .hero-content p{line-height:1.6;margin-bottom:22px}
