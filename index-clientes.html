@@ -14,7 +14,6 @@
   --muted:#b3b3b3;
   --accent:#e50914;
   --badge:#222;
-  --focus:#fff;
 }
 *{box-sizing:border-box}
 body{
@@ -25,39 +24,15 @@ body{
   overflow:hidden;
 }
 
-/* ================= PERFIS ================= */
-#profiles{
-  position:fixed;
-  inset:0;
-  background:#000;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  z-index:9999;
-}
-.profile-row{display:flex;gap:40px}
-.profile{
-  cursor:pointer;
-  text-align:center;
-  outline:none;
-}
-.profile img{
-  width:120px;height:120px;border-radius:8px;
-  border:3px solid transparent;
-}
-.profile:focus img{border-color:var(--focus)}
-
-/* ================= HOME ================= */
+/* HOME */
 #home{
   position:absolute;
   inset:0;
-  padding-top:80px;
+  padding-top:90px;
   overflow-y:auto;
-  display:none;
 }
-.section{margin-bottom:40px}
-.section h2{margin:0 0 14px 48px}
+.section{margin-bottom:46px}
+.section h2{margin:0 0 16px 48px}
 .row{
   display:flex;
   gap:16px;
@@ -66,25 +41,16 @@ body{
 }
 .card{
   min-width:200px;
-  position:relative;
   cursor:pointer;
-  outline:none;
 }
 .card img{
-  width:100%;height:300px;
-  object-fit:cover;border-radius:4px;
-}
-.card:focus{
-  outline:4px solid var(--focus);
-  transform:scale(1.08);
-}
-.progress{
-  position:absolute;
-  bottom:0;left:0;height:4px;
-  background:var(--accent);
+  width:100%;
+  height:300px;
+  object-fit:cover;
+  border-radius:4px;
 }
 
-/* ================= PLAYER ================= */
+/* PLAYER */
 #player{
   position:fixed;
   inset:0;
@@ -97,7 +63,7 @@ body{
   object-fit:cover;
 }
 
-/* ================= OVERLAY ================= */
+/* OVERLAY */
 #overlay{position:absolute;inset:0}
 #overlay::before{
   content:"";
@@ -112,7 +78,7 @@ body{
 #info{
   position:absolute;
   left:60px;
-  bottom:90px;
+  bottom:120px;
   max-width:640px;
 }
 .badge{
@@ -125,7 +91,9 @@ body{
 #info h1{font-size:40px;margin:0 0 12px}
 #info p{color:var(--muted)}
 
-.actions{margin-top:16px;display:flex;gap:10px}
+.actions{
+  margin-top:16px;
+}
 .actions button{
   padding:12px 22px;
   font-weight:700;
@@ -137,7 +105,7 @@ body{
 .series-controls{
   display:none;
   gap:10px;
-  margin-top:12px;
+  margin-top:14px;
 }
 .series-controls select{
   padding:10px;
@@ -146,21 +114,27 @@ body{
   border:1px solid #333;
 }
 
-/* ================= SUGESTÕES ================= */
+/* SUGESTÕES */
 #suggestions{
   position:absolute;
-  left:0;right:0;bottom:0;
+  left:0;
+  right:0;
+  bottom:0;
   padding:20px 48px 40px;
   display:none;
 }
-.sug-row{display:flex;gap:14px}
+.sug-row{
+  display:flex;
+  gap:14px;
+}
 .sug-row img{
-  width:160px;height:240px;
+  width:160px;
+  height:240px;
   object-fit:cover;
   cursor:pointer;
 }
 
-/* ================= ESTADOS ================= */
+/* ESTADOS */
 .hide-ui #overlay,
 .hide-ui #info{
   opacity:0;
@@ -177,23 +151,11 @@ body{
 
 <body>
 
-<!-- PERFIS -->
-<div id="profiles">
-  <h1>Quem está assistindo?</h1>
-  <div class="profile-row">
-    <div class="profile" tabindex="0" onclick="selectProfile('Ana')">
-      <img src="https://i.pravatar.cc/150?img=32"><div>Ana</div>
-    </div>
-    <div class="profile" tabindex="0" onclick="selectProfile('Carlos')">
-      <img src="https://i.pravatar.cc/150?img=12"><div>Carlos</div>
-    </div>
-  </div>
-</div>
-
 <div id="home"></div>
 
 <div id="player">
-  <video id="video" autoplay playsinline></video>
+  <!-- CONTROLES NATIVOS ATIVOS -->
+  <video id="video" controls autoplay playsinline></video>
 
   <div id="overlay">
     <div id="info">
@@ -208,8 +170,6 @@ body{
 
       <div class="actions">
         <button onclick="assistir()">▶ Assistir</button>
-        <button onclick="avaliar(1)">👍</button>
-        <button onclick="avaliar(-1)">👎</button>
       </div>
     </div>
   </div>
@@ -220,7 +180,6 @@ body{
 </div>
 
 <script>
-/* ================= SUPABASE ================= */
 const supabaseClient = supabase.createClient(
  "https://dxkszikemntfusfyrzos.supabase.co",
  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
@@ -229,179 +188,151 @@ const supabaseClient = supabase.createClient(
 const home=document.getElementById("home");
 const player=document.getElementById("player");
 const video=document.getElementById("video");
-const suggestions=document.getElementById("suggestions");
-const sugRow=document.getElementById("sugRow");
-
 const tipoBadge=document.getElementById("tipoBadge");
 const seriesControls=document.getElementById("seriesControls");
 const selTemporada=document.getElementById("selTemporada");
 const selEpisodio=document.getElementById("selEpisodio");
+const suggestions=document.getElementById("suggestions");
+const sugRow=document.getElementById("sugRow");
 
-let perfil=null;
-let dados=[], atual=null, serieAtual=[];
-let progresso={}, avaliacoes={};
+let dados=[], atual=null, serieAtual=[], indiceEp=0;
 let hideTimer=null;
-
-/* PERFIL */
-function selectProfile(p){
-  perfil=p;
-  document.getElementById("profiles").style.display="none";
-  home.style.display="block";
-  progresso=JSON.parse(localStorage.getItem("prog_"+perfil)||"{}");
-  avaliacoes=JSON.parse(localStorage.getItem("rate_"+perfil)||"{}");
-  load();
-}
 
 /* LOAD */
 async function load(){
-  const {data}=await supabaseClient.from("filmes").select("*").eq("ativo",true);
-  dados=data||[];
-  renderHome();
+ const {data}=await supabaseClient.from("filmes").select("*").eq("ativo",true);
+ dados=data||[];
+ renderHome();
 }
 
 /* HOME */
 function renderHome(){
-  home.innerHTML="";
-  renderSection("Continuar Assistindo",dados.filter(d=>progresso[d.id]));
-  renderSection("Filmes",dados.filter(d=>d.tipo==="filme"));
-  renderSection("Séries",[...new Map(dados.filter(d=>d.tipo==="serie").map(s=>[s.serie_nome,s])).values()]);
+ home.innerHTML="";
+ renderSection("Filmes",dados.filter(d=>d.tipo==="filme"));
+ renderSection("Séries",[...new Map(dados.filter(d=>d.tipo==="serie").map(s=>[s.serie_nome,s])).values()]);
 }
 function renderSection(t,itens){
-  if(!itens.length)return;
-  const sec=document.createElement("div");
-  sec.className="section";
-  sec.innerHTML=`<h2>${t}</h2>`;
-  const row=document.createElement("div");
-  row.className="row";
-  itens.forEach(i=>{
-    const c=document.createElement("div");
-    c.className="card";
-    c.tabIndex=0;
-    c.innerHTML=`<img src="${i.capa_url}">`;
-    if(progresso[i.id]){
-      c.innerHTML+=`<div class="progress" style="width:${progresso[i.id]}%"></div>`;
-    }
-    c.onclick=()=>abrir(i);
-    row.appendChild(c);
-  });
-  sec.appendChild(row);
-  home.appendChild(sec);
+ const sec=document.createElement("div");
+ sec.className="section";
+ sec.innerHTML=`<h2>${t}</h2>`;
+ const row=document.createElement("div");
+ row.className="row";
+ itens.forEach(i=>{
+  const c=document.createElement("div");
+  c.className="card";
+  c.innerHTML=`<img src="${i.capa_url}">`;
+  c.onclick=()=>abrir(i);
+  row.appendChild(c);
+ });
+ sec.appendChild(row);
+ home.appendChild(sec);
 }
 
-/* ABRIR CONTEÚDO (NUNCA 2 PLAYERS) */
+/* ABRIR */
 function abrir(item){
-  clearTimeout(hideTimer);
+ clearTimeout(hideTimer);
 
-  video.pause();
-  video.removeAttribute("src");
-  video.load();
+ video.pause();
+ video.removeAttribute("src");
+ video.load();
 
-  atual=item;
-  player.style.display="block";
-  document.body.classList.remove("hide-ui");
-  suggestions.style.display="none";
+ atual=item;
+ player.style.display="block";
+ document.body.classList.remove("hide-ui");
+ suggestions.style.display="none";
 
-  document.getElementById("titulo").textContent=item.titulo||item.serie_nome;
-  document.getElementById("descricao").textContent=item.descricao||"";
+ document.getElementById("titulo").textContent=item.titulo||item.serie_nome;
+ document.getElementById("descricao").textContent=item.descricao||"";
 
-  if(item.tipo==="serie"){
-    tipoBadge.textContent="📺 Série";
-    montarSerie(item.serie_nome);
-    seriesControls.style.display="flex";
-  }else{
-    tipoBadge.textContent="🎬 Filme";
-    seriesControls.style.display="none";
-  }
+ if(item.tipo==="serie"){
+  tipoBadge.textContent="📺 Série";
+  montarSerie(item.serie_nome);
+  seriesControls.style.display="flex";
+ }else{
+  tipoBadge.textContent="🎬 Filme";
+  seriesControls.style.display="none";
+ }
 
-  video.src=item.video_url;
-  video.muted=false;
-  video.play();
-  iniciarTimer();
+ video.src=item.video_url;
+ video.play();
+ iniciarTimer();
 }
 
 /* SERIES */
 function montarSerie(nome){
-  serieAtual=dados.filter(d=>d.serie_nome===nome)
-    .sort((a,b)=>a.temporada-b.temporada||a.episodio-b.episodio);
-  const temps=[...new Set(serieAtual.map(e=>e.temporada))];
-  selTemporada.innerHTML="";
-  temps.forEach(t=>selTemporada.innerHTML+=`<option value="${t}">Temporada ${t}</option>`);
-  selTemporada.onchange=montarEpisodios;
-  montarEpisodios();
+ serieAtual=dados.filter(d=>d.serie_nome===nome)
+  .sort((a,b)=>a.temporada-b.temporada||a.episodio-b.episodio);
+ const temps=[...new Set(serieAtual.map(e=>e.temporada))];
+ selTemporada.innerHTML="";
+ temps.forEach(t=>selTemporada.innerHTML+=`<option value="${t}">Temporada ${t}</option>`);
+ selTemporada.onchange=montarEpisodios;
+ montarEpisodios();
 }
 function montarEpisodios(){
+ const t=Number(selTemporada.value);
+ const eps=serieAtual.filter(e=>e.temporada===t);
+ selEpisodio.innerHTML="";
+ eps.forEach((e,i)=>selEpisodio.innerHTML+=`<option value="${i}">Episódio ${e.episodio}</option>`);
+ selEpisodio.onchange=()=>trocarEpisodio(eps,selEpisodio.value);
+ trocarEpisodio(eps,0);
+}
+function trocarEpisodio(eps,i){
+ indiceEp=i;
+ atual=eps[i];
+ video.pause();
+ video.src=atual.video_url;
+ video.play();
+ iniciarTimer();
+}
+
+/* AUTOPLAY PRÓXIMO EPISÓDIO */
+video.addEventListener("ended",()=>{
+ if(atual.tipo==="serie"){
   const t=Number(selTemporada.value);
   const eps=serieAtual.filter(e=>e.temporada===t);
-  selEpisodio.innerHTML="";
-  eps.forEach((e,i)=>selEpisodio.innerHTML+=`<option value="${i}">Episódio ${e.episodio}</option>`);
-  selEpisodio.onchange=()=>trocarEpisodio(eps[selEpisodio.value]);
-  trocarEpisodio(eps[0]);
-}
-function trocarEpisodio(ep){
-  clearTimeout(hideTimer);
-  video.pause();
-  video.removeAttribute("src");
-  video.load();
-  atual=ep;
-  video.src=ep.video_url;
-  video.play();
-  iniciarTimer();
-}
+  if(indiceEp+1<eps.length){
+    selEpisodio.value=indiceEp+1;
+    trocarEpisodio(eps,indiceEp+1);
+  }
+ }
+});
 
 /* TIMER */
 function iniciarTimer(){
-  clearTimeout(hideTimer);
-  hideTimer=setTimeout(()=>document.body.classList.add("hide-ui"),30000);
+ clearTimeout(hideTimer);
+ hideTimer=setTimeout(()=>document.body.classList.add("hide-ui"),30000);
 }
 
 /* ASSISTIR */
 function assistir(){
-  document.body.classList.add("hide-ui");
-  clearTimeout(hideTimer);
+ document.body.classList.add("hide-ui");
+ clearTimeout(hideTimer);
 }
 
 /* PLAY / PAUSE */
 video.addEventListener("pause",()=>{
-  clearTimeout(hideTimer);
-  document.body.classList.remove("hide-ui");
-  mostrarSugestoes();
+ clearTimeout(hideTimer);
+ document.body.classList.remove("hide-ui");
+ mostrarSugestoes();
 });
 video.addEventListener("play",()=>{
-  suggestions.style.display="none";
-  iniciarTimer();
-});
-video.addEventListener("timeupdate",()=>{
-  if(video.duration){
-    progresso[atual.id]=Math.floor(video.currentTime/video.duration*100);
-    localStorage.setItem("prog_"+perfil,JSON.stringify(progresso));
-  }
+ suggestions.style.display="none";
+ iniciarTimer();
 });
 
 /* SUGESTÕES */
 function mostrarSugestoes(){
-  sugRow.innerHTML="";
-  dados.filter(d=>d.id!==atual.id).slice(0,6).forEach(s=>{
-    const img=document.createElement("img");
-    img.src=s.capa_url;
-    img.onclick=()=>abrir(s);
-    sugRow.appendChild(img);
-  });
-  suggestions.style.display="block";
+ sugRow.innerHTML="";
+ dados.filter(d=>d.id!==atual.id).slice(0,6).forEach(s=>{
+  const img=document.createElement("img");
+  img.src=s.capa_url;
+  img.onclick=()=>abrir(s);
+  sugRow.appendChild(img);
+ });
+ suggestions.style.display="block";
 }
 
-/* CONTROLE REMOTO / TECLADO */
-document.addEventListener("keydown",e=>{
-  if(e.key==="ArrowRight"&&document.activeElement.nextElementSibling)
-    document.activeElement.nextElementSibling.focus();
-  if(e.key==="ArrowLeft"&&document.activeElement.previousElementSibling)
-    document.activeElement.previousElementSibling.focus();
-  if(e.key==="Enter"&&document.activeElement.classList.contains("card"))
-    document.activeElement.click();
-  if(e.key===" "){
-    e.preventDefault();
-    video.paused?video.play():video.pause();
-  }
-});
+load();
 </script>
 
 </body>
