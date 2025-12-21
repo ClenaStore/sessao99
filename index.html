@@ -504,8 +504,13 @@ html, body {
 
 <header>
   <h1>SESSÃO 99</h1>
+
+  <!-- desktop -->
   <input id="busca" placeholder="Buscar...">
+
   <div id="perfilBtn" onclick="abrirPerfil()"><span>US</span></div>
+
+  <!-- mobile -->
   <div id="searchBtn" onclick="toggleSearch()">🔍</div>
 </header>
 
@@ -523,7 +528,6 @@ html, body {
   <h4>Resultados</h4>
   <div class="search-grid" id="searchGrid"></div>
 </div>
-
 
 
 <div class="hero" id="hero">
@@ -677,15 +681,22 @@ render();
 
 })();
 
+const searchMobileBox = document.getElementById("searchMobileBox");
+const buscaMobile = document.getElementById("buscaMobile");
 const searchResults = document.getElementById("searchResults");
 const searchGrid = document.getElementById("searchGrid");
-const buscaMobile = document.getElementById("buscaMobile");
-const searchMobileBox = document.getElementById("searchMobileBox");
+
+function toggleSearch(){
+  searchMobileBox.style.display = "block";
+  searchResults.style.display = "none";
+  buscaMobile.value = "";
+  buscaMobile.focus();
+}
 
 buscaMobile.oninput = () => {
   const q = buscaMobile.value.trim().toLowerCase();
 
-  if (q.length < 2) {
+  if(q.length < 2){
     searchGrid.innerHTML = "";
     searchResults.style.display = "none";
     return;
@@ -699,7 +710,7 @@ buscaMobile.oninput = () => {
 
   searchGrid.innerHTML = "";
 
-  if (!resultados.length) {
+  if(!resultados.length){
     searchGrid.innerHTML =
       "<p style='color:#777'>Nenhum resultado encontrado</p>";
   } else {
@@ -715,7 +726,6 @@ buscaMobile.oninput = () => {
 
   searchResults.style.display = "block";
 };
-
 
 
 buscaMobile.oninput = () => {
@@ -754,14 +764,15 @@ buscaMobile.oninput = () => {
 };
 document.addEventListener("click", e => {
   if (
-    !searchResults.contains(e.target) &&
     !searchMobileBox.contains(e.target) &&
+    !searchResults.contains(e.target) &&
     e.target.id !== "searchBtn"
   ) {
-    searchResults.style.display = "none";
     searchMobileBox.style.display = "none";
+    searchResults.style.display = "none";
   }
 });
+
 
 
 
