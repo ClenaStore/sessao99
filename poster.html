@@ -51,20 +51,38 @@ body{
   opacity:.7;
 }
 
-/* LOGO */
-.logo{
-  margin:14px auto 10px;
-  width:120px;
-  height:120px;
-  border-radius:28px;
-  background:#000;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:46px;
+/* LOGO TEXTO */
+.logo-text{
+  position:relative;
+  display:inline-block;
+  margin:16px auto 10px;
+  padding:22px 44px;
+  font-size:64px;
   font-weight:900;
+  letter-spacing:4px;
   color:var(--red);
-  box-shadow:0 0 40px rgba(229,9,20,.6);
+  z-index:1;
+}
+
+/* FUNDO QUE ACOMPANHA O TEXTO */
+.logo-text::before{
+  content:"";
+  position:absolute;
+  inset:-10px -16px;
+  background:#000;
+  border-radius:999px;
+  z-index:-1;
+}
+
+/* GLOW */
+.logo-text::after{
+  content:"";
+  position:absolute;
+  inset:-30px -40px;
+  background:radial-gradient(circle, rgba(229,9,20,.6), transparent 70%);
+  filter:blur(18px);
+  border-radius:999px;
+  z-index:-2;
 }
 
 /* CATÁLOGO */
@@ -166,6 +184,7 @@ body{
   justify-content:center;
   font-size:clamp(64px,14vw,160px);
   font-weight:900;
+  letter-spacing:6px;
   color:var(--red);
   opacity:0;
   pointer-events:none;
@@ -180,10 +199,10 @@ body{
 @media(max-width:900px){
   .catalog{grid-template-columns:repeat(2,1fr)}
   .card{height:210px}
-  .logo{
-    width:100px;
-    height:100px;
-    font-size:40px;
+  .logo-text{
+    font-size:44px;
+    padding:16px 30px;
+    letter-spacing:2px;
   }
 }
 
@@ -207,7 +226,7 @@ body{
   <div class="header">
     <h1><span>ASSISTA</span> FILMES E SÉRIES</h1>
     <p>APENAS NA</p>
-    <div class="logo">CLENA</div>
+    <div class="logo-text">CLENA</div>
   </div>
 
   <!-- CATÁLOGO -->
