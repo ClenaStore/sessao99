@@ -526,6 +526,68 @@ body.search-open{
   overflow:hidden;
   height:100vh;
 }
+.perfil-premium{
+  background:#1c1c1c;
+  padding:24px;
+  border-radius:16px;
+  width:340px;
+  text-align:center;
+}
+
+.avatar-box{
+  position:relative;
+  margin-bottom:14px;
+}
+
+.avatar-box img{
+  width:96px;
+  height:96px;
+  border-radius:50%;
+  object-fit:cover;
+  background:#333;
+}
+
+.avatar-upload{
+  display:block;
+  margin-top:8px;
+  font-size:13px;
+  color:#3ea6ff;
+  cursor:pointer;
+}
+.avatar-upload input{display:none}
+
+.perfil-premium input{
+  width:100%;
+  padding:12px;
+  border-radius:8px;
+  border:1px solid #333;
+  background:#111;
+  color:#fff;
+  margin-bottom:10px;
+}
+
+.username-box{
+  display:flex;
+  align-items:center;
+  background:#111;
+  border:1px solid #333;
+  border-radius:8px;
+  padding-left:10px;
+}
+.username-box span{
+  color:#777;
+}
+.username-box input{
+  border:none;
+  background:none;
+  margin:0;
+}
+
+#usernameStatus{
+  font-size:12px;
+  display:block;
+  margin-bottom:10px;
+}
 
 
 </style>
@@ -637,27 +699,51 @@ body.search-open{
 </div>
 
 
-<!-- PERFIL -->
 <div id="perfilOverlay">
-<div id="perfilPopup">
-  <h3 id="perfilNome"></h3>
-  <p id="perfilEmail"></p>
+  <div id="perfilPopup" class="perfil-premium">
 
-  <div class="perfil-info">
-    <div><strong>Plano:</strong> <span id="perfilPlano"></span></div>
-    <div><strong>Valor:</strong> <span id="perfilValor"></span></div>
-    <div><strong>Vencimento:</strong> <span id="perfilVencimento"></span></div>
+    <!-- AVATAR -->
+    <div class="avatar-box">
+      <img id="avatarImg" src="" alt="Avatar">
+      <label class="avatar-upload">
+        Alterar foto
+        <input type="file" accept="image/*" onchange="uploadAvatar(this)">
+      </label>
+    </div>
+
+    <!-- NOME -->
+    <input
+      id="nomeUsuario"
+      placeholder="Nome de exibição"
+      maxlength="40"
+    >
+
+    <!-- USERNAME -->
+    <div class="username-box">
+      <span>@</span>
+      <input
+        id="username"
+        placeholder="usuario"
+        oninput="validarUsername()"
+      >
+    </div>
+    <small id="usernameStatus"></small>
+
+    <!-- INFO -->
+    <div class="perfil-info">
+      <div><strong>Email:</strong> <span id="perfilEmail"></span></div>
+      <div><strong>Plano:</strong> <span id="perfilPlano"></span></div>
+      <div><strong>Valor:</strong> <span id="perfilValor"></span></div>
+      <div><strong>Vencimento:</strong> <span id="perfilVencimento"></span></div>
+    </div>
+
+    <button onclick="salvarPerfil()">Salvar alterações</button>
+    <button id="sair" onclick="logout()">Sair</button>
+    <button id="fecharPerfil" onclick="fecharPerfil()">Fechar</button>
+
   </div>
-
-  <div id="pixBox" style="display:none">
-    <p><strong>Pagamento via PIX</strong></p>
-    <div id="perfilPix"></div>
-  </div>
-
-  <button id="sair" onclick="logout()">Sair</button>
-  <button id="fecharPerfil" onclick="fecharPerfil()">Fechar</button>
 </div>
-</div>
+
 
 <script>
 const sb = supabase.createClient(
@@ -868,18 +954,6 @@ function render(buscaTxt = "") {
   }
 }
 
-async function carregarPerfil(){
-  const { data: user, error } = await sb
-    .from("usuarios")
-    .select(`
-      email,
-      tipo_assinatura,
-      valor_assinatura,
-      vencimento_assinatura,
-      chave_pix
-    `)
-    .eq("email", usuario.email)
-    .single();
 
   if(error || !user){
     perfilEmail.textContent = usuario.email;
@@ -1175,6 +1249,122 @@ if (error || !data) {
 
   usuario = { email };
   return true;
+}
+/* ================= PERFIL PREMIUM ================= */
+
+const BUNNY_STORAGE = "https://storage.bunnycdn.com/sessao99";
+const BUNNY_PULL = "https://sessao99.b-cdn.net";
+const BUNNY_KEY = "d498d56e-361b-4a1e-9edb9eb63e3b-2e6a-4c17";
+
+let userId = null;
+
+const avatarImg = document.getElementById("avatarImg");
+const nomeUsuario = document.getElementById("nomeUsuario");
+const usernameInput = document.getElementById("username");
+const usernameStatus = document.getElementById("usernameStatus");
+const perfilBtn = document.getElementById("perfilBtn");
+
+async function carregarPerfil() {
+  const { data } = await sb
+    .from("usuarios")
+    .select(`
+      id,
+      email,
+      nome_usuario,
+      username,
+      avatar_url,
+      tipo_assinatura,
+      valor_assinatura,
+      vencimento_assinatura
+    `)
+    .eq("email", usuario.email)
+    .single();
+
+  if (!data) return;
+
+  userId = data.id;
+
+  perfilEmail.textContent = data.email;
+  nomeUsuario.value = data.nome_usuario || "Usuário";
+  usernameInput.value = data.username || "";
+
+  avatarImg.src =
+    data.avatar_url ||
+    `https://ui-avatars.com/api/?name=${nomeUsuario.value[0]}&background=e50914&color=fff`;
+
+  perfilPlano.textContent = data.tipo_assinatura || "-";
+  perfilValor.textContent = formatarReal(data.valor_assinatura);
+  perfilVencimento.textContent = formatarData(data.vencimento_assinatura);
+
+  perfilBtn.innerHTML = `
+    <img src="${avatarImg.src}"
+         style="width:36px;height:36px;border-radius:50%;object-fit:cover">
+  `;
+}
+
+async function uploadAvatar(input) {
+  const file = input.files[0];
+  if (!file || !userId) return;
+
+  const buffer = await file.arrayBuffer();
+
+  await fetch(`${BUNNY_STORAGE}/avatars/${userId}.jpg`, {
+    method: "PUT",
+    headers: {
+      "AccessKey": BUNNY_KEY,
+      "Content-Type": "application/octet-stream"
+    },
+    body: buffer
+  });
+
+  const url = `${BUNNY_PULL}/avatars/${userId}.jpg?${Date.now()}`;
+
+  avatarImg.src = url;
+  perfilBtn.innerHTML = `<img src="${url}" style="width:36px;height:36px;border-radius:50%">`;
+
+  await sb.from("usuarios")
+    .update({ avatar_url: url })
+    .eq("id", userId);
+}
+
+async function validarUsername() {
+  const u = usernameInput.value.toLowerCase().replace(/[^a-z0-9._]/g,"");
+  usernameInput.value = u;
+
+  if (u.length < 3) {
+    usernameStatus.textContent = "Muito curto";
+    usernameStatus.style.color = "#ff5555";
+    return false;
+  }
+
+  const { data } = await sb
+    .from("usuarios")
+    .select("id")
+    .eq("username", u)
+    .neq("id", userId);
+
+  if (data.length) {
+    usernameStatus.textContent = "Já em uso";
+    usernameStatus.style.color = "#ff5555";
+    return false;
+  }
+
+  usernameStatus.textContent = "Disponível";
+  usernameStatus.style.color = "#00ff99";
+  return true;
+}
+
+async function salvarPerfil() {
+  if (!(await validarUsername())) return;
+
+  await sb.from("usuarios")
+    .update({
+      nome_usuario: nomeUsuario.value,
+      username: usernameInput.value
+    })
+    .eq("id", userId);
+
+  fecharPerfil();
 }
 
 
