@@ -51,23 +51,39 @@ body{
   letter-spacing:2px;
 }
 
+/* LOGO CONTAINER */
+.logo-wrap{
+  position:relative;
+  width:180px;
+  height:180px;
+  margin:18px auto 20px;
+}
+
+/* GLOW */
+.logo-wrap::before{
+  content:"";
+  position:absolute;
+  inset:-18px;
+  border-radius:38px;
+  background:radial-gradient(circle, rgba(229,9,20,.6), transparent 70%);
+  filter:blur(12px);
+  animation:glowPulse 2.8s infinite;
+}
+
 /* LOGO */
 .logo{
-  margin:18px auto 16px;
-  width:160px;
-  height:160px;
+  position:relative;
+  width:100%;
+  height:100%;
   border-radius:32px;
-  background:linear-gradient(145deg,#000,#111);
+  background:#000;
   display:flex;
   align-items:center;
   justify-content:center;
   font-size:72px;
   font-weight:900;
   color:var(--red);
-  box-shadow:
-    0 0 45px rgba(229,9,20,.7),
-    0 0 120px rgba(229,9,20,.5);
-  animation:logoPulse 2.8s infinite;
+  z-index:1;
 }
 
 /* CONTEÚDO */
@@ -125,7 +141,6 @@ body{
   opacity:.85;
 }
 
-/* PREÇO */
 .price{
   margin-top:8px;
   font-size:26px;
@@ -146,10 +161,6 @@ body{
 }
 
 .cta button{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:10px;
   padding:14px 42px;
   background:var(--red);
   color:#fff;
@@ -167,26 +178,6 @@ body{
   box-shadow:0 20px 60px rgba(229,9,20,1);
 }
 
-/* OVERLAY ANIMAÇÃO */
-.overlay{
-  position:fixed;
-  inset:0;
-  background:#000;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:clamp(60px,12vw,140px);
-  font-weight:900;
-  color:var(--red);
-  opacity:0;
-  pointer-events:none;
-  z-index:999;
-}
-
-.overlay.show{
-  animation:overlayAnim 1.6s forwards;
-}
-
 /* MOBILE */
 @media(max-width:900px){
   .catalog{
@@ -195,48 +186,24 @@ body{
   .card{
     height:220px;
   }
-}
-
-/* ANIMAÇÕES */
-@keyframes logoPulse{
-  0%,100%{
-    transform:scale(1);
-    box-shadow:
-      0 0 30px rgba(229,9,20,.5),
-      0 0 80px rgba(229,9,20,.3);
+  .logo-wrap{
+    width:130px;
+    height:130px;
   }
-  50%{
-    transform:scale(1.08);
-    box-shadow:
-      0 0 45px rgba(229,9,20,.9),
-      0 0 130px rgba(229,9,20,.6);
+  .logo{
+    font-size:52px;
   }
 }
 
-@keyframes overlayAnim{
-  0%{
-    opacity:0;
-    transform:scale(.6);
-  }
-  40%{
-    opacity:1;
-    transform:scale(1);
-  }
-  80%{
-    opacity:1;
-    transform:scale(1.05);
-  }
-  100%{
-    opacity:0;
-    transform:scale(1.2);
-  }
+/* ANIMAÇÃO */
+@keyframes glowPulse{
+  0%,100%{opacity:.6}
+  50%{opacity:1}
 }
 </style>
 </head>
 
 <body>
-
-<div class="overlay" id="overlay">CLENA</div>
 
 <div class="page">
 
@@ -244,7 +211,10 @@ body{
   <div class="header">
     <h1><span>ASSISTA</span> FILMES E SÉRIES</h1>
     <p>APENAS NA</p>
-    <div class="logo">CLENA</div>
+
+    <div class="logo-wrap">
+      <div class="logo">CLENA</div>
+    </div>
   </div>
 
   <!-- CATÁLOGO -->
@@ -277,22 +247,11 @@ body{
     </div>
 
     <div class="cta">
-      <button onclick="assistir()">▶ ASSISTA AGORA</button>
+      <button onclick="window.location.href='index.html'">▶ ASSISTA AGORA</button>
     </div>
   </div>
 
 </div>
-
-<script>
-function assistir(){
-  const overlay = document.getElementById('overlay');
-  overlay.classList.add('show');
-
-  setTimeout(()=>{
-    window.location.href = "index.html";
-  },1400);
-}
-</script>
 
 </body>
 </html>
