@@ -1,165 +1,36 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<title>SESSÃO 99</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+curl -X POST "https://video.bunnycdn.com/library/569072/videos" ^
+  -H "AccessKey: 85959420-a8f2-4a5a-abb17086195a-21ed-4f48" ^
+  -H "Content-Type: application/octet-stream" ^
+  --data-binary "@teste.png"
 
-<!-- SUPABASE CDN -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+curl.exe -X POST "https://video.bunnycdn.com/library/569072/videos" `
+  -H "AccessKey: 85959420-a8f2-4a5a-abb17086195a-21ed-4f48" `
+  -H "Content-Type: application/octet-stream" `
+  --data-binary "teste.png"
 
-<style>
-body{
-  margin:0;
-  background:#05070f;
-  color:#fff;
-  font-family:Inter,Arial,sans-serif;
-}
-header{
-  padding:16px 32px;
-  background:#000;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-main{
-  padding:32px;
-}
-#status{
-  margin-bottom:20px;
-  font-weight:600;
-}
-.ok{color:#22c55e}
-.err{color:#ef4444}
-.grid{
-  display:flex;
-  gap:16px;
-  flex-wrap:wrap;
-}
-.card{
-  width:200px;
-  height:300px;
-  border-radius:12px;
-  overflow:hidden;
-  cursor:pointer;
-}
-.card img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-}
-</style>
-</head>
-<body>
 
-<header>
-  <h2>🎬 SESSÃO 99</h2>
-  <input id="search" placeholder="Buscar...">
-</header>
 
-<main>
-  <div id="status">⏳ Inicializando Supabase…</div>
-  <div class="grid" id="grid"></div>
-</main>
+curl.exe -X POST "https://video.bunnycdn.com/library/569072/videos" -H "AccessKey: 85959420-a8f2-4a5a-abb17086195a-21ed-4f48" -H "Content-Type: application/octet-stream" --data-binary "episódio7.mp4"
 
-<script>
-const statusEl = document.getElementById("status");
-const grid = document.getElementById("grid");
-const search = document.getElementById("search");
 
-let supabaseClient = null;
-let filmes = [];
 
-/* ===============================
-   ESPERAR SUPABASE EXISTIR
-================================ */
-function esperarSupabase(timeout = 5000){
-  return new Promise((resolve, reject) => {
-    const start = Date.now();
-    const timer = setInterval(() => {
-      if (window.supabase && window.supabase.createClient) {
-        clearInterval(timer);
-        resolve(window.supabase);
-      }
-      if (Date.now() - start > timeout) {
-        clearInterval(timer);
-        reject("Supabase não carregou (timeout)");
-      }
-    }, 50);
-  });
-}
+curl.exe -X POST "https://video.bunnycdn.com/tusupload" `
+  -H "AccessKey: 85959420-a8f2-4a5a-abb17086195a-21ed-4f48" `
+  -H "LibraryId: 569072" `
+  -H "Tus-Resumable: 1.0.0" `
+  -H "Upload-Length: 265519315" `
+  -H "Upload-Metadata: filename QmF0bWFuLm1wNA==" 
 
-/* ===============================
-   INIT
-================================ */
-async function init(){
-  try{
-    const supabaseLib = await esperarSupabase();
 
-    statusEl.innerText = "🔌 Conectando ao Supabase…";
 
-    supabaseClient = supabaseLib.createClient(
-      "https://dxkszikemntfusfyrzos.supabase.co",
-      "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
-    );
+curl.exe -X POST "https://video.bunnycdn.com/library/569072/videos" `
+  -H "AccessKey: 85959420-a8f2-4a5a-abb17086195a-21ed-4f48" `
+  -H "Content-Type: application/json" `
+  -d "{ \"title\": \"Batman\" }"
 
-    carregarFilmes();
 
-  }catch(err){
-    statusEl.innerText = "❌ ERRO: " + err;
-    statusEl.className = "err";
-  }
-}
+curl.exe -X POST "https://video.bunnycdn.com/library/569072/videos" -H "AccessKey: 85959420-a8f2-4a5a-abb17086195a-21ed-4f48" -H "Content-Type: application/json" --data-binary "@create.json"
 
-/* ===============================
-   CARREGAR FILMES
-================================ */
-async function carregarFilmes(){
-  statusEl.innerText = "📡 Buscando filmes…";
 
-  const { data, error } = await supabaseClient
-    .from("filmes")
-    .select("*")
-    .eq("ativo", true);
 
-  if(error){
-    statusEl.innerText = "❌ ERRO SUPABASE: " + error.message;
-    statusEl.className = "err";
-    return;
-  }
-
-  statusEl.innerText = `✅ ${data.length} filme(s) carregado(s)`;
-  statusEl.className = "ok";
-
-  filmes = data || [];
-  render(filmes);
-}
-
-/* ===============================
-   RENDER
-================================ */
-function render(lista){
-  grid.innerHTML = "";
-  lista.forEach(f => {
-    if(!f.capa_url) return;
-    const c = document.createElement("div");
-    c.className = "card";
-    c.innerHTML = `<img src="${f.capa_url}">`;
-    c.onclick = () => window.open(f.video_url, "_blank");
-    grid.appendChild(c);
-  });
-}
-
-/* ===============================
-   BUSCA
-================================ */
-search.oninput = () => {
-  const v = search.value.toLowerCase();
-  render(filmes.filter(f => f.titulo.toLowerCase().includes(v)));
-};
-
-init();
-</script>
-
-</body>
-</html>
+.\ffmpeg.exe -i "episódiox6.mp4" -map 0:v:0 -map 0:a:0 -c:v copy -c:a aac -b:a 128k -ac 2 "episódio6.mp4"
