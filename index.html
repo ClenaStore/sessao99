@@ -673,45 +673,48 @@ let dadosCarregados = false; // ✅ FALTA ISSO
   
 const ID_PRINCIPAL = "649a1523-e49b-49d8-a34a-452a54b04ba";
 
-(async()=>{
-  if(!localStorage.usuario){location.href="login.html";return;}
-  usuario = JSON.parse(localStorage.usuario);
-  perfilEmail.textContent = usuario.email || "";
+async function iniciarApp() {
 
-  const { data } = await sb.from("filmes").select("*").eq("ativo",true);
+  // aqui o usuario JÁ EXISTE (veio do validarSessao)
+  perfilEmail.textContent = usuario.email;
+
+  const { data } = await sb
+    .from("filmes")
+    .select("*")
+    .eq("ativo", true);
+
   dados = data || [];
   dadosCarregados = true;
-heroItem =
-  dados.find(d => d.id === ID_PRINCIPAL) ||
-  dados[0];
 
+  heroItem =
+    dados.find(d => d.id === ID_PRINCIPAL) ||
+    dados[0];
 
-hero.style.backgroundImage = `url(${heroItem.capa_url})`;
-heroTitle.textContent = heroItem.titulo || heroItem.serie_nome;
-heroMeta.textContent = `${heroItem.categoria} • ${heroItem.tipo}`;
-heroDesc.textContent = heroItem.descricao || "";
-// 🔍 MOSTRA "LER MAIS" SE PASSAR DE 3 LINHAS
-setTimeout(() => {
-  const lerMais = document.getElementById("lerMais");
+  hero.style.backgroundImage = `url(${heroItem.capa_url})`;
+  heroTitle.textContent = heroItem.titulo || heroItem.serie_nome;
+  heroMeta.textContent = `${heroItem.categoria} • ${heroItem.tipo}`;
+  heroDesc.textContent = heroItem.descricao || "";
 
-  if (heroDesc.scrollHeight > heroDesc.clientHeight + 4) {
-    lerMais.style.display = "inline-block";
-  } else {
-    lerMais.style.display = "none";
+  // 🔍 botão "ler mais"
+  setTimeout(() => {
+    const lerMais = document.getElementById("lerMais");
+    lerMais.style.display =
+      heroDesc.scrollHeight > heroDesc.clientHeight + 4
+        ? "inline-block"
+        : "none";
+  }, 50);
+
+  // ▶️ preview de fundo
+  const heroVideo = document.getElementById("heroVideo");
+  if (heroItem.video_url) {
+    heroVideo.src = heroItem.video_url;
+    heroVideo.play().catch(() => {});
   }
-}, 50);
 
-
-// ▶️ PREVIEW NO FUNDO (SEM FULLSCREEN)
-const heroVideo = document.getElementById("heroVideo");
-if (heroItem.video_url) {
-  heroVideo.src = heroItem.video_url;
-  heroVideo.play().catch(() => {});
+  render();
 }
 
-render();
 
-})();
 
 const searchMobileBox = document.getElementById("searchMobileBox");
 const buscaMobile = document.getElementById("buscaMobile");
@@ -1085,6 +1088,23 @@ function toggleSearch(){
   buscaMobile.focus();
   document.body.classList.add("search-open");
 }
+// 🚪 valida sessão e só depois inicia o app
+(async () => {
+
+  // recupera login
+  const email = localStorage.getItem("usuario_email");
+
+  if (!email) {
+    location.href = "login.html";
+    return;
+  }
+
+  usuario = { email }; // ✅ AGORA usuario EXISTE
+
+  // inicia o app
+  iniciarApp();
+
+})();
 
 
 
