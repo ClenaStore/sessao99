@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Sessão CLENA • Filmes e Séries</title>
+<title>CLENA • Filmes e Séries</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <style>
@@ -20,18 +20,17 @@
 
 body{
   height:100vh;
-  background:
-    radial-gradient(circle at top, #4a0000 0%, #140000 35%, #000 70%);
+  background:radial-gradient(circle at top, #3a0000 0%, #140000 35%, #000 70%);
   color:#fff;
   overflow:hidden;
 }
 
-/* GRID */
+/* LAYOUT */
 .page{
   height:100vh;
   display:grid;
   grid-template-rows:auto 1fr auto;
-  padding:28px 32px;
+  padding:26px 32px;
 }
 
 /* HEADER */
@@ -40,75 +39,55 @@ body{
 }
 
 .header h1{
-  font-size:clamp(34px,5vw,56px);
+  font-size:clamp(36px,5vw,56px);
   font-weight:900;
 }
 .header h1 span{color:var(--red)}
 
 .header p{
   margin-top:6px;
-  opacity:.85;
+  font-size:13px;
   letter-spacing:2px;
-}
-
-/* LOGO CONTAINER */
-.logo-wrap{
-  position:relative;
-  width:180px;
-  height:180px;
-  margin:18px auto 20px;
-}
-
-/* GLOW */
-.logo-wrap::before{
-  content:"";
-  position:absolute;
-  inset:-18px;
-  border-radius:38px;
-  background:radial-gradient(circle, rgba(229,9,20,.6), transparent 70%);
-  filter:blur(12px);
-  animation:glowPulse 2.8s infinite;
+  opacity:.7;
 }
 
 /* LOGO */
 .logo{
-  position:relative;
-  width:100%;
-  height:100%;
-  border-radius:32px;
+  margin:14px auto 10px;
+  width:120px;
+  height:120px;
+  border-radius:28px;
   background:#000;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:72px;
+  font-size:46px;
   font-weight:900;
   color:var(--red);
-  z-index:1;
+  box-shadow:0 0 40px rgba(229,9,20,.6);
 }
 
-/* CONTEÚDO */
+/* CATÁLOGO */
 .content{
   display:flex;
   align-items:center;
   justify-content:center;
 }
 
-/* CATÁLOGO */
 .catalog{
   width:100%;
-  max-width:1000px;
+  max-width:980px;
   display:grid;
   grid-template-columns:repeat(4,1fr);
   gap:22px;
 }
 
-/* CARD */
 .card{
-  height:260px;
-  border-radius:18px;
+  height:240px;
+  border-radius:16px;
   overflow:hidden;
-  box-shadow:0 18px 45px rgba(0,0,0,.85);
-  transition:.35s;
+  box-shadow:0 16px 40px rgba(0,0,0,.8);
+  transition:.3s;
 }
 
 .cover{
@@ -117,18 +96,18 @@ body{
   background:
     linear-gradient(180deg, rgba(0,0,0,.15), rgba(0,0,0,.9)),
     linear-gradient(135deg,
-      hsl(var(--hue),70%,45%),
-      hsl(calc(var(--hue) + 40),80%,35%)
+      hsl(var(--hue),65%,45%),
+      hsl(calc(var(--hue) + 35),75%,35%)
     );
   display:flex;
   align-items:flex-end;
-  padding:16px;
-  font-size:15px;
+  padding:14px;
+  font-size:14px;
   font-weight:700;
 }
 
 .card:hover{
-  transform:translateY(-10px) scale(1.05);
+  transform:translateY(-8px) scale(1.04);
 }
 
 /* FOOTER */
@@ -137,121 +116,130 @@ body{
 }
 
 .footer .info{
-  font-size:15px;
-  opacity:.85;
+  font-size:14px;
+  opacity:.75;
 }
 
 .price{
-  margin-top:8px;
-  font-size:26px;
+  margin-top:6px;
+  font-size:24px;
   font-weight:900;
   color:var(--gold);
 }
 
 .footer small{
   display:block;
-  font-size:12px;
-  opacity:.7;
-  margin-top:4px;
+  font-size:11px;
+  opacity:.6;
+  margin-top:3px;
 }
 
 /* BOTÃO */
 .cta{
-  margin-top:18px;
+  margin-top:14px;
 }
 
 .cta button{
-  padding:14px 42px;
+  padding:14px 46px;
   background:var(--red);
   color:#fff;
   font-weight:900;
-  font-size:18px;
+  font-size:17px;
   border-radius:999px;
   border:none;
   cursor:pointer;
   box-shadow:0 14px 40px rgba(229,9,20,.7);
-  transition:.3s;
+  transition:.25s;
 }
 
 .cta button:hover{
-  transform:scale(1.08);
-  box-shadow:0 20px 60px rgba(229,9,20,1);
+  transform:scale(1.07);
+}
+
+/* INTRO OVERLAY */
+.intro{
+  position:fixed;
+  inset:0;
+  background:#000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:clamp(64px,14vw,160px);
+  font-weight:900;
+  color:var(--red);
+  opacity:0;
+  pointer-events:none;
+  z-index:999;
+}
+
+.intro.show{
+  animation:introAnim 1.4s ease forwards;
 }
 
 /* MOBILE */
 @media(max-width:900px){
-  .catalog{
-    grid-template-columns:repeat(2,1fr);
-  }
-  .card{
-    height:220px;
-  }
-  .logo-wrap{
-    width:130px;
-    height:130px;
-  }
+  .catalog{grid-template-columns:repeat(2,1fr)}
+  .card{height:210px}
   .logo{
-    font-size:52px;
+    width:100px;
+    height:100px;
+    font-size:40px;
   }
 }
 
 /* ANIMAÇÃO */
-@keyframes glowPulse{
-  0%,100%{opacity:.6}
-  50%{opacity:1}
+@keyframes introAnim{
+  0%{opacity:0; transform:scale(.6)}
+  40%{opacity:1; transform:scale(1)}
+  70%{opacity:1}
+  100%{opacity:0; transform:scale(1.2)}
 }
 </style>
 </head>
 
 <body>
 
+<div class="intro" id="intro">CLENA</div>
+
 <div class="page">
 
-  <!-- TOPO -->
+  <!-- HEADER -->
   <div class="header">
     <h1><span>ASSISTA</span> FILMES E SÉRIES</h1>
     <p>APENAS NA</p>
-
-    <div class="logo-wrap">
-      <div class="logo">CLENA</div>
-    </div>
+    <div class="logo">CLENA</div>
   </div>
 
   <!-- CATÁLOGO -->
   <div class="content">
     <div class="catalog">
-      <div class="card" style="--hue:10">
-        <div class="cover">Esquadrão Suicida<br>Acerto de Contas</div>
-      </div>
-      <div class="card" style="--hue:190">
-        <div class="cover">Pânico no Lago<br>(1999)</div>
-      </div>
-      <div class="card" style="--hue:45">
-        <div class="cover">A Menina Que<br>Roubava Livros</div>
-      </div>
-      <div class="card" style="--hue:260">
-        <div class="cover">Percy Jackson e o<br>Ladrão de Raios</div>
-      </div>
+      <div class="card" style="--hue:15"><div class="cover">Esquadrão Suicida<br>Acerto de Contas</div></div>
+      <div class="card" style="--hue:200"><div class="cover">Pânico no Lago<br>(1999)</div></div>
+      <div class="card" style="--hue:45"><div class="cover">A Menina Que<br>Roubava Livros</div></div>
+      <div class="card" style="--hue:270"><div class="cover">Percy Jackson e o<br>Ladrão de Raios</div></div>
     </div>
   </div>
 
-  <!-- RODAPÉ -->
+  <!-- FOOTER -->
   <div class="footer">
-    <div class="info">
-      Disponível para celular, tablet e computador, <b>acesse já</b>
-    </div>
-
-    <div class="price">
-      PLANOS A PARTIR DE R$1,99
-      <small>após período de teste</small>
-    </div>
+    <div class="info">Disponível para celular, tablet e computador</div>
+    <div class="price">PLANOS A PARTIR DE R$1,99</div>
+    <small>após período de teste</small>
 
     <div class="cta">
-      <button onclick="window.location.href='index.html'">▶ ASSISTA AGORA</button>
+      <button onclick="assistir()">▶ ASSISTA AGORA</button>
     </div>
   </div>
 
 </div>
+
+<script>
+function assistir(){
+  const intro = document.getElementById('intro');
+  intro.classList.add('show');
+  setTimeout(()=>location.href='index.html',1200);
+}
+</script>
 
 </body>
 </html>
