@@ -311,12 +311,31 @@ btnLogin.onclick = async () => {
     return;
   }
 
-  const agora = new Date();
-  const expira = new Date(data.trial_expires_at);
+const agora = new Date();
+const expira = new Date(data.trial_expires_at);
 
-  if(data.status === "aprovado" || agora <= expira){
-    localStorage.usuario = JSON.stringify(data);
-    window.location.href = "index.html";
+// 🚫 BLOQUEADO = NUNCA ENTRA
+if (data.status === "Bloqueado") {
+  msg.innerHTML = `
+    Acesso bloqueado.<br>
+    Entre em contato pelo WhatsApp:<br>
+    <a href="https://wa.me/55${data.whatsapp}" target="_blank" style="color:#25d366">
+      Clique aqui para falar conosco
+    </a>
+  `;
+  return;
+}
+
+// ⏰ TRIAL EXPIRADO E NÃO APROVADO
+if (agora > expira && data.status !== "aprovado") {
+  msg.textContent = "Seu teste expirou. Aguarde aprovação.";
+  return;
+}
+
+// ✅ OK → LOGA
+localStorage.setItem("usuario_email", data.email);
+window.location.href = "index.html";
+
   }else{
     msg.textContent = "Seu teste expirou. Aguarde aprovação.";
   }
