@@ -720,6 +720,26 @@ const searchMobileBox = document.getElementById("searchMobileBox");
 const buscaMobile = document.getElementById("buscaMobile");
 const searchResults = document.getElementById("searchResults");
 const searchGrid = document.getElementById("searchGrid");
+const grid = document.getElementById("grid");
+
+  
+// ✅ CLIQUE FUNCIONAL NOS RESULTADOS DA BUSCA
+searchGrid.addEventListener("click", e => {
+  const card = e.target.closest(".search-card");
+  if (!card) return;
+
+  e.stopPropagation(); // 🔥 impede o document.click de fechar antes
+
+  const id = card.dataset.id;
+  const item = dados.find(d => d.id === id);
+
+  if (item) {
+    abrirPlayer(item);
+  }
+});
+
+
+  
 const busca = document.getElementById("busca");
 function executarBusca(texto) {
   if (!dadosCarregados) {
@@ -762,14 +782,13 @@ const resultados = [
     searchGrid.innerHTML =
       "<p style='color:#777'>Nenhum resultado encontrado</p>";
   } else {
-    searchGrid.innerHTML = resultados.map(r => `
-      <div class="search-card"
-           onclick="event.stopPropagation(); abrirPlayer(${JSON.stringify(r)})">
-        <img src="${r.capa_url}">
-        <span>${r.titulo || r.serie_nome}</span>
-      </div>
-    `).join("");
-  }
+searchGrid.innerHTML = resultados.map(r => `
+  <div class="search-card" data-id="${r.id}">
+    <img src="${r.capa_url}">
+    <span>${r.titulo || r.serie_nome}</span>
+  </div>
+`).join("");
+
 
   searchResults.style.display = "block";
 }
@@ -799,16 +818,19 @@ if (busca) {
 
 document.addEventListener("click", e => {
   if (
-    !searchMobileBox.contains(e.target) &&
-    !searchResults.contains(e.target) &&
-    e.target.id !== "searchBtn"
+    e.target.closest("#searchResults") ||
+    e.target.closest("#searchMobileBox") ||
+    e.target.closest("#searchBtn")
   ) {
-    searchMobileBox.style.display = "none";
-    searchResults.style.display = "none";
-    searchGrid.innerHTML = "";
-    document.body.classList.remove("search-open");
+    return; // 🔥 NÃO FECHA
   }
+
+  searchMobileBox.style.display = "none";
+  searchResults.style.display = "none";
+  searchGrid.innerHTML = "";
+  document.body.classList.remove("search-open");
 });
+
 
 
 
@@ -1090,13 +1112,7 @@ if ("serviceWorker" in navigator) {
   });
 }
 
-function toggleSearch(){
-  searchMobileBox.style.display = "block";
-  searchResults.style.display = "none";
-  buscaMobile.value = "";
-  buscaMobile.focus();
-  document.body.classList.add("search-open");
-}
+
 
 async function validarSessao() {
   const email = localStorage.getItem("usuario_email");
