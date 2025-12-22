@@ -988,10 +988,28 @@ video.addEventListener("timeupdate", () => {
   }
 });
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("./sw.js")
-    .then(() => console.log("PWA ativo"))
-    .catch(err => console.error("SW erro", err));
+  navigator.serviceWorker.register("./sw.js").then(reg => {
+
+    // 🔥 força atualização quando houver nova versão
+    if (reg.waiting) {
+      reg.waiting.postMessage({ type: "SKIP_WAITING" });
+    }
+
+    reg.addEventListener("updatefound", () => {
+      const newWorker = reg.installing;
+
+      newWorker.addEventListener("statechange", () => {
+        if (newWorker.state === "installed") {
+          if (navigator.serviceWorker.controller) {
+            location.reload(); // 🔥 atualiza o app sozinho
+          }
+        }
+      });
+    });
+
+  });
 }
+
 function toggleSearch(){
   searchMobileBox.style.display = "block";
   searchResults.style.display = "none";
