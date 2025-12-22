@@ -653,7 +653,9 @@ const sb = supabase.createClient(
 let dados=[], heroItem=null, filtro='todos', usuario=null;
 let serieAtual=[], filmeAtual=null;
 let episodioIndexAtual = 0;
+let dadosCarregados = false; // ✅ FALTA ISSO
 
+  
 const ID_PRINCIPAL = "649a1523-e49b-49d8-a34a-452a54b04ba";
 
 (async()=>{
@@ -663,7 +665,7 @@ const ID_PRINCIPAL = "649a1523-e49b-49d8-a34a-452a54b04ba";
 
   const { data } = await sb.from("filmes").select("*").eq("ativo",true);
   dados = data || [];
-
+  dadosCarregados = true;
 heroItem =
   dados.find(d => d.id === ID_PRINCIPAL) ||
   dados[0];
@@ -713,6 +715,14 @@ function toggleSearch(){
 
 
 buscaMobile.oninput = () => {
+
+  if (!dadosCarregados) {
+    searchGrid.innerHTML =
+      "<p style='color:#777'>Carregando catálogo...</p>";
+    searchResults.style.display = "block";
+    return;
+  }
+
   const q = buscaMobile.value.trim().toLowerCase();
 
   if (q.length < 2) {
@@ -739,9 +749,9 @@ buscaMobile.oninput = () => {
     `).join("");
   }
 
-  // 🔥 PRIORIDADE TOTAL
   searchResults.style.display = "block";
 };
+
 
 
 document.addEventListener("click", e => {
