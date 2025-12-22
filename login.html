@@ -8,17 +8,14 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-*{
-  box-sizing:border-box;
-  font-family:Inter,Arial,sans-serif;
-}
+*{box-sizing:border-box;font-family:Inter,Arial,sans-serif}
 
 :root{
   --bg:#0f0f10;
   --surface:#1b1b1e;
   --card:#232326;
   --accent:#e50914;
-  --text:#ffffff;
+  --text:#fff;
   --muted:#b5b5b5;
   --border:#2b2b2b;
 }
@@ -26,12 +23,12 @@
 body{
   margin:0;
   height:100vh;
-  overflow:hidden;
   background:var(--bg);
   color:var(--text);
+  overflow:hidden;
 }
 
-/* 🎬 VÍDEO FUNDO */
+/* 🎬 FUNDO */
 video{
   position:fixed;
   inset:0;
@@ -41,29 +38,16 @@ video{
   z-index:-2;
 }
 
-/* GRADIENTE OVERLAY (IGUAL HERO) */
 .bg{
   position:fixed;
   inset:0;
   background:
-    linear-gradient(
-      to right,
-      rgba(0,0,0,.88) 0%,
-      rgba(0,0,0,.75) 40%,
-      rgba(0,0,0,.45) 60%,
-      rgba(0,0,0,.15) 75%,
-      rgba(0,0,0,0) 90%
-    ),
-    linear-gradient(
-      to top,
-      rgba(0,0,0,.65) 0%,
-      rgba(0,0,0,.35) 35%,
-      rgba(0,0,0,0) 65%
-    );
+    linear-gradient(to right,rgba(0,0,0,.9),rgba(0,0,0,.4),rgba(0,0,0,0)),
+    linear-gradient(to top,rgba(0,0,0,.7),transparent);
   z-index:-1;
 }
 
-/* 🧱 CONTAINER LOGIN */
+/* 🧱 LOGIN */
 .container{
   position:absolute;
   top:50%;
@@ -78,99 +62,58 @@ video{
   box-shadow:0 40px 80px rgba(0,0,0,.6);
 }
 
-/* 🧠 TÍTULO */
 h1{
   margin:0 0 30px;
-  font-size:38px;
+  font-size:36px;
   font-weight:800;
-  letter-spacing:.5px;
 }
-h1 span{
-  color:var(--accent);
-}
+h1 span{color:var(--accent)}
 
-/* FORM */
-.group{
-  margin-bottom:22px;
-}
-
-label{
-  font-size:14px;
-  color:var(--muted);
-  margin-bottom:6px;
-  display:block;
-}
-
+.group{margin-bottom:18px}
+label{font-size:14px;color:var(--muted)}
 input{
   width:100%;
   padding:14px 16px;
-  font-size:15px;
   border-radius:12px;
   border:1px solid var(--border);
   background:rgba(0,0,0,.45);
-  color:var(--text);
-  outline:none;
+  color:#fff;
+  margin-top:6px;
 }
 
-input:focus{
-  border-color:var(--accent);
-}
-
-/* 🔴 BOTÃO */
 .btn{
-  margin-top:10px;
   width:100%;
   padding:15px;
-  font-size:16px;
+  margin-top:10px;
   border:none;
   border-radius:14px;
   background:var(--accent);
-  color:white;
+  color:#fff;
   font-weight:700;
   cursor:pointer;
-  position:relative;
-  transition:.25s;
-}
-
-.btn:hover{
-  filter:brightness(1.05);
 }
 
 .btn.loading{
   pointer-events:none;
-  opacity:.85;
+  opacity:.8;
 }
 
-.btn.loading::after{
-  content:"Aguarde...";
-  position:absolute;
-  inset:0;
-  background:var(--accent);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  border-radius:14px;
-}
-
-/* LINKS */
 .link{
   margin-top:18px;
   text-align:center;
   font-size:14px;
-  color:#ddd;
   cursor:pointer;
   text-decoration:underline;
 }
 
-/* MENSAGEM */
 .msg{
   margin-top:14px;
   min-height:18px;
-  color:#facc15;
   font-size:14px;
+  color:#facc15;
 }
 
-/* 🪟 MODAL CADASTRO */
+/* 🔳 MODAL */
 .modal{
   position:fixed;
   inset:0;
@@ -178,36 +121,15 @@ input:focus{
   display:none;
   align-items:center;
   justify-content:center;
-  z-index:50;
+  z-index:100;
 }
-
 .modal-box{
   width:420px;
   max-width:92%;
   background:var(--surface);
   padding:34px;
   border-radius:18px;
-  box-shadow:0 30px 60px rgba(0,0,0,.6);
 }
-
-.modal-box h2{
-  margin-top:0;
-  margin-bottom:22px;
-  font-size:26px;
-  color:var(--text);
-}
-
-/* MOBILE */
-@media(max-width:480px){
-  .container{
-    padding:32px 26px;
-  }
-
-  h1{
-    font-size:30px;
-  }
-}
-
 </style>
 </head>
 
@@ -224,17 +146,17 @@ input:focus{
 
   <div class="group">
     <label>Email</label>
-    <input id="email" type="email">
+    <input id="email">
   </div>
 
   <div class="group">
     <label>Senha</label>
-    <input id="senha" type="password" minlength="4">
+    <input id="senha" type="password">
   </div>
 
   <button id="btnLogin" class="btn">Entrar</button>
 
-  <div class="link" id="abrirCadastro">Ainda não tenho uma conta</div>
+  <div class="link" id="abrirCadastro">Ainda não tenho conta</div>
   <div class="msg" id="msg"></div>
 </div>
 
@@ -243,30 +165,11 @@ input:focus{
   <div class="modal-box">
     <h2>Criar conta</h2>
 
-    <div class="group">
-      <label>Email</label>
-      <input id="c_email">
-    </div>
-
-    <div class="group">
-      <label>CPF</label>
-      <input id="c_cpf">
-    </div>
-
-    <div class="group">
-      <label>WhatsApp</label>
-      <input id="c_whats">
-    </div>
-
-    <div class="group">
-      <label>Senha (mín. 4 caracteres)</label>
-      <input id="c_senha" type="password" minlength="4">
-    </div>
-
-    <div class="group">
-      <label>Confirmar senha</label>
-      <input id="c_confirma" type="password" minlength="4">
-    </div>
+    <div class="group"><label>Email</label><input id="c_email"></div>
+    <div class="group"><label>CPF</label><input id="c_cpf"></div>
+    <div class="group"><label>WhatsApp</label><input id="c_whats"></div>
+    <div class="group"><label>Senha</label><input id="c_senha" type="password"></div>
+    <div class="group"><label>Confirmar senha</label><input id="c_confirma" type="password"></div>
 
     <button id="btnCadastro" class="btn">Cadastrar</button>
     <div class="link" id="fecharCadastro">Cancelar</div>
@@ -282,100 +185,69 @@ const sb = supabase.createClient(
 /* MODAL */
 abrirCadastro.onclick = () => modal.style.display="flex";
 fecharCadastro.onclick = () => modal.style.display="none";
-modal.onclick = e => { if(e.target === modal) modal.style.display="none"; };
+modal.onclick = e => e.target===modal && (modal.style.display="none");
 
 /* LOGIN */
 btnLogin.onclick = async () => {
-  msg.textContent = "";
+  msg.textContent="";
   btnLogin.classList.add("loading");
-
-  const emailVal = email.value.trim();
-  const senhaVal = senha.value; // ❗ NÃO usar trim aqui
-
-  if(!emailVal || senhaVal.length < 4){
-    msg.textContent = "Senha deve ter no mínimo 4 caracteres";
-    btnLogin.classList.remove("loading");
-    return;
-  }
 
   const { data } = await sb
     .from("usuarios")
     .select("*")
-    .eq("email", emailVal)
+    .eq("email", email.value.trim())
     .single();
 
   btnLogin.classList.remove("loading");
 
-  if(!data || data.senha !== senhaVal){
-    msg.textContent = "Usuário ou senha inválidos";
+  if(!data || data.senha !== senha.value){
+    msg.textContent="Usuário ou senha inválidos";
     return;
   }
 
-const agora = new Date();
-const expira = new Date(data.trial_expires_at);
+  const agora=new Date();
+  const expira=new Date(data.trial_expires_at);
 
-// 🚫 BLOQUEADO = NUNCA ENTRA
-if (data.status === "Bloqueado") {
-  msg.innerHTML = `
-    Acesso bloqueado.<br>
-    Entre em contato pelo WhatsApp:<br>
+  if(data.status==="bloqueado"){
+    msg.innerHTML=`Acesso bloqueado.<br>
     <a href="https://wa.me/55${data.whatsapp}" target="_blank" style="color:#25d366">
-      Clique aqui para falar conosco
-    </a>
-  `;
-  return;
-}
-
-// ⏰ TRIAL EXPIRADO E NÃO APROVADO
-if (agora > expira && data.status !== "aprovado") {
-  msg.textContent = "Seu teste expirou. Aguarde aprovação.";
-  return;
-}
-
-// ✅ OK → LOGA
-localStorage.setItem("usuario_email", data.email);
-window.location.href = "index.html";
-
-  }else{
-    msg.textContent = "Seu teste expirou. Aguarde aprovação.";
+    Falar no WhatsApp</a>`;
+    return;
   }
+
+  if(agora>expira && data.status!=="aprovado"){
+    msg.textContent="Seu acesso está aguardando ativação.";
+    return;
+  }
+
+  localStorage.setItem("usuario_email", data.email);
+  location.href="index.html";
 };
 
 /* CADASTRO */
 btnCadastro.onclick = async () => {
-  btnCadastro.classList.add("loading");
-
-  if(c_senha.value.length < 4){
-    alert("A senha deve ter no mínimo 4 caracteres");
-    btnCadastro.classList.remove("loading");
+  if(c_senha.value.length<4 || c_senha.value!==c_confirma.value){
+    alert("Senha inválida");
     return;
   }
 
-  if(c_senha.value !== c_confirma.value){
-    alert("Senhas não conferem");
-    btnCadastro.classList.remove("loading");
-    return;
-  }
-
-  const trial = new Date(Date.now() + 86400000);
+  const trial=new Date(Date.now()+86400000);
 
   const { error } = await sb.from("usuarios").insert({
-    email: c_email.value.trim(),
-    cpf: c_cpf.value.trim(),
-    whatsapp: c_whats.value.trim(),
-    senha: c_senha.value, // ❗ salva exatamente como digitado
-    status: "pendente",
-    trial_expires_at: trial.toISOString()
+    email:c_email.value.trim(),
+    cpf:c_cpf.value.trim(),
+    whatsapp:c_whats.value.trim(),
+    senha:c_senha.value,
+    status:"pendente",
+    trial_expires_at:trial.toISOString()
   });
 
-  btnCadastro.classList.remove("loading");
-
   if(error){
-    alert("Erro ao cadastrar. Email ou CPF já existe.");
+    alert("Email ou CPF já cadastrado");
     return;
   }
 
-  alert("Cadastro criado! Teste grátis liberado.");
+  alert("Cadastro criado! Aguarde ativação.");
   modal.style.display="none";
 };
 </script>
