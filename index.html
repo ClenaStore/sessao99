@@ -392,7 +392,6 @@ html, body {
   overscroll-behavior: none;
   touch-action: manipulation;
 }
-/* 🔍 SEARCH OVERLAY */
 #searchResults{
   position:fixed;
   top:64px;
@@ -410,12 +409,13 @@ html, body {
 
   display:none;
 
-  z-index:99999;          /* 🔥 AQUI É O PULO DO GATO */
-  isolation:isolate;     /* 🔥 QUEBRA STACKING CONTEXT */
+  z-index:99999;          /* 🔥 acima do hero e do vídeo */
+  isolation:isolate;     /* 🔥 quebra stacking context */
   pointer-events:auto;
 
-  box-shadow:0 30px 60px rgba(0,0,0,.7);
+  overscroll-behavior:contain; /* 🔥 scroll NÃO vaza */
 }
+
 
 
 
@@ -524,7 +524,9 @@ html, body {
 }
 body.search-open{
   overflow:hidden;
+  height:100vh;
 }
+
 
 </style>
 </head>
