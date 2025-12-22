@@ -79,29 +79,54 @@ video{
   margin-bottom:18px;
 }
 
-/* CONTROLES DE SÉRIE */
+/* 🎨 CONTROLES DE SÉRIE (BONITOS) */
 #serieControls{
   display:none;
+  margin-top:12px;
+}
+
+.select-box{
+  position:relative;
+  margin-bottom:10px;
+}
+
+.select-box::after{
+  content:"▾";
+  position:absolute;
+  right:14px;
+  top:50%;
+  transform:translateY(-50%);
+  pointer-events:none;
+  color:#aaa;
 }
 
 select{
   width:100%;
-  padding:10px;
-  margin-bottom:10px;
-  background:#1f1f1f;
+  appearance:none;
+  padding:12px 14px;
+  background:#1c1c1c;
   border:1px solid #333;
+  border-radius:10px;
   color:#fff;
-  border-radius:6px;
+  font-size:14px;
+  cursor:pointer;
 }
 
-/* PRÓXIMO EP */
+select:hover{border-color:#555}
+select:focus{
+  outline:none;
+  border-color:#e50914;
+  box-shadow:0 0 0 2px rgba(229,9,20,.25);
+}
+
+/* ▶ PRÓXIMO EP */
 #btnProximo{
   position:absolute;
   right:40px;
   bottom:120px;
   padding:12px 22px;
   border:none;
-  border-radius:6px;
+  border-radius:999px;
   font-size:15px;
   font-weight:600;
   cursor:pointer;
@@ -135,14 +160,16 @@ select{
 
     <div id="side">
       <h2 id="titulo"></h2>
-
       <div id="meta"></div>
-
       <p id="desc"></p>
 
       <div id="serieControls">
-        <select id="selTemporada"></select>
-        <select id="selEpisodio"></select>
+        <div class="select-box">
+          <select id="selTemporada"></select>
+        </div>
+        <div class="select-box">
+          <select id="selEpisodio"></select>
+        </div>
       </div>
     </div>
   </div>
@@ -155,9 +182,21 @@ const sb = supabase.createClient(
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-/* 📦 ITEM RECEBIDO */
+/* 🔐 VALIDA SESSÃO */
+const usuarioEmail = localStorage.getItem("usuario_email");
+if(!usuarioEmail){
+  location.replace("login.html");
+}
+
+/* 📦 ITEM */
 const params = new URLSearchParams(location.search);
-const item = JSON.parse(decodeURIComponent(params.get("item")));
+const rawItem = params.get("item");
+
+if(!rawItem){
+  location.replace("index.html");
+}
+
+const item = JSON.parse(decodeURIComponent(rawItem));
 
 /* 🎬 ELEMENTOS */
 const video = document.getElementById("video");
@@ -208,7 +247,9 @@ async function carregarSerie(){
   serieControls.style.display = "block";
 
   const temporadas = [...new Set(serie.map(e => e.temporada))];
-  selTemporada.innerHTML = temporadas.map(t => `<option value="${t}">Temporada ${t}</option>`).join("");
+  selTemporada.innerHTML = temporadas
+    .map(t => `<option value="${t}">Temporada ${t}</option>`)
+    .join("");
 
   selTemporada.onchange = montarEpisodios;
   montarEpisodios();
@@ -217,9 +258,9 @@ async function carregarSerie(){
 function montarEpisodios(){
   const eps = serie.filter(e => e.temporada == selTemporada.value);
 
-  selEpisodio.innerHTML = eps.map((e,i)=>
-    `<option value="${i}">Episódio ${e.episodio}</option>`
-  ).join("");
+  selEpisodio.innerHTML = eps
+    .map((e,i)=> `<option value="${i}">Episódio ${e.episodio}</option>`)
+    .join("");
 
   episodioIndex = 0;
   tocarEpisodio(eps, episodioIndex);
@@ -232,7 +273,6 @@ function montarEpisodios(){
 
 function tocarEpisodio(eps, index){
   btnProximo.style.display = "none";
-
   const ep = eps[index];
   if(!ep) return;
 
@@ -240,7 +280,6 @@ function tocarEpisodio(eps, index){
   video.play().catch(()=>{});
 }
 
-/* ▶ PRÓXIMO EPISÓDIO */
 function proximoEpisodio(){
   const eps = serie.filter(e => e.temporada == selTemporada.value);
   episodioIndex++;
@@ -255,23 +294,17 @@ video.addEventListener("timeupdate", ()=>{
   if(item.tipo !== "serie") return;
   if(!video.duration) return;
 
-  if(video.duration - video.currentTime <= 60){
-    btnProximo.style.display = "block";
-  }else{
-    btnProximo.style.display = "none";
-  }
+  btnProximo.style.display =
+    (video.duration - video.currentTime <= 60)
+      ? "block"
+      : "none";
 });
 
 /* ⬅ VOLTAR */
 function voltar(){
   video.pause();
   video.src = "";
-
-  if(document.referrer && document.referrer.includes("index.html")){
-    history.back();
-  }else{
-    location.href = "index.html";
-  }
+  location.replace("index.html");
 }
 </script>
 
