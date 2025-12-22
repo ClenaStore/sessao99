@@ -398,21 +398,25 @@ html, body {
   top:64px;
   left:50%;
   transform:translateX(-50%);
+
   width:92%;
   max-width:1100px;
-
-  max-height:70vh;              /* 🔥 LIMITE DE ALTURA */
-  overflow-y:auto;              /* 🔥 SCROLL AQUI */
+  max-height:70vh;
+  overflow-y:auto;
 
   background:#111;
   border-radius:14px;
   padding:20px;
-  display:none;
-  z-index:9001;
-  box-shadow:0 30px 60px rgba(0,0,0,.7);
 
-  overscroll-behavior:contain;  /* 🔒 não vaza scroll */
+  display:none;
+
+  z-index:99999;          /* 🔥 AQUI É O PULO DO GATO */
+  isolation:isolate;     /* 🔥 QUEBRA STACKING CONTEXT */
+  pointer-events:auto;
+
+  box-shadow:0 30px 60px rgba(0,0,0,.7);
 }
+
 
 
 #searchResults h4{
