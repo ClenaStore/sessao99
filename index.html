@@ -1111,14 +1111,15 @@ async function validarSessao() {
     .from("usuarios")
     .select("status, trial_expires_at, whatsapp")
     .eq("email", email)
-    .single();
+    .maybeSingle()
 
-  if (error || !data) {
-    localStorage.clear();
-    location.replace("login.html");
+if (error || !data) {
+  console.warn("Sessão inválida", error);
+  localStorage.clear();
+  location.replace("login.html");
+  return false;
+}
 
-    return false;
-  }
 
   const agora = new Date();
   const expira = new Date(data.trial_expires_at);
