@@ -64,7 +64,6 @@ body{
   z-index:1;
 }
 
-/* FUNDO QUE ACOMPANHA O TEXTO */
 .logo-text::before{
   content:"";
   position:absolute;
@@ -74,7 +73,6 @@ body{
   z-index:-1;
 }
 
-/* GLOW */
 .logo-text::after{
   content:"";
   position:absolute;
@@ -100,28 +98,33 @@ body{
   gap:22px;
 }
 
+/* CARD */
 .card{
   height:240px;
   border-radius:16px;
   overflow:hidden;
   box-shadow:0 16px 40px rgba(0,0,0,.8);
   transition:.3s;
+  position:relative;
 }
 
-.cover{
+.card img{
   width:100%;
   height:100%;
-  background:
-    linear-gradient(180deg, rgba(0,0,0,.15), rgba(0,0,0,.9)),
-    linear-gradient(135deg,
-      hsl(var(--hue),65%,45%),
-      hsl(calc(var(--hue) + 35),75%,35%)
-    );
-  display:flex;
-  align-items:flex-end;
+  object-fit:cover;
+  display:block;
+}
+
+/* OVERLAY DE TEXTO */
+.card .title{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
   padding:14px;
   font-size:14px;
   font-weight:700;
+  background:linear-gradient(180deg, transparent, rgba(0,0,0,.85));
 }
 
 .card:hover{
@@ -232,10 +235,31 @@ body{
   <!-- CATÁLOGO -->
   <div class="content">
     <div class="catalog">
-      <div class="card" style="--hue:15"><div class="cover">Esquadrão Suicida<br>Acerto de Contas</div></div>
-      <div class="card" style="--hue:200"><div class="cover">Pânico no Lago<br>(1999)</div></div>
-      <div class="card" style="--hue:45"><div class="cover">A Menina Que<br>Roubava Livros</div></div>
-      <div class="card" style="--hue:270"><div class="cover">Percy Jackson e o<br>Ladrão de Raios</div></div>
+
+      <!-- CARD 1 -->
+      <div class="card">
+        <img src="img1.png" alt="Esquadrão Suicida">
+        <div class="title">Esquadrão Suicida<br>Acerto de Contas</div>
+      </div>
+
+      <!-- CARD 2 -->
+      <div class="card">
+        <img src="img2.png" alt="Pânico no Lago">
+        <div class="title">Pânico no Lago<br>(1999)</div>
+      </div>
+
+      <!-- CARD 3 -->
+      <div class="card">
+        <img src="img3.png" alt="A Menina Que Roubava Livros">
+        <div class="title">A Menina Que<br>Roubava Livros</div>
+      </div>
+
+      <!-- CARD 4 -->
+      <div class="card">
+        <img src="img4.png" alt="Percy Jackson">
+        <div class="title">Percy Jackson e o<br>Ladrão de Raios</div>
+      </div>
+
     </div>
   </div>
 
