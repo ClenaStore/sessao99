@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>CLENA • Filmes e Séries</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 :root{
@@ -18,46 +18,45 @@
   font-family:Inter,Arial,sans-serif;
 }
 
+/* ===== BODY ===== */
 body{
-  height:100vh;
   background:radial-gradient(circle at top, #3a0000 0%, #140000 35%, #000 70%);
   color:#fff;
-  overflow:hidden;
 }
 
-/* LAYOUT */
+/* ===== LAYOUT DESKTOP ===== */
 .page{
-  height:100vh;
+  min-height:100vh;
   display:grid;
   grid-template-rows:auto 1fr auto;
   padding:26px 32px;
 }
 
-/* HEADER */
+/* ===== HEADER ===== */
 .header{
   text-align:center;
 }
 
 .header h1{
-  font-size:clamp(36px,5vw,56px);
+  font-size:clamp(32px,5vw,56px);
   font-weight:900;
 }
 .header h1 span{color:var(--red)}
 
 .header p{
   margin-top:6px;
-  font-size:13px;
+  font-size:12px;
   letter-spacing:2px;
   opacity:.7;
 }
 
-/* LOGO TEXTO */
+/* ===== LOGO TEXTO ===== */
 .logo-text{
   position:relative;
   display:inline-block;
-  margin:16px auto 10px;
-  padding:22px 44px;
-  font-size:64px;
+  margin:14px auto 10px;
+  padding:18px 38px;
+  font-size:56px;
   font-weight:900;
   letter-spacing:4px;
   color:var(--red);
@@ -67,7 +66,7 @@ body{
 .logo-text::before{
   content:"";
   position:absolute;
-  inset:-10px -16px;
+  inset:-8px -14px;
   background:#000;
   border-radius:999px;
   z-index:-1;
@@ -76,18 +75,18 @@ body{
 .logo-text::after{
   content:"";
   position:absolute;
-  inset:-30px -40px;
-  background:radial-gradient(circle, rgba(229,9,20,.6), transparent 70%);
+  inset:-26px -36px;
+  background:radial-gradient(circle, rgba(229,9,20,.55), transparent 70%);
   filter:blur(18px);
   border-radius:999px;
   z-index:-2;
 }
 
-/* CATÁLOGO */
+/* ===== CATÁLOGO ===== */
 .content{
   display:flex;
-  align-items:center;
   justify-content:center;
+  align-items:center;
 }
 
 .catalog{
@@ -95,55 +94,51 @@ body{
   max-width:980px;
   display:grid;
   grid-template-columns:repeat(4,1fr);
-  gap:22px;
+  gap:18px;
 }
 
-/* CARD */
+/* ===== CARD ===== */
 .card{
-  height:240px;
+  height:230px;
   border-radius:16px;
   overflow:hidden;
-  box-shadow:0 16px 40px rgba(0,0,0,.8);
-  transition:.3s;
   position:relative;
+  box-shadow:0 14px 36px rgba(0,0,0,.8);
+  transition:.3s;
 }
 
 .card img{
   width:100%;
   height:100%;
   object-fit:cover;
-  display:block;
 }
 
-/* OVERLAY DE TEXTO */
 .card .title{
   position:absolute;
-  left:0;
-  right:0;
-  bottom:0;
-  padding:14px;
-  font-size:14px;
+  inset:auto 0 0 0;
+  padding:12px;
+  font-size:13px;
   font-weight:700;
   background:linear-gradient(180deg, transparent, rgba(0,0,0,.85));
 }
 
 .card:hover{
-  transform:translateY(-8px) scale(1.04);
+  transform:translateY(-6px) scale(1.04);
 }
 
-/* FOOTER */
+/* ===== FOOTER ===== */
 .footer{
   text-align:center;
 }
 
 .footer .info{
-  font-size:14px;
+  font-size:13px;
   opacity:.75;
 }
 
 .price{
   margin-top:6px;
-  font-size:24px;
+  font-size:22px;
   font-weight:900;
   color:var(--gold);
 }
@@ -155,17 +150,17 @@ body{
   margin-top:3px;
 }
 
-/* BOTÃO */
+/* ===== BOTÃO ===== */
 .cta{
-  margin-top:14px;
+  margin-top:12px;
 }
 
 .cta button{
-  padding:14px 46px;
+  padding:13px 40px;
   background:var(--red);
   color:#fff;
   font-weight:900;
-  font-size:17px;
+  font-size:16px;
   border-radius:999px;
   border:none;
   cursor:pointer;
@@ -174,10 +169,10 @@ body{
 }
 
 .cta button:hover{
-  transform:scale(1.07);
+  transform:scale(1.06);
 }
 
-/* INTRO OVERLAY */
+/* ===== INTRO ===== */
 .intro{
   position:fixed;
   inset:0;
@@ -198,18 +193,53 @@ body{
   animation:introAnim 1.4s ease forwards;
 }
 
-/* MOBILE */
+/* ===== MOBILE ===== */
 @media(max-width:900px){
-  .catalog{grid-template-columns:repeat(2,1fr)}
-  .card{height:210px}
+
+  body{
+    overflow:auto;
+  }
+
+  .page{
+    min-height:auto;
+    padding:18px 14px 22px;
+    grid-template-rows:auto auto auto;
+  }
+
   .logo-text{
-    font-size:44px;
-    padding:16px 30px;
+    font-size:40px;
+    padding:14px 28px;
     letter-spacing:2px;
+  }
+
+  .content{
+    margin:14px 0;
+  }
+
+  .catalog{
+    grid-template-columns:repeat(2,1fr);
+    gap:12px;
+  }
+
+  .card{
+    height:160px;
+  }
+
+  .card .title{
+    font-size:12px;
+  }
+
+  .price{
+    font-size:20px;
+  }
+
+  .cta button{
+    width:100%;
+    max-width:320px;
   }
 }
 
-/* ANIMAÇÃO */
+/* ===== ANIMAÇÃO ===== */
 @keyframes introAnim{
   0%{opacity:0; transform:scale(.6)}
   40%{opacity:1; transform:scale(1)}
@@ -236,28 +266,24 @@ body{
   <div class="content">
     <div class="catalog">
 
-      <!-- CARD 1 -->
       <div class="card">
-        <img src="reiarthur.png" alt="Rei Arthur">
-        <div class="title">A lenda<br>Rei Arthur</div>
+        <img src="reiarthur.png">
+        <div class="title">A Lenda<br>Rei Arthur</div>
       </div>
 
-      <!-- CARD 2 -->
       <div class="card">
-        <img src="batman.png" alt="Batman VS Robin">
+        <img src="batman.png">
         <div class="title">Batman VS Robin<br>(2015)</div>
       </div>
 
-      <!-- CARD 3 -->
       <div class="card">
-        <img src="menina.png" alt="A Menina Que Roubava Livros">
+        <img src="menina.png">
         <div class="title">A Menina Que<br>Roubava Livros</div>
       </div>
 
-      <!-- CARD 4 -->
       <div class="card">
-        <img src="jogosvorazes.png" alt="Jogos Vorazes">
-        <div class="title">Jogos Vorazes<br>A esperança</div>
+        <img src="jogosvorazes.png">
+        <div class="title">Jogos Vorazes<br>A Esperança</div>
       </div>
 
     </div>
