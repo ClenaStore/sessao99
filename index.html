@@ -742,7 +742,7 @@ buscaMobile.oninput = () => {
       "<p style='color:#777'>Nenhum resultado encontrado</p>";
   } else {
     searchGrid.innerHTML = resultados.map(r => `
-      <div class="search-card" onclick='abrirPlayer(${JSON.stringify(r)})'>
+      <div class="search-card" onclick='event.stopPropagation(); abrirPlayer(...)'>
         <img src="${r.capa_url}">
         <span>${r.titulo || r.serie_nome}</span>
       </div>
