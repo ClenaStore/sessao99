@@ -53,20 +53,20 @@ body{
 
 /* LOGO */
 .logo{
-  margin:22px auto 14px;
-  width:120px;
-  height:120px;
-  border-radius:26px;
+  margin:18px auto 16px;
+  width:160px;
+  height:160px;
+  border-radius:32px;
   background:linear-gradient(145deg,#000,#111);
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:54px;
+  font-size:72px;
   font-weight:900;
   color:var(--red);
   box-shadow:
-    0 0 35px rgba(229,9,20,.6),
-    0 0 90px rgba(229,9,20,.4);
+    0 0 45px rgba(229,9,20,.7),
+    0 0 120px rgba(229,9,20,.5);
   animation:logoPulse 2.8s infinite;
 }
 
@@ -145,7 +145,7 @@ body{
   margin-top:18px;
 }
 
-.cta a{
+.cta button{
   display:inline-flex;
   align-items:center;
   justify-content:center;
@@ -156,14 +156,35 @@ body{
   font-weight:900;
   font-size:18px;
   border-radius:999px;
-  text-decoration:none;
+  border:none;
+  cursor:pointer;
   box-shadow:0 14px 40px rgba(229,9,20,.7);
   transition:.3s;
 }
 
-.cta a:hover{
+.cta button:hover{
   transform:scale(1.08);
   box-shadow:0 20px 60px rgba(229,9,20,1);
+}
+
+/* OVERLAY ANIMAÇÃO */
+.overlay{
+  position:fixed;
+  inset:0;
+  background:#000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:clamp(60px,12vw,140px);
+  font-weight:900;
+  color:var(--red);
+  opacity:0;
+  pointer-events:none;
+  z-index:999;
+}
+
+.overlay.show{
+  animation:overlayAnim 1.6s forwards;
 }
 
 /* MOBILE */
@@ -176,7 +197,7 @@ body{
   }
 }
 
-/* ANIMAÇÃO LOGO */
+/* ANIMAÇÕES */
 @keyframes logoPulse{
   0%,100%{
     transform:scale(1);
@@ -191,10 +212,31 @@ body{
       0 0 130px rgba(229,9,20,.6);
   }
 }
+
+@keyframes overlayAnim{
+  0%{
+    opacity:0;
+    transform:scale(.6);
+  }
+  40%{
+    opacity:1;
+    transform:scale(1);
+  }
+  80%{
+    opacity:1;
+    transform:scale(1.05);
+  }
+  100%{
+    opacity:0;
+    transform:scale(1.2);
+  }
+}
 </style>
 </head>
 
 <body>
+
+<div class="overlay" id="overlay">CLENA</div>
 
 <div class="page">
 
@@ -234,13 +276,23 @@ body{
       <small>após período de teste</small>
     </div>
 
-    <!-- BOTÃO -->
     <div class="cta">
-      <a href="index.html">▶ ASSISTA AGORA</a>
+      <button onclick="assistir()">▶ ASSISTA AGORA</button>
     </div>
   </div>
 
 </div>
+
+<script>
+function assistir(){
+  const overlay = document.getElementById('overlay');
+  overlay.classList.add('show');
+
+  setTimeout(()=>{
+    window.location.href = "index.html";
+  },1400);
+}
+</script>
 
 </body>
 </html>
