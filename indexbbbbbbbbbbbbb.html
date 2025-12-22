@@ -73,6 +73,12 @@ header input{
   background:var(--accent);
   font-weight:700;
 }
+header input{
+  font-size:16px;
+}
+input, textarea, select {
+  touch-action: manipulation;
+}
 
 /* ================= HERO ================= */
 .hero{
@@ -210,6 +216,11 @@ header input{
 }
 .filtros button.active{
   background:var(--accent);
+}
+@media (max-width:768px){
+  input, textarea, select {
+    font-size:16px;
+  }
 }
 
 /* ================= SECTIONS ================= */
@@ -381,21 +392,32 @@ html, body {
   overscroll-behavior: none;
   touch-action: manipulation;
 }
-/* 🔍 SEARCH OVERLAY */
 #searchResults{
   position:fixed;
   top:64px;
   left:50%;
   transform:translateX(-50%);
+
   width:92%;
   max-width:1100px;
+  max-height:70vh;
+  overflow-y:auto;
+
   background:#111;
   border-radius:14px;
   padding:20px;
+
   display:none;
-  z-index:200;
-  box-shadow:0 30px 60px rgba(0,0,0,.7);
+
+  z-index:99999;          /* 🔥 acima do hero e do vídeo */
+  isolation:isolate;     /* 🔥 quebra stacking context */
+  pointer-events:auto;
+
+  overscroll-behavior:contain; /* 🔥 scroll NÃO vaza */
 }
+
+
+
 
 #searchResults h4{
   margin:0 0 14px;
@@ -430,7 +452,9 @@ html, body {
   #searchResults{
     top:56px;
     padding:14px;
+    max-height:75vh;   /* 🔥 mais espaço no mobile */
   }
+}
   .search-card img{
     height:140px;
   }
@@ -478,7 +502,7 @@ html, body {
   padding:12px;
   background:rgba(0,0,0,.95);
   display:none;
-  z-index:300;
+  z-index: 9000;
 }
 
 #buscaMobile{
@@ -486,9 +510,21 @@ html, body {
   padding:14px 16px;
   border-radius:999px;
   border:none;
-  font-size:15px;
+  font-size:16px;
   background:#2b2b2b;
   color:#fff;
+}
+
+#searchMobileBox{
+  pointer-events: auto;
+}
+
+#searchResults{
+  pointer-events: auto;
+}
+body.search-open{
+  overflow:hidden;
+  height:100vh;
 }
 
 
@@ -632,130 +668,135 @@ const sb = supabase.createClient(
 let dados=[], heroItem=null, filtro='todos', usuario=null;
 let serieAtual=[], filmeAtual=null;
 let episodioIndexAtual = 0;
+let dadosCarregados = false; // ✅ FALTA ISSO
 
+  
 const ID_PRINCIPAL = "649a1523-e49b-49d8-a34a-452a54b04ba";
 
-(async()=>{
-  if(!localStorage.usuario){location.href="login.html";return;}
-  usuario = JSON.parse(localStorage.usuario);
-  perfilEmail.textContent = usuario.email || "";
+async function iniciarApp() {
 
-  const { data } = await sb.from("filmes").select("*").eq("ativo",true);
+  // aqui o usuario JÁ EXISTE (veio do validarSessao)
+  perfilEmail.textContent = usuario.email;
+
+  const { data } = await sb
+    .from("filmes")
+    .select("*")
+    .eq("ativo", true);
+
   dados = data || [];
+  dadosCarregados = true;
 
-heroItem =
-  dados.find(d => d.id === ID_PRINCIPAL) ||
-  dados[0];
+  heroItem =
+    dados.find(d => d.id === ID_PRINCIPAL) ||
+    dados[0];
 
+  hero.style.backgroundImage = `url(${heroItem.capa_url})`;
+  heroTitle.textContent = heroItem.titulo || heroItem.serie_nome;
+  heroMeta.textContent = `${heroItem.categoria} • ${heroItem.tipo}`;
+  heroDesc.textContent = heroItem.descricao || "";
 
-hero.style.backgroundImage = `url(${heroItem.capa_url})`;
-heroTitle.textContent = heroItem.titulo || heroItem.serie_nome;
-heroMeta.textContent = `${heroItem.categoria} • ${heroItem.tipo}`;
-heroDesc.textContent = heroItem.descricao || "";
-// 🔍 MOSTRA "LER MAIS" SE PASSAR DE 3 LINHAS
-setTimeout(() => {
-  const lerMais = document.getElementById("lerMais");
+  // 🔍 botão "ler mais"
+  setTimeout(() => {
+    const lerMais = document.getElementById("lerMais");
+    lerMais.style.display =
+      heroDesc.scrollHeight > heroDesc.clientHeight + 4
+        ? "inline-block"
+        : "none";
+  }, 50);
 
-  if (heroDesc.scrollHeight > heroDesc.clientHeight + 4) {
-    lerMais.style.display = "inline-block";
-  } else {
-    lerMais.style.display = "none";
+  // ▶️ preview de fundo
+  const heroVideo = document.getElementById("heroVideo");
+  if (heroItem.video_url) {
+    heroVideo.src = heroItem.video_url;
+    heroVideo.play().catch(() => {});
   }
-}, 50);
 
-
-// ▶️ PREVIEW NO FUNDO (SEM FULLSCREEN)
-const heroVideo = document.getElementById("heroVideo");
-if (heroItem.video_url) {
-  heroVideo.src = heroItem.video_url;
-  heroVideo.play().catch(() => {});
+  render();
 }
 
-render();
 
-})();
 
 const searchMobileBox = document.getElementById("searchMobileBox");
 const buscaMobile = document.getElementById("buscaMobile");
 const searchResults = document.getElementById("searchResults");
 const searchGrid = document.getElementById("searchGrid");
-
-function toggleSearch(){
-  searchMobileBox.style.display = "block";
-  searchResults.style.display = "none";
-  buscaMobile.value = "";
-  buscaMobile.focus();
-}
-
-buscaMobile.oninput = () => {
-  const q = buscaMobile.value.trim().toLowerCase();
-
-  if(q.length < 2){
-    searchGrid.innerHTML = "";
-    searchResults.style.display = "none";
+const busca = document.getElementById("busca");
+function executarBusca(texto) {
+  if (!dadosCarregados) {
+    searchGrid.innerHTML =
+      "<p style='color:#777'>Carregando catálogo...</p>";
+    searchResults.style.display = "block";
     return;
   }
 
-  const resultados = dados.filter(d =>
-    (d.titulo || d.serie_nome || "")
-      .toLowerCase()
-      .includes(q)
-  );
-
-  searchGrid.innerHTML = "";
-
-  if(!resultados.length){
-    searchGrid.innerHTML =
-      "<p style='color:#777'>Nenhum resultado encontrado</p>";
-  } else {
-    resultados.forEach(r => {
-      searchGrid.innerHTML += `
-        <div class="search-card" onclick='abrirPlayer(${JSON.stringify(r)})'>
-          <img src="${r.capa_url}">
-          <span>${r.titulo || r.serie_nome}</span>
-        </div>
-      `;
-    });
-  }
-
-  searchResults.style.display = "block";
-};
-
-
-buscaMobile.oninput = () => {
-  const q = buscaMobile.value.trim().toLowerCase();
+  const q = texto.trim().toLowerCase();
 
   if (q.length < 2) {
+    searchResults.style.display = "none";
     searchGrid.innerHTML = "";
     return;
   }
 
-  const resultados = dados.filter(d =>
-    (d.titulo || d.serie_nome || "")
-      .toLowerCase()
-      .includes(q)
-  );
+const resultados = [
+  // 🎬 FILMES
+  ...dados.filter(d =>
+    d.tipo === "filme" &&
+    (d.titulo || "").toLowerCase().includes(q)
+  ),
 
-  searchGrid.innerHTML = "";
+  // 📺 SÉRIES AGRUPADAS POR serie_nome
+  ...[
+    ...new Map(
+      dados
+        .filter(d =>
+          d.tipo === "serie" &&
+          (d.serie_nome || "").toLowerCase().includes(q)
+        )
+        .map(s => [s.serie_nome, s])
+    ).values()
+  ]
+];
+
 
   if (!resultados.length) {
     searchGrid.innerHTML =
       "<p style='color:#777'>Nenhum resultado encontrado</p>";
   } else {
-    resultados.forEach(r => {
-      searchGrid.innerHTML += `
-        <div class="search-card" onclick='abrirPlayer(${JSON.stringify(r)})'>
-          <img src="${r.capa_url}">
-          <span>${r.titulo || r.serie_nome}</span>
-        </div>
-      `;
-    });
+    searchGrid.innerHTML = resultados.map(r => `
+      <div class="search-card"
+           onclick="event.stopPropagation(); abrirPlayer(${JSON.stringify(r)})">
+        <img src="${r.capa_url}">
+        <span>${r.titulo || r.serie_nome}</span>
+      </div>
+    `).join("");
   }
-};
-
 
   searchResults.style.display = "block";
+}
+
+
+function toggleSearch(){
+  searchMobileBox.style.display = "block";
+  searchResults.style.display = "none";
+  buscaMobile.value = "";
+  document.body.classList.add("search-open");
+
+  // força foco sem zoom
+  setTimeout(() => buscaMobile.focus(), 100);
+}
+
+
+buscaMobile.oninput = () => {
+  executarBusca(buscaMobile.value);
 };
+
+if (busca) {
+  busca.oninput = () => {
+    executarBusca(busca.value);
+  };
+}
+
+
 document.addEventListener("click", e => {
   if (
     !searchMobileBox.contains(e.target) &&
@@ -764,6 +805,8 @@ document.addEventListener("click", e => {
   ) {
     searchMobileBox.style.display = "none";
     searchResults.style.display = "none";
+    searchGrid.innerHTML = "";
+    document.body.classList.remove("search-open");
   }
 });
 
@@ -938,7 +981,12 @@ function abrirPerfil(){
 }
 
 function fecharPerfil(){perfilOverlay.style.display="none";}
-function logout(){localStorage.clear();location.href="login.html";}
+function logout(){
+  localStorage.clear();
+  sessionStorage.clear();
+  location.replace("login.html");
+}
+
 function irProximoEpisodio(){
   btnProximo.style.display = "none";
 
@@ -1016,26 +1064,132 @@ video.addEventListener("timeupdate", () => {
   }
 });
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("./sw.js")
-    .then(() => console.log("PWA ativo"))
-    .catch(err => console.error("SW erro", err));
+  navigator.serviceWorker.register("./sw.js").then(reg => {
+
+    // 🔥 força atualização quando houver nova versão
+    if (reg.waiting) {
+      reg.waiting.postMessage({ type: "SKIP_WAITING" });
+    }
+
+    reg.addEventListener("updatefound", () => {
+      const newWorker = reg.installing;
+
+      newWorker.addEventListener("statechange", () => {
+        if (newWorker.state === "installed") {
+          if (navigator.serviceWorker.controller) {
+           if (!sessionStorage.getItem("sw_reloaded")) {
+  sessionStorage.setItem("sw_reloaded", "1");
+  location.reload();
 }
+
+          }
+        }
+      });
+    });
+
+  });
+}
+
 function toggleSearch(){
   searchMobileBox.style.display = "block";
-  searchResults.style.display = "block";
+  searchResults.style.display = "none";
   buscaMobile.value = "";
   buscaMobile.focus();
+  document.body.classList.add("search-open");
 }
 
-  if(window.innerWidth <= 768){
-    buscaMobile.value = "";
-    buscaMobile.focus();
-  }else{
-    busca.focus();
+async function validarSessao() {
+  const email = localStorage.getItem("usuario_email");
+
+  if (!email) {
+    location.replace("login.html");
+
+    return false;
   }
+
+  const { data, error } = await sb
+    .from("usuarios")
+    .select("status, trial_expires_at, whatsapp")
+    .eq("email", email)
+    .maybeSingle()
+
+if (error || !data) {
+  console.warn("Sessão inválida", error);
+  localStorage.clear();
+  location.replace("login.html");
+  return false;
 }
 
 
+  const agora = new Date();
+  const expira = new Date(data.trial_expires_at);
+
+  // 🚫 BLOQUEIO IMEDIATO
+  if (data.status === "bloqueado") {
+    localStorage.clear();
+
+    document.body.innerHTML = `
+      <div style="
+        height:100vh;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        background:#0f0f10;
+        color:#fff;
+        font-family:Inter,Arial;
+        text-align:center;
+      ">
+        <div>
+          <h1 style="color:#e50914">Acesso bloqueado</h1>
+          <p style="margin:14px 0;color:#b5b5b5">
+            Seu acesso foi bloqueado.<br>
+            Entre em contato para regularizar.
+          </p>
+          <a href="https://wa.me/55${data.whatsapp || ""}"
+             target="_blank"
+             style="
+               display:inline-block;
+               margin-top:12px;
+               padding:14px 26px;
+               border-radius:999px;
+               background:#25d366;
+               color:#000;
+               font-weight:700;
+               text-decoration:none;
+             ">
+            Falar no WhatsApp
+          </a>
+        </div>
+      </div>
+    `;
+    return false;
+  }
+
+  // ⏰ trial expirado
+  if (agora > expira && data.status !== "aprovado") {
+    localStorage.clear();
+    location.replace("login.html");
+
+    return false;
+  }
+
+  usuario = { email };
+  return true;
+}
+
+
+// 🚪 valida sessão e só depois inicia o app
+(async () => {
+
+  const ok = await validarSessao();
+  if (!ok) return;
+
+  iniciarApp();
+
+  // 🔁 revalida a cada 15s (bloqueio quase imediato)
+  setInterval(validarSessao, 15000);
+
+})();
 
 </script>
 
