@@ -756,9 +756,13 @@ function toggleSearch(){
 buscaMobile.oninput = () => {
   executarBusca(buscaMobile.value);
 };
-busca.oninput = () => {
-  executarBusca(busca.value);
-};
+
+if (busca) {
+  busca.oninput = () => {
+    executarBusca(busca.value);
+  };
+}
+
 
 document.addEventListener("click", e => {
   if (
