@@ -491,6 +491,16 @@ html, body {
   color:#fff;
 }
 
+#searchMobileBox{
+  pointer-events: auto;
+}
+
+#searchResults{
+  pointer-events: auto;
+}
+body.search-open{
+  overflow:hidden;
+}
 
 </style>
 </head>
@@ -690,7 +700,7 @@ function toggleSearch(){
 buscaMobile.oninput = () => {
   const q = buscaMobile.value.trim().toLowerCase();
 
-  if(q.length < 2){
+  if (q.length < 2) {
     searchGrid.innerHTML = "";
     searchResults.style.display = "none";
     return;
@@ -702,60 +712,21 @@ buscaMobile.oninput = () => {
       .includes(q)
   );
 
-  searchGrid.innerHTML = "";
-
-  if(!resultados.length){
-    searchGrid.innerHTML =
-      "<p style='color:#777'>Nenhum resultado encontrado</p>";
-  } else {
-    resultados.forEach(r => {
-      searchGrid.innerHTML += `
-        <div class="search-card" onclick='abrirPlayer(${JSON.stringify(r)})'>
-          <img src="${r.capa_url}">
-          <span>${r.titulo || r.serie_nome}</span>
-        </div>
-      `;
-    });
-  }
-
-  searchResults.style.display = "block";
-};
-
-
-buscaMobile.oninput = () => {
-  const q = buscaMobile.value.trim().toLowerCase();
-
-  if (q.length < 2) {
-    searchGrid.innerHTML = "";
-    return;
-  }
-
-  const resultados = dados.filter(d =>
-    (d.titulo || d.serie_nome || "")
-      .toLowerCase()
-      .includes(q)
-  );
-
-  searchGrid.innerHTML = "";
-
   if (!resultados.length) {
     searchGrid.innerHTML =
       "<p style='color:#777'>Nenhum resultado encontrado</p>";
   } else {
-    resultados.forEach(r => {
-      searchGrid.innerHTML += `
-        <div class="search-card" onclick='abrirPlayer(${JSON.stringify(r)})'>
-          <img src="${r.capa_url}">
-          <span>${r.titulo || r.serie_nome}</span>
-        </div>
-      `;
-    });
+    searchGrid.innerHTML = resultados.map(r => `
+      <div class="search-card" onclick='abrirPlayer(${JSON.stringify(r)})'>
+        <img src="${r.capa_url}">
+        <span>${r.titulo || r.serie_nome}</span>
+      </div>
+    `).join("");
   }
-};
-
 
   searchResults.style.display = "block";
 };
+
 document.addEventListener("click", e => {
   if (
     !searchMobileBox.contains(e.target) &&
@@ -764,6 +735,7 @@ document.addEventListener("click", e => {
   ) {
     searchMobileBox.style.display = "none";
     searchResults.style.display = "none";
+    document.body.classList.remove("search-open");
   }
 });
 
@@ -1022,17 +994,10 @@ if ("serviceWorker" in navigator) {
 }
 function toggleSearch(){
   searchMobileBox.style.display = "block";
-  searchResults.style.display = "block";
+  searchResults.style.display = "none";
   buscaMobile.value = "";
   buscaMobile.focus();
-}
-
-  if(window.innerWidth <= 768){
-    buscaMobile.value = "";
-    buscaMobile.focus();
-  }else{
-    busca.focus();
-  }
+  document.body.classList.add("search-open");
 }
 
 
