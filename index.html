@@ -404,7 +404,7 @@ html, body {
   border-radius:14px;
   padding:20px;
   display:none;
-  z-index:200;
+  z-index:9001;
   box-shadow:0 30px 60px rgba(0,0,0,.7);
 }
 
@@ -489,7 +489,7 @@ html, body {
   padding:12px;
   background:rgba(0,0,0,.95);
   display:none;
-  z-index:300;
+  z-index: 9000;
 }
 
 #buscaMobile{
@@ -705,15 +705,19 @@ function toggleSearch(){
   searchMobileBox.style.display = "block";
   searchResults.style.display = "none";
   buscaMobile.value = "";
-  buscaMobile.focus();
+  document.body.classList.add("search-open");
+
+  // força foco sem zoom
+  setTimeout(() => buscaMobile.focus(), 100);
 }
+
 
 buscaMobile.oninput = () => {
   const q = buscaMobile.value.trim().toLowerCase();
 
   if (q.length < 2) {
-    searchGrid.innerHTML = "";
     searchResults.style.display = "none";
+    searchGrid.innerHTML = "";
     return;
   }
 
@@ -735,8 +739,10 @@ buscaMobile.oninput = () => {
     `).join("");
   }
 
+  // 🔥 PRIORIDADE TOTAL
   searchResults.style.display = "block";
 };
+
 
 document.addEventListener("click", e => {
   if (
@@ -746,6 +752,7 @@ document.addEventListener("click", e => {
   ) {
     searchMobileBox.style.display = "none";
     searchResults.style.display = "none";
+    searchGrid.innerHTML = "";
     document.body.classList.remove("search-open");
   }
 });
