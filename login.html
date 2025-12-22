@@ -242,31 +242,55 @@ c_whats.oninput = e=>{
 };
 
 /* LOGIN */
-btnLogin.onclick = async ()=>{
-  msg.textContent="";
+btnLogin.onclick = async () => {
+  msg.textContent = "";
   btnLogin.classList.add("loading");
 
-  const { data } = await sb
-    .from("usuarios")
-    .select("*")
-    .eq("email", email.value.trim())
-    .single();
+  const emailVal = email.value.trim();
+  const senhaVal = senha.value;
 
-  btnLogin.classList.remove("loading");
-
-  if(!data || data.senha !== senha.value){
-    msg.textContent="Usuário ou senha inválidos";
+  if (!emailVal || !senhaVal) {
+    msg.textContent = "Preencha email e senha";
+    btnLogin.classList.remove("loading");
     return;
   }
 
-  const agora=new Date(), exp=new Date(data.trial_expires_at);
-  if(data.status==="aprovado" || agora<=exp){
+  const { data, error } = await sb
+    .from("usuarios")
+    .select("email, senha, status, trial_expires_at")
+    .eq("email", emailVal)
+    .maybeSingle(); // 👈 importante
+
+  btnLogin.classList.remove("loading");
+
+  if (error) {
+    msg.textContent = "Erro ao consultar usuário";
+    console.error(error);
+    return;
+  }
+
+  if (!data) {
+    msg.textContent = "Usuário não encontrado";
+    return;
+  }
+
+  if (data.senha !== senhaVal) {
+    msg.textContent = "Senha incorreta";
+    return;
+  }
+
+  const agora = new Date();
+  const expira = new Date(data.trial_expires_at);
+
+  if (data.status === "aprovado" || agora <= expira) {
     localStorage.setItem("usuario_email", data.email);
-    location.href="index.html";
-  }else{
-    msg.textContent="Seu teste expirou. Aguarde aprovação.";
+    console.log("LOGIN OK:", data.email); // 👈 debug
+    location.replace("index.html"); // 👈 evita histórico bugado
+  } else {
+    msg.textContent = "Seu teste expirou. Aguarde aprovação.";
   }
 };
+
 
 /* CADASTRO */
 btnCadastro.onclick = async ()=>{
