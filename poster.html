@@ -9,7 +9,8 @@
 :root{
   --red:#e50914;
   --gold:#f5c36a;
-  --dark:#0b0b0b;
+  --bg1:#2a0000;
+  --bg2:#000;
 }
 
 *{
@@ -20,180 +21,156 @@
 }
 
 body{
+  height:100vh;
   background:
-    radial-gradient(circle at top, #5a0000 0%, #120000 30%, #000 70%);
+    radial-gradient(circle at top, var(--bg1) 0%, var(--bg2) 65%);
   color:#fff;
+  overflow:hidden;
 }
 
-/* HERO */
-.hero{
+/* GRID GERAL */
+.page{
+  height:100vh;
+  display:grid;
+  grid-template-rows:auto 1fr auto;
+  padding:28px 36px;
+}
+
+/* HEADER */
+.header{
   text-align:center;
-  padding:70px 20px 50px;
 }
 
-.hero h1{
-  font-size:clamp(38px,6vw,68px);
+.header h1{
+  font-size:clamp(36px,5vw,56px);
   font-weight:900;
 }
-.hero h1 span{color:var(--red)}
+.header h1 span{color:var(--red)}
 
-.hero p{
-  margin-top:10px;
+.header p{
+  margin-top:6px;
   opacity:.8;
   letter-spacing:2px;
 }
 
 /* LOGO */
 .logo{
-  margin:40px auto;
-  width:130px;
-  height:130px;
-  border-radius:28px;
+  margin:18px auto 10px;
+  width:110px;
+  height:110px;
+  border-radius:24px;
   background:#000;
   display:flex;
   align-items:center;
   justify-content:center;
-  box-shadow:0 0 60px rgba(229,9,20,.8);
+  box-shadow:0 0 40px rgba(229,9,20,.7);
 }
 .logo img{
-  width:90px;
+  width:78px;
+}
+
+/* CONTEÚDO CENTRAL */
+.content{
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 
 /* CATÁLOGO */
-.catalogo{
-  max-width:1100px;
-  margin:0 auto;
-  padding:30px 20px;
-}
-
-.catalogo h2{
-  margin-bottom:20px;
-  font-size:22px;
-}
-
-/* GRID */
-.grid{
+.catalog{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-  gap:18px;
+  grid-template-columns:repeat(4,1fr);
+  gap:22px;
+  max-width:1000px;
+  width:100%;
 }
 
-/* CARD */
 .card{
   background:#111;
-  border-radius:14px;
+  border-radius:16px;
   overflow:hidden;
-  cursor:pointer;
   transition:.35s;
+  box-shadow:0 15px 40px rgba(0,0,0,.7);
 }
+
 .card img{
   width:100%;
-  height:240px;
+  height:100%;
   object-fit:cover;
-}
-.card span{
-  display:block;
-  padding:10px;
-  font-size:14px;
-  text-align:center;
 }
 
 .card:hover{
-  transform:scale(1.08);
-  box-shadow:0 15px 40px rgba(0,0,0,.8);
+  transform:translateY(-10px) scale(1.05);
+  box-shadow:0 25px 60px rgba(0,0,0,.9);
 }
 
-/* INFO */
-.info{
+/* FOOTER */
+.footer{
   text-align:center;
-  margin:40px 20px 20px;
-  font-size:18px;
-  opacity:.9;
 }
 
-/* PREÇO */
-.price{
-  text-align:center;
-  margin:20px;
-  font-size:32px;
+.footer .info{
+  font-size:16px;
+  opacity:.85;
+}
+
+.footer .price{
+  margin-top:10px;
+  font-size:28px;
   font-weight:900;
   color:var(--gold);
 }
-.price small{
+
+.footer small{
   display:block;
-  font-size:14px;
+  font-size:13px;
   opacity:.7;
+  margin-top:4px;
 }
 
-/* BOTÃO */
-.cta{
-  text-align:center;
-  margin:30px 0 60px;
-}
-.cta a{
-  background:var(--red);
-  color:#fff;
-  padding:16px 40px;
-  border-radius:999px;
-  text-decoration:none;
-  font-weight:800;
-  font-size:18px;
-  box-shadow:0 12px 35px rgba(229,9,20,.7);
-}
-.cta a:hover{
-  transform:scale(1.06);
+/* RESPONSIVO */
+@media(max-width:900px){
+  .catalog{grid-template-columns:repeat(2,1fr)}
 }
 </style>
 </head>
 
 <body>
 
-<section class="hero">
-  <h1><span>ASSISTA</span> FILMES E SÉRIES</h1>
-  <p>APENAS NA</p>
+<div class="page">
 
-  <div class="logo">
-    <img src="img/logo.png" alt="Sessão 99">
-  </div>
-</section>
+  <!-- TOPO -->
+  <div class="header">
+    <h1><span>ASSISTA</span> FILMES E SÉRIES</h1>
+    <p>APENAS NA</p>
 
-<section class="catalogo">
-  <h2>Catálogo em destaque</h2>
-
-  <div class="grid">
-    <div class="card">
-      <img src="img/percy.jpg">
-      <span>Percy Jackson e o Ladrão de Raios</span>
-    </div>
-
-    <div class="card">
-      <img src="img/esquadrao.jpg">
-      <span>Esquadrão Suicida: Acerto de Contas</span>
-    </div>
-
-    <div class="card">
-      <img src="img/panico.jpg">
-      <span>Pânico no Lago (1999)</span>
-    </div>
-
-    <div class="card">
-      <img src="img/menina.jpg">
-      <span>A Menina Que Roubava Livros</span>
+    <div class="logo">
+      <img src="img/logo.png" alt="Sessão 99">
     </div>
   </div>
-</section>
 
-<div class="info">
-  Disponível para celular, tablet e computador, <b>acesse já</b>
-</div>
+  <!-- MEIO -->
+  <div class="content">
+    <div class="catalog">
+      <div class="card"><img src="img/percy.jpg"></div>
+      <div class="card"><img src="img/esquadrao.jpg"></div>
+      <div class="card"><img src="img/panico.jpg"></div>
+      <div class="card"><img src="img/menina.jpg"></div>
+    </div>
+  </div>
 
-<div class="price">
-  PLANOS A PARTIR DE R$1,99
-  <small>após período de teste</small>
-</div>
+  <!-- RODAPÉ -->
+  <div class="footer">
+    <div class="info">
+      Disponível para celular, tablet e computador, <b>acesse já</b>
+    </div>
 
-<div class="cta">
-  <a href="#">ASSINAR AGORA</a>
+    <div class="price">
+      PLANOS A PARTIR DE R$1,99
+      <small>após período de teste</small>
+    </div>
+  </div>
+
 </div>
 
 </body>
