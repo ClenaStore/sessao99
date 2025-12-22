@@ -702,20 +702,8 @@ const searchMobileBox = document.getElementById("searchMobileBox");
 const buscaMobile = document.getElementById("buscaMobile");
 const searchResults = document.getElementById("searchResults");
 const searchGrid = document.getElementById("searchGrid");
-
-function toggleSearch(){
-  searchMobileBox.style.display = "block";
-  searchResults.style.display = "none";
-  buscaMobile.value = "";
-  document.body.classList.add("search-open");
-
-  // força foco sem zoom
-  setTimeout(() => buscaMobile.focus(), 100);
-}
-
-
-buscaMobile.oninput = () => {
-
+const busca = document.getElementById("busca");
+function executarBusca(texto) {
   if (!dadosCarregados) {
     searchGrid.innerHTML =
       "<p style='color:#777'>Carregando catálogo...</p>";
@@ -723,7 +711,7 @@ buscaMobile.oninput = () => {
     return;
   }
 
-  const q = buscaMobile.value.trim().toLowerCase();
+  const q = texto.trim().toLowerCase();
 
   if (q.length < 2) {
     searchResults.style.display = "none";
@@ -742,7 +730,8 @@ buscaMobile.oninput = () => {
       "<p style='color:#777'>Nenhum resultado encontrado</p>";
   } else {
     searchGrid.innerHTML = resultados.map(r => `
-      <div class="search-card" onclick='event.stopPropagation(); abrirPlayer(...)'>
+      <div class="search-card"
+           onclick="event.stopPropagation(); abrirPlayer(${JSON.stringify(r)})">
         <img src="${r.capa_url}">
         <span>${r.titulo || r.serie_nome}</span>
       </div>
@@ -750,9 +739,26 @@ buscaMobile.oninput = () => {
   }
 
   searchResults.style.display = "block";
+}
+
+
+function toggleSearch(){
+  searchMobileBox.style.display = "block";
+  searchResults.style.display = "none";
+  buscaMobile.value = "";
+  document.body.classList.add("search-open");
+
+  // força foco sem zoom
+  setTimeout(() => buscaMobile.focus(), 100);
+}
+
+
+buscaMobile.oninput = () => {
+  executarBusca(buscaMobile.value);
 };
-
-
+busca.oninput = () => {
+  executarBusca(busca.value);
+};
 
 document.addEventListener("click", e => {
   if (
