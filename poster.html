@@ -20,214 +20,180 @@
 }
 
 body{
-  min-height:100vh;
   background:
     radial-gradient(circle at top, #5a0000 0%, #120000 30%, #000 70%);
   color:#fff;
-  display:flex;
-  justify-content:center;
-  overflow-x:hidden;
 }
 
-/* CONTAINER */
-.poster{
-  width:100%;
-  max-width:1200px;
-  padding:70px 24px 90px;
+/* HERO */
+.hero{
   text-align:center;
+  padding:70px 20px 50px;
 }
 
-/* TÍTULOS */
-.title{
+.hero h1{
   font-size:clamp(38px,6vw,68px);
   font-weight:900;
-  letter-spacing:1px;
 }
-.title span{color:var(--red)}
+.hero h1 span{color:var(--red)}
 
-.subtitle{
-  margin-top:12px;
-  font-size:14px;
+.hero p{
+  margin-top:10px;
+  opacity:.8;
   letter-spacing:2px;
-  opacity:.85;
 }
 
 /* LOGO */
 .logo{
-  margin:46px auto 50px;
-  width:140px;
-  height:140px;
+  margin:40px auto;
+  width:130px;
+  height:130px;
   border-radius:28px;
   background:#000;
   display:flex;
   align-items:center;
   justify-content:center;
-  box-shadow:
-    0 0 60px rgba(229,9,20,.9),
-    inset 0 0 20px rgba(255,255,255,.05);
-  animation:pulse 2.6s infinite;
+  box-shadow:0 0 60px rgba(229,9,20,.8);
 }
-.logo span{
-  font-size:64px;
-  font-weight:900;
-  color:var(--red);
+.logo img{
+  width:90px;
 }
 
-/* DISPOSITIVOS */
-.devices{
-  display:flex;
-  justify-content:center;
-  align-items:flex-end;
-  gap:30px;
-  margin:60px 0;
-  perspective:1000px;
+/* CATÁLOGO */
+.catalogo{
+  max-width:1100px;
+  margin:0 auto;
+  padding:30px 20px;
 }
 
-.device{
-  background:#000;
-  border-radius:18px;
-  padding:10px;
-  box-shadow:0 30px 70px rgba(0,0,0,.8);
+.catalogo h2{
+  margin-bottom:20px;
+  font-size:22px;
+}
+
+/* GRID */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+  gap:18px;
+}
+
+/* CARD */
+.card{
+  background:#111;
+  border-radius:14px;
   overflow:hidden;
-  opacity:0;
-  transform:translateY(60px) scale(.95);
-  animation:deviceIn 1s forwards;
+  cursor:pointer;
+  transition:.35s;
 }
-
-.device:nth-child(1){animation-delay:.2s}
-.device:nth-child(2){animation-delay:.5s}
-.device:nth-child(3){animation-delay:.8s}
-
-/* TAMANHOS */
-.laptop{width:420px;height:250px}
-.tablet{width:260px;height:330px}
-.phone{width:150px;height:280px}
-
-/* TELAS (simulação de catálogo) */
-.screen{
+.card img{
   width:100%;
-  height:100%;
-  border-radius:12px;
-  background-size:cover;
-  background-position:center;
-  animation:screenMove 8s ease-in-out infinite;
+  height:240px;
+  object-fit:cover;
+}
+.card span{
+  display:block;
+  padding:10px;
+  font-size:14px;
+  text-align:center;
 }
 
-/* IMAGENS DE FUNDO (exemplo – pode trocar por prints reais depois) */
-.laptop .screen{
-  background-image:url("https://i.imgur.com/9M7kE4U.jpg");
-}
-.tablet .screen{
-  background-image:url("https://i.imgur.com/8fQqM7L.jpg");
-}
-.phone .screen{
-  background-image:url("https://i.imgur.com/Z6cF2oF.jpg");
+.card:hover{
+  transform:scale(1.08);
+  box-shadow:0 15px 40px rgba(0,0,0,.8);
 }
 
-/* TEXTO */
+/* INFO */
 .info{
-  margin-top:30px;
-  font-size:20px;
+  text-align:center;
+  margin:40px 20px 20px;
+  font-size:18px;
   opacity:.9;
 }
 
 /* PREÇO */
 .price{
-  margin-top:36px;
-  font-size:34px;
+  text-align:center;
+  margin:20px;
+  font-size:32px;
   font-weight:900;
   color:var(--gold);
-  animation:glow 2s infinite alternate;
 }
 .price small{
   display:block;
-  margin-top:8px;
   font-size:14px;
-  opacity:.75;
+  opacity:.7;
 }
 
 /* BOTÃO */
 .cta{
-  margin-top:50px;
+  text-align:center;
+  margin:30px 0 60px;
 }
 .cta a{
-  display:inline-block;
-  padding:18px 48px;
-  font-size:18px;
-  font-weight:800;
-  color:#fff;
   background:var(--red);
+  color:#fff;
+  padding:16px 40px;
   border-radius:999px;
   text-decoration:none;
-  box-shadow:0 16px 40px rgba(229,9,20,.7);
-  transition:.3s;
+  font-weight:800;
+  font-size:18px;
+  box-shadow:0 12px 35px rgba(229,9,20,.7);
 }
 .cta a:hover{
-  transform:scale(1.08);
-  box-shadow:0 22px 60px rgba(229,9,20,1);
-}
-
-/* ANIMAÇÕES */
-@keyframes pulse{
-  0%,100%{transform:scale(1)}
-  50%{transform:scale(1.1)}
-}
-
-@keyframes glow{
-  from{text-shadow:0 0 10px rgba(245,195,106,.4)}
-  to{text-shadow:0 0 30px rgba(245,195,106,1)}
-}
-
-@keyframes deviceIn{
-  to{opacity:1;transform:translateY(0) scale(1)}
-}
-
-@keyframes screenMove{
-  0%{transform:scale(1)}
-  50%{transform:scale(1.05)}
-  100%{transform:scale(1)}
-}
-
-/* RESPONSIVO */
-@media(max-width:980px){
-  .devices{flex-wrap:wrap}
-  .laptop{width:320px}
+  transform:scale(1.06);
 }
 </style>
 </head>
 
 <body>
 
-<div class="poster">
-
-  <div class="title">
-    <span>ASSISTA</span> FILMES E SÉRIES
-  </div>
-  <div class="subtitle">APENAS NA</div>
+<section class="hero">
+  <h1><span>ASSISTA</span> FILMES E SÉRIES</h1>
+  <p>APENAS NA</p>
 
   <div class="logo">
-    <span>99</span>
+    <img src="img/logo.png" alt="Sessão 99">
   </div>
+</section>
 
-  <div class="devices">
-    <div class="device laptop"><div class="screen"></div></div>
-    <div class="device tablet"><div class="screen"></div></div>
-    <div class="device phone"><div class="screen"></div></div>
+<section class="catalogo">
+  <h2>Catálogo em destaque</h2>
+
+  <div class="grid">
+    <div class="card">
+      <img src="img/percy.jpg">
+      <span>Percy Jackson e o Ladrão de Raios</span>
+    </div>
+
+    <div class="card">
+      <img src="img/esquadrao.jpg">
+      <span>Esquadrão Suicida: Acerto de Contas</span>
+    </div>
+
+    <div class="card">
+      <img src="img/panico.jpg">
+      <span>Pânico no Lago (1999)</span>
+    </div>
+
+    <div class="card">
+      <img src="img/menina.jpg">
+      <span>A Menina Que Roubava Livros</span>
+    </div>
   </div>
+</section>
 
-  <div class="info">
-    Disponível para celular, tablet e computador, <b>acesse já</b>
-  </div>
+<div class="info">
+  Disponível para celular, tablet e computador, <b>acesse já</b>
+</div>
 
-  <div class="price">
-    PLANOS A PARTIR DE R$1,99
-    <small>após período de teste</small>
-  </div>
+<div class="price">
+  PLANOS A PARTIR DE R$1,99
+  <small>após período de teste</small>
+</div>
 
-  <div class="cta">
-    <a href="#">ASSINAR AGORA</a>
-  </div>
-
+<div class="cta">
+  <a href="#">ASSINAR AGORA</a>
 </div>
 
 </body>
