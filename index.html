@@ -1093,7 +1093,8 @@ async function validarSessao() {
   const email = localStorage.getItem("usuario_email");
 
   if (!email) {
-    location.href = "login.html";
+    location.replace("login.html");
+
     return false;
   }
 
@@ -1105,7 +1106,8 @@ async function validarSessao() {
 
   if (error || !data) {
     localStorage.clear();
-    location.href = "login.html";
+    location.replace("login.html");
+
     return false;
   }
 
@@ -1156,7 +1158,8 @@ async function validarSessao() {
   // ⏰ trial expirado
   if (agora > expira && data.status !== "aprovado") {
     localStorage.clear();
-    location.href = "login.html";
+    location.replace("login.html");
+
     return false;
   }
 
