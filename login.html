@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <title>Login | Sessão 99</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- 🔒 BLOQUEIA ZOOM TOTAL -->
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -11,6 +14,11 @@
 *{
   box-sizing:border-box;
   font-family:Inter,Arial,sans-serif;
+}
+
+html,body{
+  overscroll-behavior:none;
+  touch-action:manipulation;
 }
 
 :root{
@@ -41,29 +49,17 @@ video{
   z-index:-2;
 }
 
-/* GRADIENTE OVERLAY (IGUAL HERO) */
+/* OVERLAY */
 .bg{
   position:fixed;
   inset:0;
   background:
-    linear-gradient(
-      to right,
-      rgba(0,0,0,.88) 0%,
-      rgba(0,0,0,.75) 40%,
-      rgba(0,0,0,.45) 60%,
-      rgba(0,0,0,.15) 75%,
-      rgba(0,0,0,0) 90%
-    ),
-    linear-gradient(
-      to top,
-      rgba(0,0,0,.65) 0%,
-      rgba(0,0,0,.35) 35%,
-      rgba(0,0,0,0) 65%
-    );
+    linear-gradient(to right,rgba(0,0,0,.88),rgba(0,0,0,.3)),
+    linear-gradient(to top,rgba(0,0,0,.65),rgba(0,0,0,0));
   z-index:-1;
 }
 
-/* 🧱 CONTAINER LOGIN */
+/* CONTAINER */
 .container{
   position:absolute;
   top:50%;
@@ -78,27 +74,20 @@ video{
   box-shadow:0 40px 80px rgba(0,0,0,.6);
 }
 
-/* 🧠 TÍTULO */
 h1{
   margin:0 0 30px;
   font-size:38px;
   font-weight:800;
-  letter-spacing:.5px;
 }
-h1 span{
-  color:var(--accent);
-}
+h1 span{color:var(--accent)}
 
-/* FORM */
-.group{
-  margin-bottom:22px;
-}
+.group{margin-bottom:22px}
 
 label{
   font-size:14px;
   color:var(--muted);
-  margin-bottom:6px;
   display:block;
+  margin-bottom:6px;
 }
 
 input{
@@ -108,69 +97,42 @@ input{
   border-radius:12px;
   border:1px solid var(--border);
   background:rgba(0,0,0,.45);
-  color:var(--text);
+  color:#fff;
   outline:none;
 }
 
-input:focus{
-  border-color:var(--accent);
-}
+input:focus{border-color:var(--accent)}
 
-/* 🔴 BOTÃO */
 .btn{
-  margin-top:10px;
   width:100%;
   padding:15px;
-  font-size:16px;
   border:none;
   border-radius:14px;
   background:var(--accent);
-  color:white;
+  color:#fff;
   font-weight:700;
   cursor:pointer;
-  position:relative;
-  transition:.25s;
+  margin-top:10px;
 }
 
-.btn:hover{
-  filter:brightness(1.05);
-}
+.btn.loading{opacity:.8;pointer-events:none}
 
-.btn.loading{
-  pointer-events:none;
-  opacity:.85;
-}
-
-.btn.loading::after{
-  content:"Aguarde...";
-  position:absolute;
-  inset:0;
-  background:var(--accent);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  border-radius:14px;
-}
-
-/* LINKS */
 .link{
   margin-top:18px;
   text-align:center;
   font-size:14px;
-  color:#ddd;
-  cursor:pointer;
   text-decoration:underline;
+  cursor:pointer;
 }
 
-/* MENSAGEM */
 .msg{
   margin-top:14px;
-  min-height:18px;
-  color:#facc15;
+  min-height:20px;
   font-size:14px;
+  color:#facc15;
 }
 
-/* 🪟 MODAL CADASTRO */
+/* MODAL */
 .modal{
   position:fixed;
   inset:0;
@@ -178,7 +140,6 @@ input:focus{
   display:none;
   align-items:center;
   justify-content:center;
-  z-index:50;
 }
 
 .modal-box{
@@ -187,27 +148,7 @@ input:focus{
   background:var(--surface);
   padding:34px;
   border-radius:18px;
-  box-shadow:0 30px 60px rgba(0,0,0,.6);
 }
-
-.modal-box h2{
-  margin-top:0;
-  margin-bottom:22px;
-  font-size:26px;
-  color:var(--text);
-}
-
-/* MOBILE */
-@media(max-width:480px){
-  .container{
-    padding:32px 26px;
-  }
-
-  h1{
-    font-size:30px;
-  }
-}
-
 </style>
 </head>
 
@@ -233,7 +174,6 @@ input:focus{
   </div>
 
   <button id="btnLogin" class="btn">Entrar</button>
-
   <div class="link" id="abrirCadastro">Ainda não tenho uma conta</div>
   <div class="msg" id="msg"></div>
 </div>
@@ -245,21 +185,21 @@ input:focus{
 
     <div class="group">
       <label>Email</label>
-      <input id="c_email">
+      <input id="c_email" type="email">
     </div>
 
     <div class="group">
       <label>CPF</label>
-      <input id="c_cpf">
+      <input id="c_cpf" inputmode="numeric" placeholder="000.000.000-00">
     </div>
 
     <div class="group">
       <label>WhatsApp</label>
-      <input id="c_whats">
+      <input id="c_whats" inputmode="numeric" placeholder="(99) 99999-9999">
     </div>
 
     <div class="group">
-      <label>Senha (mín. 4 caracteres)</label>
+      <label>Senha</label>
       <input id="c_senha" type="password" minlength="4">
     </div>
 
@@ -280,83 +220,78 @@ const sb = supabase.createClient(
 );
 
 /* MODAL */
-abrirCadastro.onclick = () => modal.style.display="flex";
-fecharCadastro.onclick = () => modal.style.display="none";
-modal.onclick = e => { if(e.target === modal) modal.style.display="none"; };
+abrirCadastro.onclick=()=>modal.style.display="flex";
+fecharCadastro.onclick=()=>modal.style.display="none";
+
+/* 🔢 MÁSCARAS */
+c_cpf.oninput = e=>{
+  e.target.value = e.target.value
+    .replace(/\D/g,"")
+    .replace(/(\d{3})(\d)/,"$1.$2")
+    .replace(/(\d{3})(\d)/,"$1.$2")
+    .replace(/(\d{3})(\d{1,2})$/,"$1-$2")
+    .slice(0,14);
+};
+
+c_whats.oninput = e=>{
+  e.target.value = e.target.value
+    .replace(/\D/g,"")
+    .replace(/^(\d{2})(\d)/,"($1) $2")
+    .replace(/(\d{5})(\d)/,"$1-$2")
+    .slice(0,15);
+};
 
 /* LOGIN */
-btnLogin.onclick = async () => {
-  msg.textContent = "";
+btnLogin.onclick = async ()=>{
+  msg.textContent="";
   btnLogin.classList.add("loading");
-
-  const emailVal = email.value.trim();
-  const senhaVal = senha.value; // ❗ NÃO usar trim aqui
-
-  if(!emailVal || senhaVal.length < 4){
-    msg.textContent = "Senha deve ter no mínimo 4 caracteres";
-    btnLogin.classList.remove("loading");
-    return;
-  }
 
   const { data } = await sb
     .from("usuarios")
     .select("*")
-    .eq("email", emailVal)
+    .eq("email", email.value.trim())
     .single();
 
   btnLogin.classList.remove("loading");
 
-  if(!data || data.senha !== senhaVal){
-    msg.textContent = "Usuário ou senha inválidos";
+  if(!data || data.senha !== senha.value){
+    msg.textContent="Usuário ou senha inválidos";
     return;
   }
 
-  const agora = new Date();
-  const expira = new Date(data.trial_expires_at);
-
-  if(data.status === "aprovado" || agora <= expira){
-    localStorage.usuario = JSON.stringify(data);
-    window.location.href = "index.html";
+  const agora=new Date(), exp=new Date(data.trial_expires_at);
+  if(data.status==="aprovado" || agora<=exp){
+    localStorage.setItem("usuario_email", data.email);
+    location.href="index.html";
   }else{
-    msg.textContent = "Seu teste expirou. Aguarde aprovação.";
+    msg.textContent="Seu teste expirou. Aguarde aprovação.";
   }
 };
 
 /* CADASTRO */
-btnCadastro.onclick = async () => {
-  btnCadastro.classList.add("loading");
-
-  if(c_senha.value.length < 4){
-    alert("A senha deve ter no mínimo 4 caracteres");
-    btnCadastro.classList.remove("loading");
-    return;
-  }
-
-  if(c_senha.value !== c_confirma.value){
+btnCadastro.onclick = async ()=>{
+  if(c_senha.value!==c_confirma.value){
     alert("Senhas não conferem");
-    btnCadastro.classList.remove("loading");
     return;
   }
 
-  const trial = new Date(Date.now() + 86400000);
+  const trial=new Date(Date.now()+86400000);
 
   const { error } = await sb.from("usuarios").insert({
-    email: c_email.value.trim(),
-    cpf: c_cpf.value.trim(),
-    whatsapp: c_whats.value.trim(),
-    senha: c_senha.value, // ❗ salva exatamente como digitado
-    status: "pendente",
-    trial_expires_at: trial.toISOString()
+    email:c_email.value.trim(),
+    cpf:c_cpf.value.replace(/\D/g,""),
+    whatsapp:c_whats.value.replace(/\D/g,""),
+    senha:c_senha.value,
+    status:"pendente",
+    trial_expires_at:trial.toISOString()
   });
 
-  btnCadastro.classList.remove("loading");
-
   if(error){
-    alert("Erro ao cadastrar. Email ou CPF já existe.");
+    alert("Erro ao cadastrar");
     return;
   }
 
-  alert("Cadastro criado! Teste grátis liberado.");
+  alert("Cadastro criado! Aguarde aprovação.");
   modal.style.display="none";
 };
 </script>
