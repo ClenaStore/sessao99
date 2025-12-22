@@ -2,7 +2,6 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-
 <title>Login | Sessão 99</title>
 
 <meta name="viewport"
@@ -11,23 +10,26 @@ content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-*{box-sizing:border-box;font-family:Inter,Arial}
+*{
+  box-sizing:border-box;
+  font-family:Inter,Arial,sans-serif;
+}
+
 html,body{
   margin:0;
   height:100%;
+  overflow:hidden;
   background:#0f0f10;
   color:#fff;
-  overflow:hidden;
   touch-action:manipulation;
 }
 
-/* impede zoom */
-input,button,textarea{
+input,button{
   font-size:16px;
   touch-action:manipulation;
 }
 
-/* FUNDO */
+/* 🎬 FUNDO */
 video{
   position:fixed;
   inset:0;
@@ -36,10 +38,21 @@ video{
   object-fit:cover;
   z-index:-2;
 }
+
 .bg{
   position:fixed;
   inset:0;
-  background:linear-gradient(to right,rgba(0,0,0,.85),rgba(0,0,0,.3));
+  background:
+    linear-gradient(to right,
+      rgba(0,0,0,.88) 0%,
+      rgba(0,0,0,.75) 40%,
+      rgba(0,0,0,.45) 60%,
+      rgba(0,0,0,.15) 75%,
+      rgba(0,0,0,0) 90%),
+    linear-gradient(to top,
+      rgba(0,0,0,.65) 0%,
+      rgba(0,0,0,.35) 35%,
+      rgba(0,0,0,0) 65%);
   z-index:-1;
 }
 
@@ -52,24 +65,28 @@ video{
   max-width:92%;
   background:rgba(27,27,30,.75);
   backdrop-filter:blur(14px);
-  padding:40px;
+  padding:42px;
   border-radius:18px;
 }
 
 h1{
-  margin-bottom:24px;
-  font-size:36px;
+  margin-bottom:28px;
+  font-size:38px;
+  font-weight:800;
 }
 h1 span{color:#e50914}
 
-.group{margin-bottom:18px}
-label{font-size:14px;color:#b5b5b5}
+.group{margin-bottom:20px}
+label{
+  font-size:14px;
+  color:#b5b5b5;
+}
 input{
   width:100%;
   padding:14px;
   border-radius:12px;
   border:1px solid #2b2b2b;
-  background:#000;
+  background:rgba(0,0,0,.45);
   color:#fff;
 }
 
@@ -89,11 +106,37 @@ input{
   opacity:.8;
 }
 
+.link{
+  margin-top:18px;
+  text-align:center;
+  font-size:14px;
+  text-decoration:underline;
+  cursor:pointer;
+}
+
 .msg{
-  margin-top:14px;
+  margin-top:16px;
+  min-height:40px;
   font-size:14px;
   color:#facc15;
-  min-height:40px;
+}
+
+/* MODAL */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.85);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:50;
+}
+.modal-box{
+  width:420px;
+  max-width:92%;
+  background:#1b1b1e;
+  padding:34px;
+  border-radius:18px;
 }
 
 /* OVERLAY BLOQUEIO */
@@ -104,20 +147,19 @@ input{
   display:none;
   align-items:center;
   justify-content:center;
-  z-index:999;
   text-align:center;
-  padding:30px;
+  z-index:999;
 }
 #overlay h2{color:#e50914}
 #overlay a{
   display:inline-block;
-  margin-top:14px;
-  padding:14px 24px;
+  margin-top:16px;
+  padding:14px 26px;
+  border-radius:999px;
   background:#25d366;
   color:#000;
-  border-radius:999px;
-  text-decoration:none;
   font-weight:700;
+  text-decoration:none;
 }
 </style>
 </head>
@@ -129,6 +171,7 @@ input{
 </video>
 <div class="bg"></div>
 
+<!-- LOGIN -->
 <div class="container">
   <h1>Sessão <span>99</span></h1>
 
@@ -144,13 +187,52 @@ input{
 
   <button class="btn" id="btnLogin">Entrar</button>
 
+  <div class="link" onclick="modal.style.display='flex'">
+    Ainda não tenho uma conta
+  </div>
+
   <div class="msg" id="msg"></div>
+</div>
+
+<!-- CADASTRO -->
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <h2>Criar conta</h2>
+
+    <div class="group">
+      <label>Email</label>
+      <input id="c_email">
+    </div>
+
+    <div class="group">
+      <label>CPF</label>
+      <input id="c_cpf">
+    </div>
+
+    <div class="group">
+      <label>WhatsApp</label>
+      <input id="c_whats">
+    </div>
+
+    <div class="group">
+      <label>Senha</label>
+      <input id="c_senha" type="password">
+    </div>
+
+    <div class="group">
+      <label>Confirmar senha</label>
+      <input id="c_confirma" type="password">
+    </div>
+
+    <button class="btn" id="btnCadastro">Cadastrar</button>
+    <div class="link" onclick="modal.style.display='none'">Cancelar</div>
+  </div>
 </div>
 
 <!-- OVERLAY -->
 <div id="overlay">
   <div>
-    <h2>Acesso bloqueado</h2>
+    <h2 id="overlayTitle"></h2>
     <p id="overlayMsg"></p>
     <a id="waLink" target="_blank">Falar no WhatsApp</a>
   </div>
@@ -164,49 +246,69 @@ const sb = supabase.createClient(
 
 btnLogin.onclick = async () => {
 
-  msg.textContent = "";
+  msg.textContent="";
   btnLogin.classList.add("loading");
 
-  const emailVal = email.value.trim();
-  const senhaVal = senha.value;
+  const emailVal=email.value.trim();
+  const senhaVal=senha.value;
 
-  if(!emailVal || senhaVal.length < 4){
-    msg.textContent = "Preencha email e senha corretamente";
+  if(!emailVal||senhaVal.length<4){
+    msg.textContent="Informe email e senha válidos";
     btnLogin.classList.remove("loading");
     return;
   }
 
-  const { data, error } = await sb
+  const {data}=await sb
     .from("usuarios")
     .select("*")
-    .eq("email", emailVal)
+    .eq("email",emailVal)
     .single();
 
   btnLogin.classList.remove("loading");
 
-  if(error || !data || data.senha !== senhaVal){
-    msg.textContent = "Usuário ou senha inválidos";
+  if(!data||data.senha!==senhaVal){
+    msg.textContent="Usuário ou senha inválidos";
     return;
   }
 
-  const agora = new Date();
-  const expira = new Date(data.trial_expires_at);
+  const agora=new Date();
+  const expira=new Date(data.trial_expires_at);
 
-  if(data.status === "bloqueado"){
+  if(data.status==="bloqueado"){
     overlay.style.display="flex";
-    overlayMsg.innerHTML =
-      "Seu acesso foi bloqueado.<br>Entre em contato.";
-    waLink.href = `https://wa.me/55${data.whatsapp||""}`;
+    overlayTitle.textContent="Acesso bloqueado";
+    overlayMsg.innerHTML="Entre em contato para regularizar.";
+    waLink.href=`https://wa.me/55${data.whatsapp||""}`;
     return;
   }
 
-  if(agora > expira && data.status !== "aprovado"){
-    msg.textContent = "Seu teste expirou. Aguarde liberação.";
+  if(agora>expira && data.status!=="aprovado"){
+    msg.textContent="Seu teste expirou. Aguarde ativação.";
     return;
   }
 
-  localStorage.setItem("usuario_email", data.email);
+  localStorage.setItem("usuario_email",data.email);
   location.href="index.html";
+};
+
+/* CADASTRO */
+btnCadastro.onclick=async()=>{
+  if(c_senha.value!==c_confirma.value){
+    alert("Senhas não conferem");
+    return;
+  }
+  const trial=new Date(Date.now()+86400000);
+  const {error}=await sb.from("usuarios").insert({
+    email:c_email.value.trim(),
+    cpf:c_cpf.value.trim(),
+    whatsapp:c_whats.value.trim(),
+    senha:c_senha.value,
+    status:"pendente",
+    trial_expires_at:trial.toISOString()
+  });
+  if(error){alert("Erro ao cadastrar");return;}
+  alert("Cadastro criado!");
+  modal.style.display="none";
 };
 </script>
 
