@@ -400,13 +400,20 @@ html, body {
   transform:translateX(-50%);
   width:92%;
   max-width:1100px;
+
+  max-height:70vh;              /* 🔥 LIMITE DE ALTURA */
+  overflow-y:auto;              /* 🔥 SCROLL AQUI */
+
   background:#111;
   border-radius:14px;
   padding:20px;
   display:none;
   z-index:9001;
   box-shadow:0 30px 60px rgba(0,0,0,.7);
+
+  overscroll-behavior:contain;  /* 🔒 não vaza scroll */
 }
+
 
 #searchResults h4{
   margin:0 0 14px;
@@ -441,7 +448,9 @@ html, body {
   #searchResults{
     top:56px;
     padding:14px;
+    max-height:75vh;   /* 🔥 mais espaço no mobile */
   }
+}
   .search-card img{
     height:140px;
   }
@@ -719,11 +728,26 @@ function executarBusca(texto) {
     return;
   }
 
-  const resultados = dados.filter(d =>
-    (d.titulo || d.serie_nome || "")
-      .toLowerCase()
-      .includes(q)
-  );
+const resultados = [
+  // 🎬 FILMES
+  ...dados.filter(d =>
+    d.tipo === "filme" &&
+    (d.titulo || "").toLowerCase().includes(q)
+  ),
+
+  // 📺 SÉRIES (AGRUPADAS POR serie_nome)
+  ...[
+    ...new Map(
+      dados
+        .filter(d =>
+          d.tipo === "serie" &&
+          (d.serie_nome || "").toLowerCase().includes(q)
+        )
+        .map(s => [s.serie_nome, s])
+    ).values()
+  ]
+];
+
 
   if (!resultados.length) {
     searchGrid.innerHTML =
