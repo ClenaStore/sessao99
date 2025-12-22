@@ -981,7 +981,12 @@ function abrirPerfil(){
 }
 
 function fecharPerfil(){perfilOverlay.style.display="none";}
-function logout(){localStorage.clear();location.href="login.html";}
+function logout(){
+  localStorage.clear();
+  sessionStorage.clear();
+  location.replace("login.html");
+}
+
 function irProximoEpisodio(){
   btnProximo.style.display = "none";
 
