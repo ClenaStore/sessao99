@@ -1072,7 +1072,11 @@ if ("serviceWorker" in navigator) {
       newWorker.addEventListener("statechange", () => {
         if (newWorker.state === "installed") {
           if (navigator.serviceWorker.controller) {
-            location.reload(); // 🔥 atualiza o app sozinho
+           if (!sessionStorage.getItem("sw_reloaded")) {
+  sessionStorage.setItem("sw_reloaded", "1");
+  location.reload();
+}
+
           }
         }
       });
