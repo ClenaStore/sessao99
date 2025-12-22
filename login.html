@@ -10,20 +10,15 @@ content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-*{
-  box-sizing:border-box;
-  font-family:Inter,Arial,sans-serif;
-}
-
+*{box-sizing:border-box;font-family:Inter,Arial,sans-serif}
 html,body{
   margin:0;
   height:100%;
-  overflow:hidden;
   background:#0f0f10;
   color:#fff;
+  overflow:hidden;
   touch-action:manipulation;
 }
-
 input,button{
   font-size:16px;
   touch-action:manipulation;
@@ -38,7 +33,6 @@ video{
   object-fit:cover;
   z-index:-2;
 }
-
 .bg{
   position:fixed;
   inset:0;
@@ -77,10 +71,7 @@ h1{
 h1 span{color:#e50914}
 
 .group{margin-bottom:20px}
-label{
-  font-size:14px;
-  color:#b5b5b5;
-}
+label{font-size:14px;color:#b5b5b5}
 input{
   width:100%;
   padding:14px;
@@ -100,7 +91,6 @@ input{
   font-weight:700;
   cursor:pointer;
 }
-
 .btn.loading{
   pointer-events:none;
   opacity:.8;
@@ -110,8 +100,8 @@ input{
   margin-top:18px;
   text-align:center;
   font-size:14px;
-  text-decoration:underline;
   cursor:pointer;
+  text-decoration:underline;
 }
 
 .msg{
@@ -139,7 +129,7 @@ input{
   border-radius:18px;
 }
 
-/* OVERLAY BLOQUEIO */
+/* OVERLAY */
 #overlay{
   position:fixed;
   inset:0;
@@ -185,7 +175,8 @@ input{
     <input id="senha" type="password">
   </div>
 
-  <button class="btn" id="btnLogin">Entrar</button>
+  <!-- 🔒 type=button é OBRIGATÓRIO -->
+  <button class="btn" id="btnLogin" type="button">Entrar</button>
 
   <div class="link" onclick="modal.style.display='flex'">
     Ainda não tenho uma conta
@@ -195,36 +186,17 @@ input{
 </div>
 
 <!-- CADASTRO -->
-<div class="modal" id="modal">
+<div class="modal" id="modal" onclick="if(event.target===this)this.style.display='none'">
   <div class="modal-box">
     <h2>Criar conta</h2>
 
-    <div class="group">
-      <label>Email</label>
-      <input id="c_email">
-    </div>
+    <div class="group"><label>Email</label><input id="c_email"></div>
+    <div class="group"><label>CPF</label><input id="c_cpf"></div>
+    <div class="group"><label>WhatsApp</label><input id="c_whats"></div>
+    <div class="group"><label>Senha</label><input id="c_senha" type="password"></div>
+    <div class="group"><label>Confirmar senha</label><input id="c_confirma" type="password"></div>
 
-    <div class="group">
-      <label>CPF</label>
-      <input id="c_cpf">
-    </div>
-
-    <div class="group">
-      <label>WhatsApp</label>
-      <input id="c_whats">
-    </div>
-
-    <div class="group">
-      <label>Senha</label>
-      <input id="c_senha" type="password">
-    </div>
-
-    <div class="group">
-      <label>Confirmar senha</label>
-      <input id="c_confirma" type="password">
-    </div>
-
-    <button class="btn" id="btnCadastro">Cadastrar</button>
+    <button class="btn" id="btnCadastro" type="button">Cadastrar</button>
     <div class="link" onclick="modal.style.display='none'">Cancelar</div>
   </div>
 </div>
@@ -244,7 +216,17 @@ const sb = supabase.createClient(
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-btnLogin.onclick = async () => {
+// 🔒 trava qualquer tentativa de reload
+window.addEventListener("beforeunload", e => {
+  if (document.body.dataset.lock === "true") {
+    e.preventDefault();
+    e.returnValue = "";
+  }
+});
+
+btnLogin.addEventListener("click", async (e) => {
+  e.preventDefault();
+  document.body.dataset.lock = "true";
 
   msg.textContent="";
   btnLogin.classList.add("loading");
@@ -252,13 +234,13 @@ btnLogin.onclick = async () => {
   const emailVal=email.value.trim();
   const senhaVal=senha.value;
 
-  if(!emailVal||senhaVal.length<4){
+  if(!emailVal || senhaVal.length<4){
     msg.textContent="Informe email e senha válidos";
     btnLogin.classList.remove("loading");
     return;
   }
 
-  const {data}=await sb
+  const {data,error}=await sb
     .from("usuarios")
     .select("*")
     .eq("email",emailVal)
@@ -266,7 +248,7 @@ btnLogin.onclick = async () => {
 
   btnLogin.classList.remove("loading");
 
-  if(!data||data.senha!==senhaVal){
+  if(error || !data || data.senha!==senhaVal){
     msg.textContent="Usuário ou senha inválidos";
     return;
   }
@@ -287,29 +269,10 @@ btnLogin.onclick = async () => {
     return;
   }
 
+  document.body.dataset.lock="false";
   localStorage.setItem("usuario_email",data.email);
   location.href="index.html";
-};
-
-/* CADASTRO */
-btnCadastro.onclick=async()=>{
-  if(c_senha.value!==c_confirma.value){
-    alert("Senhas não conferem");
-    return;
-  }
-  const trial=new Date(Date.now()+86400000);
-  const {error}=await sb.from("usuarios").insert({
-    email:c_email.value.trim(),
-    cpf:c_cpf.value.trim(),
-    whatsapp:c_whats.value.trim(),
-    senha:c_senha.value,
-    status:"pendente",
-    trial_expires_at:trial.toISOString()
-  });
-  if(error){alert("Erro ao cadastrar");return;}
-  alert("Cadastro criado!");
-  modal.style.display="none";
-};
+});
 </script>
 
 </body>
