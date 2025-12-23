@@ -92,7 +92,7 @@ select{
   <button id="close" onclick="voltar()">←</button>
 
   <div id="layout">
-    <video id="video" controls autoplay></video>
+    <video id="video" controls autoplay playsinline></video>
     <button id="btnProximo" onclick="proximoEpisodio()">▶ Próximo episódio</button>
 
     <div id="side">
@@ -168,6 +168,7 @@ const btnProximo = document.getElementById("btnProximo");
 /* ================= CONTROLE ================= */
 let serie = [];
 let episodioIndex = 0;
+let playRegistrado = false;
 
 /* ================= UI ================= */
 meta.innerHTML = `
@@ -217,20 +218,46 @@ function montarEpisodios(){
 
   episodioIndex = 0;
   tocarEpisodio(eps, episodioIndex);
-
-  selEpisodio.onchange = () => {
-    episodioIndex = Number(selEpisodio.value);
-    tocarEpisodio(eps, episodioIndex);
-  };
 }
 
 function tocarEpisodio(eps, index){
+  playRegistrado = false;
   btnProximo.style.display = "none";
+
   const ep = eps[index];
   if (!ep) return;
+
   video.src = ep.video_url;
 }
 
+/* ================= TRACKING CORRETO (AUTOPLAY CONTA) ================= */
+video.addEventListener("timeupdate", () => {
+  if (playRegistrado) return;
+  if (!window.trackEvent) return;
+  if (video.currentTime < 1) return;
+
+  playRegistrado = true;
+
+  const payload =
+    item.tipo === "filme"
+      ? {
+          tipo: "filme",
+          titulo: item.titulo
+        }
+      : {
+          tipo: "serie",
+          serie_nome: item.serie_nome,
+          temporada: selTemporada.value,
+          episodio: selEpisodio.options[selEpisodio.selectedIndex]?.text
+        };
+
+  window.trackEvent({
+    event_type: "play",
+    payload
+  });
+});
+
+/* ================= PRÓXIMO EP ================= */
 function proximoEpisodio(){
   const temporadas = [...new Set(serie.map(e => e.temporada))];
   const tempAtual = Number(selTemporada.value);
@@ -251,6 +278,7 @@ function proximoEpisodio(){
   }
 }
 
+/* ================= BOTÃO PRÓXIMO ================= */
 video.addEventListener("timeupdate", () => {
   if (item.tipo !== "serie" || !video.duration) return;
   btnProximo.style.display =
@@ -268,11 +296,10 @@ function voltar(){
   const ok = await validarSessaoPlayer();
   if (!ok) return;
 
-  /* 🔥 CONTEXTO ÚNICO PARA ANALYTICS */
   window.__CLENA_CONTEXT__ = {
     email: localStorage.getItem("usuario_email"),
-    item: item,
-    video: video
+    item,
+    video
   };
 })();
 </script>
