@@ -1349,8 +1349,6 @@ async function uploadAvatar(input) {
 
 const avatarUrl = `${BUNNY.cdn}/avatars/${nome}?${Date.now()}`;
 
-// 👉 salva em memória
-avatarAtual = avatarUrl;
 
 // UI
 avatarImg.src = avatarUrl;
@@ -1367,7 +1365,7 @@ await sb
 
 // 🔥 FORÇA HEADER A LER DA TABELA
 await carregarAvatarHeader();
-
+}
 
 async function validarUsername() {
   const u = usernameInput.value.toLowerCase().replace(/[^a-z0-9._]/g,"");
