@@ -1,6 +1,6 @@
 {
-  "name": "Sessão",
-  "short_name": "Sessão",
+  "name": "CLENA TV",
+  "short_name": "CLENA TV",
   "description": "Streaming Sessão",
   "start_url": "./index.html",
   "scope": "./",
