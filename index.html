@@ -1313,51 +1313,52 @@ async function carregarPerfil() {
          style="width:36px;height:36px;border-radius:50%;object-fit:cover">
   `;
 }
-
 async function uploadAvatar(input) {
   const file = input.files[0];
   if (!file || !userId) return;
 
-  const reader = new FileReader();
-
-  reader.onload = async () => {
-    const base64 = reader.result.split(",")[1];
-
-    const res = await fetch("/api/upload-avatar", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        userId,
-        fileBase64: base64, // ✅ nome correto
-        mime: file.type
-      })
-    }); // ✅ FECHAMENTO CORRETO
-
-    const data = await res.json();
-
-    if (!res.ok || !data.url) {
-      console.error(data);
-      alert("Erro ao subir avatar");
-      return;
-    }
-
-    const url = `${data.url}?${Date.now()}`;
-
-    // atualiza popup
-    avatarImg.src = url;
-
-    // atualiza header
-    perfilBtn.innerHTML = `
-      <img src="${url}"
-           style="width:36px;height:36px;border-radius:50%;object-fit:cover">
-    `;
-
-    // salva no Supabase
-    await sb
-      .from("usuarios")
-      .update({ avatar_url: url })
-      .eq("id", userId);
+  const BUNNY = {
+    zone: "sessao99",
+    region: "br",
+    key: "d498d56e-361b-4a1e-9edb9eb63e3b-2e6a-4c17",
+    cdn: "https://sessao99.b-cdn.net"
   };
+
+  const nome = `${userId}.jpg`; // sempre sobrescreve
+  const uploadUrl =
+    `https://${BUNNY.region}.storage.bunnycdn.com/${BUNNY.zone}/avatars/${nome}`;
+
+  // 🔥 UPLOAD DIRETO (IGUAL AO ADMIN)
+  const res = await fetch(uploadUrl, {
+    method: "PUT",
+    headers: {
+      "AccessKey": BUNNY.key,
+      "Content-Type": "application/octet-stream"
+    },
+    body: file
+  });
+
+  if (!res.ok) {
+    alert("Erro ao enviar avatar para Bunny");
+    return;
+  }
+
+  const avatarUrl = `${BUNNY.cdn}/avatars/${nome}?${Date.now()}`;
+
+  // atualiza UI
+  avatarImg.src = avatarUrl;
+  perfilBtn.innerHTML = `
+    <img src="${avatarUrl}"
+         style="width:36px;height:36px;border-radius:50%;object-fit:cover">
+  `;
+
+  // salva no Supabase
+  await sb
+    .from("usuarios")
+    .update({ avatar_url: avatarUrl })
+    .eq("id", userId);
+}
+
 
   reader.readAsDataURL(file);
 }
