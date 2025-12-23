@@ -1252,6 +1252,30 @@ const usernameInput = document.getElementById("username");
 const usernameStatus = document.getElementById("usernameStatus");
 const perfilBtn = document.getElementById("perfilBtn");
 
+async function carregarAvatarHeader() {
+  const email = localStorage.getItem("usuario_email");
+  if (!email) return;
+
+  const { data } = await sb
+    .from("usuarios")
+    .select("avatar_url, nome_usuario")
+    .eq("email", email)
+    .single();
+
+  const avatarUrl =
+    data?.avatar_url ||
+    `https://ui-avatars.com/api/?name=${(data?.nome_usuario || "U")[0]}&background=e50914&color=fff`;
+
+  // avatar no header
+  perfilBtn.innerHTML = `
+    <img src="${avatarUrl}"
+         style="width:36px;height:36px;border-radius:50%;object-fit:cover">
+  `;
+}
+
+
+
+  
 async function carregarPerfil() {
   const { data } = await sb
     .from("usuarios")
@@ -1377,12 +1401,15 @@ async function salvarPerfil() {
   const ok = await validarSessao();
   if (!ok) return;
 
+  // 🔥 carrega avatar imediatamente
+  await carregarAvatarHeader();
+
   iniciarApp();
 
-  // 🔁 revalida a cada 15s (bloqueio quase imediato)
   setInterval(validarSessao, 15000);
 
 })();
+
 
 </script>
 
