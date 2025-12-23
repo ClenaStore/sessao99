@@ -979,20 +979,6 @@ function render(buscaTxt = "") {
 }
 
 
-  // REGRA DO PIX (mostrar só se faltar <= 2 dias)
-  pixBox.style.display = "none";
-
-  if(user.vencimento_assinatura && user.chave_pix){
-    const hoje = new Date();
-    const venc = new Date(user.vencimento_assinatura);
-    const diffDias = Math.ceil((venc - hoje) / (1000 * 60 * 60 * 24));
-
-    if(diffDias <= 2){
-      pixBox.style.display = "block";
-      perfilPix.textContent = user.chave_pix;
-    }
-  }
-}
 
 
 function formatarReal(valor){
