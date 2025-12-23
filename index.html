@@ -756,6 +756,8 @@ let dados=[], heroItem=null, filtro='todos', usuario=null;
 let serieAtual=[], filmeAtual=null;
 let episodioIndexAtual = 0;
 let dadosCarregados = false;
+let avatarAtual = null; // 👈 AQUI
+
 
 // ================= ELEMENTOS DOM =================
 const hero = document.getElementById("hero");
@@ -1256,6 +1258,15 @@ async function carregarAvatarHeader() {
   const email = localStorage.getItem("usuario_email");
   if (!email) return;
 
+  // 👉 se já temos avatar em memória, usa ele
+  if (avatarAtual) {
+    perfilBtn.innerHTML = `
+      <img src="${avatarAtual}"
+           style="width:36px;height:36px;border-radius:50%;object-fit:cover">
+    `;
+    return;
+  }
+
   const { data } = await sb
     .from("usuarios")
     .select("avatar_url, nome_usuario")
@@ -1265,6 +1276,8 @@ async function carregarAvatarHeader() {
   const avatarUrl =
     data?.avatar_url ||
     `https://ui-avatars.com/api/?name=${(data?.nome_usuario || "U")[0]}&background=e50914&color=fff`;
+
+  avatarAtual = avatarUrl;
 
   perfilBtn.innerHTML = `
     <img src="${avatarUrl}"
@@ -1342,22 +1355,24 @@ async function uploadAvatar(input) {
     return;
   }
 
-  const avatarUrl = `${BUNNY.cdn}/avatars/${nome}?${Date.now()}`;
+const avatarUrl = `${BUNNY.cdn}/avatars/${nome}?${Date.now()}`;
 
-  // UI
-  avatarImg.src = avatarUrl;
-  perfilBtn.innerHTML = `
-    <img src="${avatarUrl}"
-         style="width:36px;height:36px;border-radius:50%;object-fit:cover">
-  `;
+// 👉 salva em memória
+avatarAtual = avatarUrl;
 
-  // Supabase
-  await sb
-    .from("usuarios")
-    .update({ avatar_url: avatarUrl })
-    .eq("id", userId);
+// UI
+avatarImg.src = avatarUrl;
+perfilBtn.innerHTML = `
+  <img src="${avatarUrl}"
+       style="width:36px;height:36px;border-radius:50%;object-fit:cover">
+`;
+
+// Supabase
+await sb
+  .from("usuarios")
+  .update({ avatar_url: avatarUrl })
+  .eq("id", userId);
 }
-
 
 async function validarUsername() {
   const u = usernameInput.value.toLowerCase().replace(/[^a-z0-9._]/g,"");
@@ -1395,7 +1410,7 @@ async function salvarPerfil() {
       username: usernameInput.value
     })
     .eq("id", userId);
-
+  
   fecharPerfil();
 }
 
