@@ -181,6 +181,13 @@ window.__CLENA_CONTEXT__ = {
   video: video
 };
 
+// 🔥 inicia analytics APENAS quando tudo existir
+const s = document.createElement("script");
+s.src = "/analytics/tracker.js";
+s.defer = true;
+document.body.appendChild(s);
+
+
 /* ================= FILME ================= */
 if (item.tipo === "filme") {
   video.src = item.video_url;
@@ -273,7 +280,6 @@ function voltar(){
 
 <!-- 📊 ANALYTICS -->
 <script src="/analytics/collector.js"></script>
-<script src="/analytics/tracker.js"></script>
 
 </body>
 </html>
