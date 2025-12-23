@@ -1324,11 +1324,10 @@ async function uploadAvatar(input) {
     cdn: "https://sessao99.b-cdn.net"
   };
 
-  const nome = `${userId}.jpg`; // sempre sobrescreve
+  const nome = `${userId}.jpg`; // sobrescreve sempre
   const uploadUrl =
     `https://${BUNNY.region}.storage.bunnycdn.com/${BUNNY.zone}/avatars/${nome}`;
 
-  // 🔥 UPLOAD DIRETO (IGUAL AO ADMIN)
   const res = await fetch(uploadUrl, {
     method: "PUT",
     headers: {
@@ -1345,22 +1344,18 @@ async function uploadAvatar(input) {
 
   const avatarUrl = `${BUNNY.cdn}/avatars/${nome}?${Date.now()}`;
 
-  // atualiza UI
+  // UI
   avatarImg.src = avatarUrl;
   perfilBtn.innerHTML = `
     <img src="${avatarUrl}"
          style="width:36px;height:36px;border-radius:50%;object-fit:cover">
   `;
 
-  // salva no Supabase
+  // Supabase
   await sb
     .from("usuarios")
     .update({ avatar_url: avatarUrl })
     .eq("id", userId);
-}
-
-
-  reader.readAsDataURL(file);
 }
 
 
