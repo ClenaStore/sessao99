@@ -1266,12 +1266,12 @@ async function carregarAvatarHeader() {
     data?.avatar_url ||
     `https://ui-avatars.com/api/?name=${(data?.nome_usuario || "U")[0]}&background=e50914&color=fff`;
 
-  // avatar no header
   perfilBtn.innerHTML = `
     <img src="${avatarUrl}"
          style="width:36px;height:36px;border-radius:50%;object-fit:cover">
   `;
 }
+
 
 
 
@@ -1328,31 +1328,40 @@ async function uploadAvatar(input) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         userId,
-        base64,
+        fileBase64: base64, // ✅ nome correto
         mime: file.type
       })
-    });
+    }); // ✅ FECHAMENTO CORRETO
 
     const data = await res.json();
-    if (!data.url) {
+
+    if (!res.ok || !data.url) {
+      console.error(data);
       alert("Erro ao subir avatar");
       return;
     }
 
     const url = `${data.url}?${Date.now()}`;
 
+    // atualiza popup
     avatarImg.src = url;
+
+    // atualiza header
     perfilBtn.innerHTML = `
-      <img src="${url}" style="width:36px;height:36px;border-radius:50%">
+      <img src="${url}"
+           style="width:36px;height:36px;border-radius:50%;object-fit:cover">
     `;
 
-    await sb.from("usuarios")
+    // salva no Supabase
+    await sb
+      .from("usuarios")
       .update({ avatar_url: url })
       .eq("id", userId);
   };
 
   reader.readAsDataURL(file);
 }
+
 
 async function validarUsername() {
   const u = usernameInput.value.toLowerCase().replace(/[^a-z0-9._]/g,"");
@@ -1395,20 +1404,18 @@ async function salvarPerfil() {
 }
 
 
-// 🚪 valida sessão e só depois inicia o app
 (async () => {
 
   const ok = await validarSessao();
   if (!ok) return;
 
-  // 🔥 carrega avatar imediatamente
-  await carregarAvatarHeader();
-
+  await carregarAvatarHeader(); // ✅ AQUI
   iniciarApp();
 
   setInterval(validarSessao, 15000);
 
 })();
+
 
 
 </script>
