@@ -756,7 +756,6 @@ let dados=[], heroItem=null, filtro='todos', usuario=null;
 let serieAtual=[], filmeAtual=null;
 let episodioIndexAtual = 0;
 let dadosCarregados = false;
-let avatarAtual = null; // 👈 AQUI
 
 
 // ================= ELEMENTOS DOM =================
@@ -1258,33 +1257,26 @@ async function carregarAvatarHeader() {
   const email = localStorage.getItem("usuario_email");
   if (!email) return;
 
-  // 👉 se já temos avatar em memória, usa ele
-  if (avatarAtual) {
-    perfilBtn.innerHTML = `
-      <img src="${avatarAtual}"
-           style="width:36px;height:36px;border-radius:50%;object-fit:cover">
-    `;
-    return;
-  }
-
-  const { data } = await sb
+  const { data, error } = await sb
     .from("usuarios")
     .select("avatar_url, nome_usuario")
     .eq("email", email)
     .single();
 
+  if (error) {
+    console.warn("Erro avatar header:", error);
+    return;
+  }
+
   const avatarUrl =
     data?.avatar_url ||
     `https://ui-avatars.com/api/?name=${(data?.nome_usuario || "U")[0]}&background=e50914&color=fff`;
-
-  avatarAtual = avatarUrl;
 
   perfilBtn.innerHTML = `
     <img src="${avatarUrl}"
          style="width:36px;height:36px;border-radius:50%;object-fit:cover">
   `;
 }
-
 
 
 
@@ -1372,7 +1364,10 @@ await sb
   .from("usuarios")
   .update({ avatar_url: avatarUrl })
   .eq("id", userId);
-}
+
+// 🔥 FORÇA HEADER A LER DA TABELA
+await carregarAvatarHeader();
+
 
 async function validarUsername() {
   const u = usernameInput.value.toLowerCase().replace(/[^a-z0-9._]/g,"");
