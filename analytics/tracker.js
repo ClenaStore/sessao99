@@ -85,32 +85,41 @@
     });
 
     // ⏹ SALVA SESSÃO
-    async function salvarSessao() {
-      if (!sessionStart) return;
+async function salvarSessao() {
+  if (!sessionStart) return;
 
-      const user = getUser();
-      const item = getItem();
-      if (!user || !item) return;
+  const video = getVideo();
+  if (!video) return;
 
-      const watchedSeconds = Math.floor(
-        (Date.now() - sessionStart) / 1000
-      );
+  const user = getUsuario();
+  const item = getItemAtual();
+  if (!user || !item) return;
 
-      await sb.from("watch_sessions").insert({
-        email: user.email,
-        tipo: item.tipo,
-        filme_id: item.id || null,
-        serie_nome: item.serie_nome || null,
-        temporada: item.temporada || null,
-        episodio: item.episodio || null,
-        started_at: new Date(sessionStart).toISOString(),
-        ended_at: new Date().toISOString(),
-        watched_seconds: watchedSeconds
-      });
+  const watchedSeconds = Math.floor(
+    (Date.now() - sessionStart) / 1000
+  );
 
-      sessionStart = null;
-      lastPercentSent = -1;
-    }
+  // ⛔ REGRA DE OURO: mínimo 10 segundos
+  if (watchedSeconds < 10) {
+    sessionStart = null;
+    return;
+  }
+
+  await sb.from("watch_sessions").insert({
+    email: user.email,
+    tipo: item.tipo,
+    filme_id: item.id || null,
+    serie_nome: item.serie_nome || null,
+    temporada: item.temporada || null,
+    episodio: item.episodio || null,
+    started_at: new Date(sessionStart).toISOString(),
+    ended_at: new Date().toISOString(),
+    watched_seconds: watchedSeconds
+  });
+
+  sessionStart = null;
+}
+
 
     video.addEventListener("ended", salvarSessao);
     window.addEventListener("beforeunload", salvarSessao);
