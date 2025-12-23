@@ -1266,12 +1266,12 @@ async function carregarAvatarHeader() {
     data?.avatar_url ||
     `https://ui-avatars.com/api/?name=${(data?.nome_usuario || "U")[0]}&background=e50914&color=fff`;
 
-  // avatar no header
   perfilBtn.innerHTML = `
     <img src="${avatarUrl}"
          style="width:36px;height:36px;border-radius:50%;object-fit:cover">
   `;
 }
+
 
 
 
@@ -1313,46 +1313,51 @@ async function carregarPerfil() {
          style="width:36px;height:36px;border-radius:50%;object-fit:cover">
   `;
 }
-
 async function uploadAvatar(input) {
   const file = input.files[0];
   if (!file || !userId) return;
 
-  const reader = new FileReader();
-
-  reader.onload = async () => {
-    const base64 = reader.result.split(",")[1];
-
-    const res = await fetch("/api/upload-avatar", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        userId,
-        base64,
-        mime: file.type
-      })
-    });
-
-    const data = await res.json();
-    if (!data.url) {
-      alert("Erro ao subir avatar");
-      return;
-    }
-
-    const url = `${data.url}?${Date.now()}`;
-
-    avatarImg.src = url;
-    perfilBtn.innerHTML = `
-      <img src="${url}" style="width:36px;height:36px;border-radius:50%">
-    `;
-
-    await sb.from("usuarios")
-      .update({ avatar_url: url })
-      .eq("id", userId);
+  const BUNNY = {
+    zone: "sessao99",
+    region: "br",
+    key: "d498d56e-361b-4a1e-9edb9eb63e3b-2e6a-4c17",
+    cdn: "https://sessao99.b-cdn.net"
   };
 
-  reader.readAsDataURL(file);
+  const nome = `${userId}.jpg`; // sobrescreve sempre
+  const uploadUrl =
+    `https://${BUNNY.region}.storage.bunnycdn.com/${BUNNY.zone}/avatars/${nome}`;
+
+  const res = await fetch(uploadUrl, {
+    method: "PUT",
+    headers: {
+      "AccessKey": BUNNY.key,
+      "Content-Type": "application/octet-stream"
+    },
+    body: file
+  });
+
+  if (!res.ok) {
+    alert("Erro ao enviar avatar para Bunny");
+    return;
+  }
+
+  const avatarUrl = `${BUNNY.cdn}/avatars/${nome}?${Date.now()}`;
+
+  // UI
+  avatarImg.src = avatarUrl;
+  perfilBtn.innerHTML = `
+    <img src="${avatarUrl}"
+         style="width:36px;height:36px;border-radius:50%;object-fit:cover">
+  `;
+
+  // Supabase
+  await sb
+    .from("usuarios")
+    .update({ avatar_url: avatarUrl })
+    .eq("id", userId);
 }
+
 
 async function validarUsername() {
   const u = usernameInput.value.toLowerCase().replace(/[^a-z0-9._]/g,"");
@@ -1395,21 +1400,17 @@ async function salvarPerfil() {
 }
 
 
-// 🚪 valida sessão e só depois inicia o app
 (async () => {
 
   const ok = await validarSessao();
   if (!ok) return;
 
-  // 🔥 carrega avatar imediatamente
-  await carregarAvatarHeader();
-
+  await carregarAvatarHeader(); // ✅ mostra avatar salvo OU padrão
   iniciarApp();
 
   setInterval(validarSessao, 15000);
 
 })();
-
 
 </script>
 
