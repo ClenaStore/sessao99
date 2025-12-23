@@ -1,52 +1,61 @@
-(async function () {
-  // ================= CONFIG =================
+// analytics/tracker.js
+(async () => {
   const SUPABASE_URL = "https://dxkszikemntfusfyrzos.supabase.co";
   const SUPABASE_KEY = "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed";
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // ================= HELPERS =================
-  function getUsuario() {
-    const email = localStorage.getItem("usuario_email");
-    return email ? { email } : null;
+  /* ================= CONTEXTO ================= */
+  function getContext() {
+    return window.__CLENA_CONTEXT__ || null;
+  }
+
+  function getUser() {
+    const ctx = getContext();
+    return ctx?.email ? { email: ctx.email } : null;
+  }
+
+  function getItem() {
+    const ctx = getContext();
+    return ctx?.item || null;
   }
 
   function getVideo() {
-    return document.querySelector("video");
+    const ctx = getContext();
+    return ctx?.video || null;
   }
 
-  function getItemAtual() {
-    try {
-      return window.heroItem || null;
-    } catch {
-      return null;
-    }
-  }
-
-  // ================= PRESENÇA (ONLINE) =================
-  setInterval(async () => {
-    const user = getUsuario();
+  /* ================= PRESENÇA ================= */
+  async function heartbeat() {
+    const user = getUser();
     if (!user) return;
 
     await sb.from("user_presence").upsert({
-      user_id: user.email, // simplificado (pode trocar por UUID depois)
       email: user.email,
       page: location.pathname,
       last_seen: new Date().toISOString()
     });
-  }, 20000);
+  }
 
-  // ================= WATCH TRACKING =================
+  heartbeat();
+  setInterval(heartbeat, 15000);
+
+  /* ================= WATCH TRACKING ================= */
+  let lastPercentSent = -1;
   let sessionStart = null;
 
   function bindVideo() {
     const video = getVideo();
     if (!video) return;
 
+    // ▶ PLAY
     video.addEventListener("play", () => {
-      sessionStart = Date.now();
+      if (!sessionStart) {
+        sessionStart = Date.now();
+      }
     });
 
+    // ⏱ PROGRESSO
     video.addEventListener("timeupdate", async () => {
       if (!video.duration) return;
 
@@ -54,16 +63,18 @@
         (video.currentTime / video.duration) * 100
       );
 
-      if (percent % 10 !== 0) return;
+      // envia só a cada 10%
+      if (percent % 10 !== 0 || percent === lastPercentSent) return;
+      lastPercentSent = percent;
 
-      const user = getUsuario();
-      const item = getItemAtual();
+      const user = getUser();
+      const item = getItem();
       if (!user || !item) return;
 
       await sb.from("watch_progress").upsert({
         email: user.email,
         tipo: item.tipo,
-        filme_id: item.id,
+        filme_id: item.id || null,
         serie_nome: item.serie_nome || null,
         temporada: item.temporada || null,
         episodio: item.episodio || null,
@@ -73,14 +84,12 @@
       });
     });
 
+    // ⏹ SALVA SESSÃO
     async function salvarSessao() {
       if (!sessionStart) return;
 
-      const video = getVideo();
-      if (!video) return;
-
-      const user = getUsuario();
-      const item = getItemAtual();
+      const user = getUser();
+      const item = getItem();
       if (!user || !item) return;
 
       const watchedSeconds = Math.floor(
@@ -90,7 +99,7 @@
       await sb.from("watch_sessions").insert({
         email: user.email,
         tipo: item.tipo,
-        filme_id: item.id,
+        filme_id: item.id || null,
         serie_nome: item.serie_nome || null,
         temporada: item.temporada || null,
         episodio: item.episodio || null,
@@ -100,13 +109,18 @@
       });
 
       sessionStart = null;
+      lastPercentSent = -1;
     }
 
     video.addEventListener("ended", salvarSessao);
     window.addEventListener("beforeunload", salvarSessao);
   }
 
-  // ================= AUTO INIT =================
-  const observer = new MutationObserver(bindVideo);
-  observer.observe(document.body, { childList: true, subtree: true });
+  /* ================= INIT ================= */
+  const waitContext = setInterval(() => {
+    if (getContext()?.video) {
+      clearInterval(waitContext);
+      bindVideo();
+    }
+  }, 300);
 })();
