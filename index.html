@@ -754,7 +754,25 @@ const sb = supabase.createClient(
 let dados=[], heroItem=null, filtro='todos', usuario=null;
 let serieAtual=[], filmeAtual=null;
 let episodioIndexAtual = 0;
-let dadosCarregados = false; // ✅ FALTA ISSO
+let dadosCarregados = false;
+
+// ================= ELEMENTOS DOM =================
+const hero = document.getElementById("hero");
+const heroTitle = document.getElementById("heroTitle");
+const heroMeta = document.getElementById("heroMeta");
+const heroDesc = document.getElementById("heroDesc");
+const grid = document.getElementById("grid");
+
+const perfilEmail = document.getElementById("perfilEmail");
+const perfilPlano = document.getElementById("perfilPlano");
+const perfilValor = document.getElementById("perfilValor");
+const perfilVencimento = document.getElementById("perfilVencimento");
+
+const video = document.getElementById("video");
+const btnProximo = document.getElementById("btnProximo");
+const selTemporada = document.getElementById("selTemporada");
+const selEpisodio = document.getElementById("selEpisodio");
+
 
   
 const ID_PRINCIPAL = "649a1523-e49b-49d8-a34a-452a54b04ba";
@@ -772,9 +790,15 @@ async function iniciarApp() {
   dados = data || [];
   dadosCarregados = true;
 
-  heroItem =
-    dados.find(d => d.id === ID_PRINCIPAL) ||
-    dados[0];
+heroItem =
+  dados.find(d => d.id === ID_PRINCIPAL) ||
+  dados[0];
+
+if (!heroItem) {
+  console.warn("Nenhum filme encontrado");
+  return;
+}
+
 
   hero.style.backgroundImage = `url(${heroItem.capa_url})`;
   heroTitle.textContent = heroItem.titulo || heroItem.serie_nome;
@@ -954,21 +978,6 @@ function render(buscaTxt = "") {
   }
 }
 
-
-  if(error || !user){
-    perfilEmail.textContent = usuario.email;
-    perfilPlano.textContent = "-";
-    perfilValor.textContent = "-";
-    perfilVencimento.textContent = "-";
-    pixBox.style.display = "none";
-    return;
-  }
-
-  perfilEmail.textContent = user.email;
-
-  perfilPlano.textContent = user.tipo_assinatura || "-";
-  perfilValor.textContent = formatarReal(user.valor_assinatura);
-  perfilVencimento.textContent = formatarData(user.vencimento_assinatura);
 
   // REGRA DO PIX (mostrar só se faltar <= 2 dias)
   pixBox.style.display = "none";
