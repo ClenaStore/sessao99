@@ -1409,14 +1409,12 @@ async function salvarPerfil() {
   const ok = await validarSessao();
   if (!ok) return;
 
-  await carregarAvatarHeader(); // ✅ AQUI
+  await carregarAvatarHeader(); // ✅ mostra avatar salvo OU padrão
   iniciarApp();
 
   setInterval(validarSessao, 15000);
 
 })();
-
-
 
 </script>
 
