@@ -1,61 +1,32 @@
-// analytics/tracker.js
-(async () => {
+(async function () {
   const SUPABASE_URL = "https://dxkszikemntfusfyrzos.supabase.co";
   const SUPABASE_KEY = "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed";
-
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  /* ================= CONTEXTO ================= */
   function getContext() {
     return window.__CLENA_CONTEXT__ || null;
   }
 
-  function getUser() {
-    const ctx = getContext();
-    return ctx?.email ? { email: ctx.email } : null;
-  }
-
-  function getItem() {
-    const ctx = getContext();
-    return ctx?.item || null;
-  }
-
-  function getVideo() {
-    const ctx = getContext();
-    return ctx?.video || null;
-  }
-
-  /* ================= PRESENÇA ================= */
-  async function heartbeat() {
-    const user = getUser();
-    if (!user) return;
-
-    await sb.from("user_presence").upsert({
-      email: user.email,
-      page: location.pathname,
-      last_seen: new Date().toISOString()
-    });
-  }
-
-  heartbeat();
-  setInterval(heartbeat, 15000);
-
-  /* ================= WATCH TRACKING ================= */
-  let lastPercentSent = -1;
   let sessionStart = null;
+  let lastSaved = 0;
 
   function bindVideo() {
-    const video = getVideo();
-    if (!video) return;
+    const ctx = getContext();
+    if (!ctx || !ctx.video || !ctx.item || !ctx.email) return;
 
-    // ▶ PLAY
+    const video = ctx.video;
+    const item = ctx.item;
+    const email = ctx.email;
+
+    if (video.__clenaBound) return;
+    video.__clenaBound = true;
+
+    // ▶ PLAY (autoplay conta)
     video.addEventListener("play", () => {
-      if (!sessionStart) {
-        sessionStart = Date.now();
-      }
+      sessionStart = Date.now();
     });
 
-    // ⏱ PROGRESSO
+    // ⏱ PROGRESSO (a cada 10%)
     video.addEventListener("timeupdate", async () => {
       if (!video.duration) return;
 
@@ -63,16 +34,13 @@
         (video.currentTime / video.duration) * 100
       );
 
-      // envia só a cada 10%
-      if (percent % 10 !== 0 || percent === lastPercentSent) return;
-      lastPercentSent = percent;
+      if (percent % 10 !== 0) return;
+      if (Date.now() - lastSaved < 5000) return;
 
-      const user = getUser();
-      const item = getItem();
-      if (!user || !item) return;
+      lastSaved = Date.now();
 
       await sb.from("watch_progress").upsert({
-        email: user.email,
+        email,
         tipo: item.tipo,
         filme_id: item.id || null,
         serie_nome: item.serie_nome || null,
@@ -84,52 +52,39 @@
       });
     });
 
-    // ⏹ SALVA SESSÃO
-async function salvarSessao() {
-  if (!sessionStart) return;
+    async function salvarSessao() {
+      if (!sessionStart) return;
 
-  const video = getVideo();
-  if (!video) return;
+      const watchedSeconds = Math.floor(
+        (Date.now() - sessionStart) / 1000
+      );
 
-  const user = getUsuario();
-  const item = getItemAtual();
-  if (!user || !item) return;
+      // ⛔ mínimo 10 segundos
+      if (watchedSeconds < 10) {
+        sessionStart = null;
+        return;
+      }
 
-  const watchedSeconds = Math.floor(
-    (Date.now() - sessionStart) / 1000
-  );
+      await sb.from("watch_sessions").insert({
+        email,
+        tipo: item.tipo,
+        filme_id: item.id || null,
+        serie_nome: item.serie_nome || null,
+        temporada: item.temporada || null,
+        episodio: item.episodio || null,
+        started_at: new Date(sessionStart).toISOString(),
+        ended_at: new Date().toISOString(),
+        watched_seconds: watchedSeconds
+      });
 
-  // ⛔ REGRA DE OURO: mínimo 10 segundos
-  if (watchedSeconds < 10) {
-    sessionStart = null;
-    return;
-  }
-
-  await sb.from("watch_sessions").insert({
-    email: user.email,
-    tipo: item.tipo,
-    filme_id: item.id || null,
-    serie_nome: item.serie_nome || null,
-    temporada: item.temporada || null,
-    episodio: item.episodio || null,
-    started_at: new Date(sessionStart).toISOString(),
-    ended_at: new Date().toISOString(),
-    watched_seconds: watchedSeconds
-  });
-
-  sessionStart = null;
-}
-
+      sessionStart = null;
+    }
 
     video.addEventListener("ended", salvarSessao);
     window.addEventListener("beforeunload", salvarSessao);
   }
 
-  /* ================= INIT ================= */
-  const waitContext = setInterval(() => {
-    if (getContext()?.video) {
-      clearInterval(waitContext);
-      bindVideo();
-    }
-  }, 300);
+  // Observa até o vídeo existir
+  const observer = new MutationObserver(bindVideo);
+  observer.observe(document.body, { childList: true, subtree: true });
 })();
