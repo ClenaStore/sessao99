@@ -183,23 +183,6 @@ if (item.tipo === "filme") {
   video.src = item.video_url;
 }
 
-
-if (item.tipo === "filme") {
-  video.src = item.video_url;
-
-  video.addEventListener("play", () => {
-    if (window.trackEvent) {
-      trackEvent({
-        tipo: "filme",
-        titulo: item.titulo
-      });
-    }
-  }, { once: true });
-}
-
-
-
-  
 /* ================= SÉRIE ================= */
 if (item.tipo === "serie") carregarSerie();
 
@@ -239,24 +222,6 @@ function montarEpisodios(){
     episodioIndex = Number(selEpisodio.value);
     tocarEpisodio(eps, episodioIndex);
   };
-}
-function tocarEpisodio(eps, index){
-  btnProximo.style.display = "none";
-  const ep = eps[index];
-  if (!ep) return;
-
-  video.src = ep.video_url;
-
-  video.addEventListener("play", () => {
-    if (window.trackEvent) {
-      trackEvent({
-        tipo: "serie",
-        serie_nome: ep.serie_nome,
-        temporada: ep.temporada,
-        episodio: ep.episodio
-      });
-    }
-  }, { once: true });
 }
 
 function tocarEpisodio(eps, index){
@@ -303,7 +268,7 @@ function voltar(){
   const ok = await validarSessaoPlayer();
   if (!ok) return;
 
-  /* 🔥 CONTEXTO GLOBAL PARA ANALYTICS */
+  /* 🔥 CONTEXTO ÚNICO PARA ANALYTICS */
   window.__CLENA_CONTEXT__ = {
     email: localStorage.getItem("usuario_email"),
     item: item,
@@ -312,7 +277,7 @@ function voltar(){
 })();
 </script>
 
-<!-- 📊 ANALYTICS (AGORA FUNCIONA) -->
+<!-- 📊 ANALYTICS -->
 <script src="/analytics/collector.js"></script>
 
 </body>
