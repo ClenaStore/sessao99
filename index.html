@@ -767,6 +767,7 @@ const perfilEmail = document.getElementById("perfilEmail");
 const perfilPlano = document.getElementById("perfilPlano");
 const perfilValor = document.getElementById("perfilValor");
 const perfilVencimento = document.getElementById("perfilVencimento");
+const perfilOverlay = document.getElementById("perfilOverlay");
 
 const video = document.getElementById("video");
 const btnProximo = document.getElementById("btnProximo");
@@ -1040,7 +1041,7 @@ function tocarEpisodio(eps, index){
 
 function fechar(){
   video.pause();video.src="";
-  player.style.display="none";
+  document.getElementById("player").style.display = "none";
   document.getElementById("perfilBtn").style.display="block";
 }
 
@@ -1157,14 +1158,6 @@ if ("serviceWorker" in navigator) {
     });
 
   });
-}
-
-function toggleSearch(){
-  searchMobileBox.style.display = "block";
-  searchResults.style.display = "none";
-  buscaMobile.value = "";
-  buscaMobile.focus();
-  document.body.classList.add("search-open");
 }
 
 async function validarSessao() {
