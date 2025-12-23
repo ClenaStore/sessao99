@@ -8,7 +8,7 @@ const FILES_TO_CACHE = [
   "/login.html",
   "/player.html",
   "/manifest.json",
-  "/logo.png"
+  "/logo1.png"
 ];
 
 /* ================= INSTALL ================= */
