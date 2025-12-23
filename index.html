@@ -1243,7 +1243,6 @@ if (error || !data) {
 
 const BUNNY_STORAGE = "https://storage.bunnycdn.com/sessao99";
 const BUNNY_PULL = "https://sessao99.b-cdn.net";
-const BUNNY_KEY = "d498d56e-361b-4a1e-9edb9eb63e3b-2e6a-4c17";
 
 let userId = null;
 
@@ -1295,25 +1294,40 @@ async function uploadAvatar(input) {
   const file = input.files[0];
   if (!file || !userId) return;
 
-  const buffer = await file.arrayBuffer();
+  const reader = new FileReader();
 
-  await fetch(`${BUNNY_STORAGE}/avatars/${userId}.jpg`, {
-    method: "PUT",
-    headers: {
-      "AccessKey": BUNNY_KEY,
-      "Content-Type": "application/octet-stream"
-    },
-    body: buffer
-  });
+  reader.onload = async () => {
+    const base64 = reader.result.split(",")[1];
 
-  const url = `${BUNNY_PULL}/avatars/${userId}.jpg?${Date.now()}`;
+    const res = await fetch("/api/upload-avatar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId,
+        base64,
+        mime: file.type
+      })
+    });
 
-  avatarImg.src = url;
-  perfilBtn.innerHTML = `<img src="${url}" style="width:36px;height:36px;border-radius:50%">`;
+    const data = await res.json();
+    if (!data.url) {
+      alert("Erro ao subir avatar");
+      return;
+    }
 
-  await sb.from("usuarios")
-    .update({ avatar_url: url })
-    .eq("id", userId);
+    const url = `${data.url}?${Date.now()}`;
+
+    avatarImg.src = url;
+    perfilBtn.innerHTML = `
+      <img src="${url}" style="width:36px;height:36px;border-radius:50%">
+    `;
+
+    await sb.from("usuarios")
+      .update({ avatar_url: url })
+      .eq("id", userId);
+  };
+
+  reader.readAsDataURL(file);
 }
 
 async function validarUsername() {
