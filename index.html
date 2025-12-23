@@ -1322,49 +1322,52 @@ async function uploadAvatar(input) {
   const file = input.files[0];
   if (!file || !userId) return;
 
-  const BUNNY = {
-    zone: "sessao99",
-    region: "br",
-    key: "d498d56e-361b-4a1e-9edb9eb63e3b-2e6a-4c17",
-    cdn: "https://sessao99.b-cdn.net"
-  };
+  // 🔥 CONVERTE PARA JPG
+  const img = new Image();
+  img.src = URL.createObjectURL(file);
 
-  const nome = `${userId}.jpg`; // sobrescreve sempre
+  await new Promise(r => img.onload = r);
+
+  const canvas = document.createElement("canvas");
+  const size = 512;
+  canvas.width = size;
+  canvas.height = size;
+
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(img, 0, 0, size, size);
+
+  const blob = await new Promise(r =>
+    canvas.toBlob(r, "image/jpeg", 0.9)
+  );
+
+  const nome = `${userId}_${Date.now()}.jpg`;
+
   const uploadUrl =
-    `https://${BUNNY.region}.storage.bunnycdn.com/${BUNNY.zone}/avatars/${nome}`;
+    `https://br.storage.bunnycdn.com/sessao99/avatars/${nome}`;
 
   const res = await fetch(uploadUrl, {
     method: "PUT",
     headers: {
-      "AccessKey": BUNNY.key,
+      "AccessKey": "SUA_KEY_AQUI",
       "Content-Type": "application/octet-stream"
     },
-    body: file
+    body: blob
   });
 
   if (!res.ok) {
-    alert("Erro ao enviar avatar para Bunny");
+    alert("Erro ao enviar avatar");
     return;
   }
 
-const avatarUrl = `${BUNNY.cdn}/avatars/${nome}?${Date.now()}`;
+  const avatarUrl = `https://sessao99.b-cdn.net/avatars/${nome}`;
 
+  await sb
+    .from("usuarios")
+    .update({ avatar_url: avatarUrl })
+    .eq("id", userId);
 
-// UI
-avatarImg.src = avatarUrl;
-perfilBtn.innerHTML = `
-  <img src="${avatarUrl}"
-       style="width:36px;height:36px;border-radius:50%;object-fit:cover">
-`;
-
-// Supabase
-await sb
-  .from("usuarios")
-  .update({ avatar_url: avatarUrl })
-  .eq("id", userId);
-
-// 🔥 FORÇA HEADER A LER DA TABELA
-await carregarAvatarHeader();
+  avatarImg.src = avatarUrl;
+  await carregarAvatarHeader();
 }
 
 async function validarUsername() {
