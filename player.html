@@ -165,11 +165,6 @@ const selTemporada = document.getElementById("selTemporada");
 const selEpisodio = document.getElementById("selEpisodio");
 const btnProximo = document.getElementById("btnProximo");
 
-/* ================= CONTROLE ================= */
-let serie = [];
-let episodioIndex = 0;
-let playRegistrado = false;
-
 /* ================= UI ================= */
 meta.innerHTML = `
   <span class="badge categoria">${item.categoria || "Geral"}</span>
@@ -179,12 +174,22 @@ meta.innerHTML = `
 titulo.textContent = item.titulo || item.serie_nome;
 desc.textContent = item.descricao || "";
 
+/* ================= CONTEXTO GLOBAL ================= */
+window.__CLENA_CONTEXT__ = {
+  email: localStorage.getItem("usuario_email"),
+  item: item,
+  video: video
+};
+
 /* ================= FILME ================= */
 if (item.tipo === "filme") {
   video.src = item.video_url;
 }
 
 /* ================= SÉRIE ================= */
+let serie = [];
+let episodioIndex = 0;
+
 if (item.tipo === "serie") carregarSerie();
 
 async function carregarSerie(){
@@ -221,64 +226,29 @@ function montarEpisodios(){
 }
 
 function tocarEpisodio(eps, index){
-  playRegistrado = false;
-  btnProximo.style.display = "none";
-
   const ep = eps[index];
   if (!ep) return;
 
+  window.__CLENA_CONTEXT__.item = {
+    ...item,
+    temporada: ep.temporada,
+    episodio: ep.episodio
+  };
+
   video.src = ep.video_url;
+  video.play();
 }
 
-/* ================= TRACKING CORRETO (AUTOPLAY CONTA) ================= */
-video.addEventListener("timeupdate", () => {
-  if (playRegistrado) return;
-  if (!window.trackEvent) return;
-  if (video.currentTime < 1) return;
-
-  playRegistrado = true;
-
-  const payload =
-    item.tipo === "filme"
-      ? {
-          tipo: "filme",
-          titulo: item.titulo
-        }
-      : {
-          tipo: "serie",
-          serie_nome: item.serie_nome,
-          temporada: selTemporada.value,
-          episodio: selEpisodio.options[selEpisodio.selectedIndex]?.text
-        };
-
-  window.trackEvent({
-    event_type: "play",
-    payload
-  });
-});
-
-/* ================= PRÓXIMO EP ================= */
 function proximoEpisodio(){
-  const temporadas = [...new Set(serie.map(e => e.temporada))];
-  const tempAtual = Number(selTemporada.value);
-  const epsTemp = serie.filter(e => e.temporada == tempAtual);
-
+  const epsTemp = serie.filter(e => e.temporada == selTemporada.value);
   episodioIndex++;
 
   if (episodioIndex < epsTemp.length) {
     selEpisodio.value = episodioIndex;
     tocarEpisodio(epsTemp, episodioIndex);
-    return;
-  }
-
-  const idxTemp = temporadas.indexOf(tempAtual);
-  if (idxTemp < temporadas.length - 1) {
-    selTemporada.value = temporadas[idxTemp + 1];
-    montarEpisodios();
   }
 }
 
-/* ================= BOTÃO PRÓXIMO ================= */
 video.addEventListener("timeupdate", () => {
   if (item.tipo !== "serie" || !video.duration) return;
   btnProximo.style.display =
@@ -296,16 +266,14 @@ function voltar(){
   const ok = await validarSessaoPlayer();
   if (!ok) return;
 
-  window.__CLENA_CONTEXT__ = {
-    email: localStorage.getItem("usuario_email"),
-    item,
-    video
-  };
+  // força play caso autoplay tenha sido bloqueado
+  video.play().catch(()=>{});
 })();
 </script>
 
 <!-- 📊 ANALYTICS -->
 <script src="/analytics/collector.js"></script>
+<script src="/analytics/tracker.js"></script>
 
 </body>
 </html>
