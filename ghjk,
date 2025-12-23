@@ -46,7 +46,28 @@ curl.exe -X POST "https://video.bunnycdn.com/library/569072/videos" -H "AccessKe
 
 CONVERTER DE MKV PARA MP4 
 
-.\ffmpeg -i "Planeta dos Macacos (2001).mkv" -c:v libx264 -profile:v high -level 4.1 -pix_fmt yuv420p -crf 20 -preset slow -c:a aac -b:a 128k -movflags +faststart "Planeta dos Macacos (2001).mp4"
+.\ffmpeg -i "Palmer.mkv" -c:v libx264 -profile:v high -level 4.1 -pix_fmt yuv420p -crf 20 -preset slow -c:a aac -b:a 128k -movflags +faststart "Palmern.mp4"
+
+
+
+TRANSFORMAR TODOS DA PASTA EM MP4 (PRECISAR TER O ffmpeg NA PASTA)
+
+Get-ChildItem *.mkv | ForEach-Object {
+  $out = [System.IO.Path]::ChangeExtension($_.Name, ".mp4")
+  .\ffmpeg -i "$($_.Name)" -c:v copy -c:a aac -ac 2 -b:a 192k "$out"
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 <!DOCTYPE html>
