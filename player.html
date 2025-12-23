@@ -183,6 +183,21 @@ if (item.tipo === "filme") {
   video.src = item.video_url;
 }
 
+trackEvent({
+  tipo: "filme",
+  titulo: item.titulo,
+});
+trackEvent({
+  tipo: "serie",
+  serie_nome: item.serie_nome,
+  temporada: ep.temporada,
+  episodio: ep.episodio
+});
+
+
+
+
+  
 /* ================= SÉRIE ================= */
 if (item.tipo === "serie") carregarSerie();
 
