@@ -11,52 +11,20 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#000;color:#fff;font-family:Inter,Arial,sans-serif}
 
-#player{
-  position:fixed;
-  inset:0;
-  background:#000;
-}
-
+#player{position:fixed;inset:0;background:#000}
 #close{
-  position:absolute;
-  top:16px;
-  left:16px;
+  position:absolute;top:16px;left:16px;
   padding:10px 16px;
   background:rgba(0,0,0,.6);
-  color:#fff;
-  border:none;
-  border-radius:999px;
-  cursor:pointer;
-  z-index:10;
+  color:#fff;border:none;border-radius:999px;
+  cursor:pointer;z-index:10
 }
+#layout{display:grid;grid-template-columns:3fr 1.4fr;height:100%}
+video{width:100%;height:100%;object-fit:cover}
 
-#layout{
-  display:grid;
-  grid-template-columns:3fr 1.4fr;
-  height:100%;
-}
-
-video{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-}
-
-/* LATERAL */
-#side{
-  background:#111;
-  padding:32px;
-}
-
-#titulo{
-  font-size:26px;
-  margin-bottom:8px;
-}
-
-#meta{
-  margin-bottom:12px;
-  font-size:14px;
-}
+#side{background:#111;padding:32px}
+#titulo{font-size:26px;margin-bottom:8px}
+#meta{margin-bottom:12px;font-size:14px}
 
 .badge{
   display:inline-block;
@@ -65,41 +33,25 @@ video{
   border-radius:999px;
   font-size:12px;
   font-weight:600;
-  background:#222;
+  background:#222
 }
-
 .badge.tipo{background:#e50914}
 .badge.categoria{background:#333}
 .badge.classificacao{background:#444}
 
-#desc{
-  font-size:14px;
-  line-height:1.5;
-  color:#ccc;
-  margin-bottom:18px;
-}
+#desc{font-size:14px;line-height:1.5;color:#ccc;margin-bottom:18px}
 
-/* CONTROLES DE SÉRIE */
-#serieControls{
-  display:none;
-  margin-top:12px;
-}
-
-.select-box{
-  position:relative;
-  margin-bottom:10px;
-}
-
+#serieControls{display:none;margin-top:12px}
+.select-box{position:relative;margin-bottom:10px}
 .select-box::after{
   content:"▾";
   position:absolute;
   right:14px;
   top:50%;
   transform:translateY(-50%);
-  pointer-events:none;
   color:#aaa;
+  pointer-events:none
 }
-
 select{
   width:100%;
   appearance:none;
@@ -107,17 +59,9 @@ select{
   background:#1c1c1c;
   border:1px solid #333;
   border-radius:10px;
-  color:#fff;
-  font-size:14px;
+  color:#fff
 }
 
-select:focus{
-  outline:none;
-  border-color:#e50914;
-  box-shadow:0 0 0 2px rgba(229,9,20,.25);
-}
-
-/* PRÓXIMO EP */
 #btnProximo{
   position:absolute;
   right:40px;
@@ -132,11 +76,7 @@ select:focus{
   color:#fff;
   backdrop-filter:blur(6px);
   display:none;
-  z-index:20;
-}
-
-#btnProximo:hover{
-  background:rgba(255,255,255,.28);
+  z-index:20
 }
 
 @media(max-width:768px){
@@ -153,7 +93,6 @@ select:focus{
 
   <div id="layout">
     <video id="video" controls autoplay></video>
-
     <button id="btnProximo" onclick="proximoEpisodio()">▶ Próximo episódio</button>
 
     <div id="side">
@@ -230,13 +169,12 @@ const btnProximo = document.getElementById("btnProximo");
 let serie = [];
 let episodioIndex = 0;
 
-/* ================= META ================= */
+/* ================= UI ================= */
 meta.innerHTML = `
   <span class="badge categoria">${item.categoria || "Geral"}</span>
   <span class="badge tipo">${item.tipo}</span>
   ${item.classificacao ? `<span class="badge classificacao">${item.classificacao}</span>` : ""}
 `;
-
 titulo.textContent = item.titulo || item.serie_nome;
 desc.textContent = item.descricao || "";
 
@@ -246,9 +184,7 @@ if (item.tipo === "filme") {
 }
 
 /* ================= SÉRIE ================= */
-if (item.tipo === "serie") {
-  carregarSerie();
-}
+if (item.tipo === "serie") carregarSerie();
 
 async function carregarSerie(){
   const { data } = await sb
@@ -295,7 +231,6 @@ function tocarEpisodio(eps, index){
   video.src = ep.video_url;
 }
 
-/* ▶ PRÓXIMO EP (com troca de temporada) */
 function proximoEpisodio(){
   const temporadas = [...new Set(serie.map(e => e.temporada))];
   const tempAtual = Number(selTemporada.value);
@@ -322,21 +257,27 @@ video.addEventListener("timeupdate", () => {
     (video.duration - video.currentTime <= 60) ? "block" : "none";
 });
 
-/* ⬅ VOLTAR */
 function voltar(){
   video.pause();
   video.src = "";
   location.replace("index.html");
 }
 
-/* INIT */
+/* ================= INIT ================= */
 (async ()=>{
   const ok = await validarSessaoPlayer();
   if (!ok) return;
+
+  /* 🔥 CONTEXTO GLOBAL PARA ANALYTICS */
+  window.__CLENA_CONTEXT__ = {
+    email: localStorage.getItem("usuario_email"),
+    item: item,
+    video: video
+  };
 })();
 </script>
 
-<!-- 📊 ANALYTICS -->
+<!-- 📊 ANALYTICS (AGORA FUNCIONA) -->
 <script src="/analytics/collector.js"></script>
 
 </body>
