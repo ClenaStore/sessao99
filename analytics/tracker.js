@@ -4,75 +4,92 @@
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  const MIN_SECONDS = 10;
+  const email = localStorage.getItem("usuario_email");
+  if (!email) return;
 
-  let startedAt = null;
-  let saved = false;
+  let sessionStartedAt = null;
+  let sentProgress = false;
 
   function getContext() {
     return window.__CLENA_CONTEXT__ || null;
   }
 
-  function startSession() {
-    if (startedAt) return;
-    startedAt = Date.now();
-    console.log("[TRACKER] sessão iniciada");
+  function getVideo() {
+    return document.querySelector("video");
   }
 
-  async function saveSession(reason = "auto") {
-    if (saved || !startedAt) return;
+  function iniciarSessao() {
+    if (sessionStartedAt) return;
+    sessionStartedAt = Date.now();
+    console.log("▶ Sessão iniciada");
+  }
 
+  async function enviarProgress(video, item) {
+    if (sentProgress) return;
+
+    const elapsed = (Date.now() - sessionStartedAt) / 1000;
+    if (elapsed < 10) return; // ⏱ mínimo REAL
+
+    sentProgress = true;
+
+    const percent = Math.floor(
+      (video.currentTime / video.duration) * 100
+    );
+
+    console.log("📊 Salvando progress", percent);
+
+    await sb.from("watch_progress").upsert({
+      email,
+      tipo: item.tipo,
+      filme_id: item.id || null,
+      serie_nome: item.serie_nome || null,
+      temporada: item.temporada || null,
+      episodio: item.episodio || null,
+      progress_percent: percent,
+      passed_50: percent >= 50,
+      updated_at: new Date().toISOString()
+    });
+  }
+
+  function bind() {
     const ctx = getContext();
-    if (!ctx || !ctx.item || !ctx.email) return;
+    const video = getVideo();
+    if (!ctx || !video) return;
 
-    const watchedSeconds = Math.floor((Date.now() - startedAt) / 1000);
-    if (watchedSeconds < MIN_SECONDS) {
-      console.log("[TRACKER] ignorado (<10s)");
-      return;
-    }
+    // 🔥 AUTOPLAY → inicia sozinho
+    iniciarSessao();
 
-    saved = true;
+    video.addEventListener("timeupdate", () => {
+      if (!video.duration) return;
+      enviarProgress(video, ctx.item);
+    });
 
-    const payload = {
-      email: ctx.email,
-      tipo: ctx.item.tipo,
-      filme_id: ctx.item.id || null,
-      serie_nome: ctx.item.serie_nome || null,
-      temporada: ctx.item.temporada || null,
-      episodio: ctx.item.episodio || null,
-      started_at: new Date(startedAt).toISOString(),
-      ended_at: new Date().toISOString(),
-      watched_seconds: watchedSeconds
-    };
+    video.addEventListener("ended", async () => {
+      if (!sessionStartedAt) return;
 
-    console.log("[TRACKER] salvando sessão", payload);
+      const seconds =
+        Math.floor((Date.now() - sessionStartedAt) / 1000);
 
-    await sb.from("watch_sessions").insert(payload);
+      if (seconds < 10) return;
+
+      await sb.from("watch_sessions").insert({
+        email,
+        tipo: ctx.item.tipo,
+        filme_id: ctx.item.id || null,
+        serie_nome: ctx.item.serie_nome || null,
+        temporada: ctx.item.temporada || null,
+        episodio: ctx.item.episodio || null,
+        started_at: new Date(sessionStartedAt).toISOString(),
+        ended_at: new Date().toISOString(),
+        watched_seconds: seconds
+      });
+
+      sessionStartedAt = null;
+      sentProgress = false;
+    });
   }
 
-  function bindVideo(video) {
-    if (!video) return;
-
-    // autoplay CONTA
-    startSession();
-
-    video.addEventListener("playing", startSession);
-
-    // salva ao sair
-    window.addEventListener("beforeunload", () => saveSession("unload"));
-
-    // salva ao terminar
-    video.addEventListener("ended", () => saveSession("ended"));
-  }
-
-  // observa quando o vídeo aparece
-  const observer = new MutationObserver(() => {
-    const video = document.querySelector("video");
-    if (video) {
-      observer.disconnect();
-      bindVideo(video);
-    }
-  });
-
-  observer.observe(document.body, { childList: true, subtree: true });
+  // Observa DOM (player carrega depois)
+  const obs = new MutationObserver(bind);
+  obs.observe(document.body, { childList: true, subtree: true });
 })();
