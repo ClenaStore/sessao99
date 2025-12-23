@@ -1336,9 +1336,11 @@ async function uploadAvatar(input) {
   const ctx = canvas.getContext("2d");
   ctx.drawImage(img, 0, 0, size, size);
 
-  const blob = await new Promise(r =>
-    canvas.toBlob(r, "image/jpeg", 0.9)
-  );
+const blob = await new Promise(r =>
+  canvas.toBlob(r, "image/jpeg", 0.9)
+);
+
+URL.revokeObjectURL(img.src);
 
   const nome = `${userId}_${Date.now()}.jpg`;
 
@@ -1348,7 +1350,7 @@ async function uploadAvatar(input) {
   const res = await fetch(uploadUrl, {
     method: "PUT",
     headers: {
-      "AccessKey": "SUA_KEY_AQUI",
+     "AccessKey": "d498d56e-361b-4a1e-9edb9eb63e3b-2e6a-4c17"
       "Content-Type": "application/octet-stream"
     },
     body: blob
