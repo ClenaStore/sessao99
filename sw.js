@@ -1,4 +1,4 @@
-const CACHE_NAME = "sessao-cache-v3"; // 🔴 MUDE SEMPRE AO ATUALIZAR
+const CACHE_NAME = "sessao-cache-v4"; // 🔴 MUDE SEMPRE AO ATUALIZAR
 
 const FILES_TO_CACHE = [
   "/",
