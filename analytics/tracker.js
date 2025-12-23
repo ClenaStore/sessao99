@@ -1,90 +1,78 @@
-(async function () {
+(() => {
   const SUPABASE_URL = "https://dxkszikemntfusfyrzos.supabase.co";
   const SUPABASE_KEY = "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed";
+
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const MIN_SECONDS = 10;
+
+  let startedAt = null;
+  let saved = false;
 
   function getContext() {
     return window.__CLENA_CONTEXT__ || null;
   }
 
-  let sessionStart = null;
-  let lastSaved = 0;
-
-  function bindVideo() {
-    const ctx = getContext();
-    if (!ctx || !ctx.video || !ctx.item || !ctx.email) return;
-
-    const video = ctx.video;
-    const item = ctx.item;
-    const email = ctx.email;
-
-    if (video.__clenaBound) return;
-    video.__clenaBound = true;
-
-    // ▶ PLAY (autoplay conta)
-    video.addEventListener("play", () => {
-      sessionStart = Date.now();
-    });
-
-    // ⏱ PROGRESSO (a cada 10%)
-    video.addEventListener("timeupdate", async () => {
-      if (!video.duration) return;
-
-      const percent = Math.floor(
-        (video.currentTime / video.duration) * 100
-      );
-
-      if (percent % 10 !== 0) return;
-      if (Date.now() - lastSaved < 5000) return;
-
-      lastSaved = Date.now();
-
-      await sb.from("watch_progress").upsert({
-        email,
-        tipo: item.tipo,
-        filme_id: item.id || null,
-        serie_nome: item.serie_nome || null,
-        temporada: item.temporada || null,
-        episodio: item.episodio || null,
-        progress_percent: percent,
-        passed_50: percent >= 50,
-        updated_at: new Date().toISOString()
-      });
-    });
-
-    async function salvarSessao() {
-      if (!sessionStart) return;
-
-      const watchedSeconds = Math.floor(
-        (Date.now() - sessionStart) / 1000
-      );
-
-      // ⛔ mínimo 10 segundos
-      if (watchedSeconds < 10) {
-        sessionStart = null;
-        return;
-      }
-
-      await sb.from("watch_sessions").insert({
-        email,
-        tipo: item.tipo,
-        filme_id: item.id || null,
-        serie_nome: item.serie_nome || null,
-        temporada: item.temporada || null,
-        episodio: item.episodio || null,
-        started_at: new Date(sessionStart).toISOString(),
-        ended_at: new Date().toISOString(),
-        watched_seconds: watchedSeconds
-      });
-
-      sessionStart = null;
-    }
-
-    video.addEventListener("ended", salvarSessao);
-    window.addEventListener("beforeunload", salvarSessao);
+  function startSession() {
+    if (startedAt) return;
+    startedAt = Date.now();
+    console.log("[TRACKER] sessão iniciada");
   }
 
-  // Observa até o vídeo existir
-  const observer = new MutationObserver(bindVideo);
+  async function saveSession(reason = "auto") {
+    if (saved || !startedAt) return;
+
+    const ctx = getContext();
+    if (!ctx || !ctx.item || !ctx.email) return;
+
+    const watchedSeconds = Math.floor((Date.now() - startedAt) / 1000);
+    if (watchedSeconds < MIN_SECONDS) {
+      console.log("[TRACKER] ignorado (<10s)");
+      return;
+    }
+
+    saved = true;
+
+    const payload = {
+      email: ctx.email,
+      tipo: ctx.item.tipo,
+      filme_id: ctx.item.id || null,
+      serie_nome: ctx.item.serie_nome || null,
+      temporada: ctx.item.temporada || null,
+      episodio: ctx.item.episodio || null,
+      started_at: new Date(startedAt).toISOString(),
+      ended_at: new Date().toISOString(),
+      watched_seconds: watchedSeconds
+    };
+
+    console.log("[TRACKER] salvando sessão", payload);
+
+    await sb.from("watch_sessions").insert(payload);
+  }
+
+  function bindVideo(video) {
+    if (!video) return;
+
+    // autoplay CONTA
+    startSession();
+
+    video.addEventListener("playing", startSession);
+
+    // salva ao sair
+    window.addEventListener("beforeunload", () => saveSession("unload"));
+
+    // salva ao terminar
+    video.addEventListener("ended", () => saveSession("ended"));
+  }
+
+  // observa quando o vídeo aparece
+  const observer = new MutationObserver(() => {
+    const video = document.querySelector("video");
+    if (video) {
+      observer.disconnect();
+      bindVideo(video);
+    }
+  });
+
   observer.observe(document.body, { childList: true, subtree: true });
 })();
