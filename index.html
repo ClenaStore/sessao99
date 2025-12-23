@@ -1266,12 +1266,12 @@ async function carregarAvatarHeader() {
     data?.avatar_url ||
     `https://ui-avatars.com/api/?name=${(data?.nome_usuario || "U")[0]}&background=e50914&color=fff`;
 
+  // avatar no header
   perfilBtn.innerHTML = `
     <img src="${avatarUrl}"
          style="width:36px;height:36px;border-radius:50%;object-fit:cover">
   `;
 }
-
 
 
 
@@ -1394,18 +1394,20 @@ async function salvarPerfil() {
 }
 
 
+// 🚪 valida sessão e só depois inicia o app
 (async () => {
 
   const ok = await validarSessao();
   if (!ok) return;
 
-  await carregarAvatarHeader(); // ✅ AQUI
+  // 🔥 carrega avatar imediatamente
+  await carregarAvatarHeader();
+
   iniciarApp();
 
   setInterval(validarSessao, 15000);
 
 })();
-
 
 
 </script>
