@@ -1326,12 +1326,11 @@ async function uploadAvatar(input) {
     const res = await fetch("/api/upload-avatar", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        userId,
-        base64,
-        mime: file.type
-      })
-    });
+  body: JSON.stringify({
+  userId,
+  fileBase64: base64, // ✅ NOME CERTO
+  mime: file.type
+})
 
     const data = await res.json();
     if (!data.url) {
