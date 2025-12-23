@@ -1,20 +1,28 @@
-const CACHE_NAME = "sessao-cache-v4"; // 🔴 MUDE SEMPRE AO ATUALIZAR
+// 🔴 MUDE A VERSÃO SEMPRE QUE ATUALIZAR
+const CACHE_NAME = "sessao-cache-v5";
 
+// ✅ SOMENTE ARQUIVOS ESTÁTICOS
 const FILES_TO_CACHE = [
   "/",
   "/index.html",
   "/login.html",
   "/player.html",
-  "/manifest.json"
+  "/manifest.json",
+  "/logo.png"
 ];
 
+/* ================= INSTALL ================= */
 self.addEventListener("install", event => {
   self.skipWaiting();
+
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(FILES_TO_CACHE))
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.addAll(FILES_TO_CACHE);
+    })
   );
 });
 
+/* ================= ACTIVATE ================= */
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys().then(keys =>
@@ -27,19 +35,54 @@ self.addEventListener("activate", event => {
       )
     )
   );
+
   self.clients.claim();
 });
 
+/* ================= FETCH ================= */
 self.addEventListener("fetch", event => {
+  const url = new URL(event.request.url);
+
+  /**
+   * ❌ NUNCA CACHEAR:
+   * - Supabase
+   * - Analytics / métricas
+   * - APIs
+   */
+  if (
+    url.hostname.includes("supabase.co") ||
+    url.pathname.includes("/analytics") ||
+    url.pathname.includes("/metrics")
+  ) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  /**
+   * 🎬 CDN / imagens / vídeos
+   * (sempre online-first)
+   */
+  if (url.hostname.includes("b-cdn.net")) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  /**
+   * ✅ NETWORK FIRST (app normal)
+   */
   event.respondWith(
     fetch(event.request)
-      .then(res => {
-        const resClone = res.clone();
+      .then(response => {
+        const responseClone = response.clone();
+
         caches.open(CACHE_NAME).then(cache => {
-          cache.put(event.request, resClone);
+          cache.put(event.request, responseClone);
         });
-        return res;
+
+        return response;
       })
-      .catch(() => caches.match(event.request))
+      .catch(() => {
+        return caches.match(event.request);
+      })
   );
 });
