@@ -29,7 +29,7 @@ body{
   margin:0;
   background:var(--bg);
   color:var(--text);
-  height:100vh;
+  min-height:100vh;
   overflow:hidden;
 }
 
@@ -39,62 +39,90 @@ main{
   flex-direction:column;
 }
 
-/* HEADER */
+/* ================= HEADER ================= */
 .header{
-  padding:20px 28px;
+  padding:clamp(16px,3vw,28px);
   background:rgba(27,27,30,.85);
   backdrop-filter:blur(14px);
   display:grid;
-  grid-template-columns:repeat(3,1fr);
   gap:16px;
   border-bottom:1px solid var(--border);
 }
 
+/* Desktop / TV */
+@media (min-width:768px){
+  .header{
+    grid-template-columns:repeat(3,1fr);
+  }
+}
+
+/* Mobile */
+@media (max-width:767px){
+  .header{
+    grid-template-columns:1fr;
+  }
+}
+
 .stat{
   background:var(--card);
-  padding:18px;
-  border-radius:16px;
+  padding:clamp(14px,2vw,22px);
+  border-radius:18px;
 }
 
 .stat span{
-  font-size:13px;
+  font-size:clamp(12px,1.2vw,14px);
   color:var(--muted);
 }
 
 .stat h2{
   margin:6px 0 0;
-  font-size:26px;
+  font-size:clamp(22px,2.5vw,32px);
 }
 
-/* CONTEÚDO */
+/* ================= CONTEÚDO ================= */
 .content{
   flex:1;
   overflow-y:auto;
-  padding:26px;
+  padding:clamp(16px,3vw,32px);
 }
 
-/* JOGOS */
 .section-title{
-  font-size:20px;
+  font-size:clamp(18px,2vw,22px);
   font-weight:800;
   margin-bottom:16px;
 }
 
+/* ================= GRID JOGOS ================= */
 .games{
   display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
-  gap:18px;
+  gap:20px;
+}
+
+/* Mobile */
+@media (max-width:640px){
+  .games{grid-template-columns:1fr;}
+}
+
+/* Desktop */
+@media (min-width:641px) and (max-width:1279px){
+  .games{grid-template-columns:repeat(2,1fr);}
+}
+
+/* TV */
+@media (min-width:1280px){
+  .games{grid-template-columns:repeat(3,1fr);}
 }
 
 .game{
   background:var(--card);
-  border-radius:18px;
-  padding:18px;
+  border-radius:22px;
+  padding:clamp(16px,2vw,24px);
   display:flex;
   flex-direction:column;
-  gap:14px;
+  gap:16px;
 }
 
+/* TIMES */
 .teams{
   display:flex;
   align-items:center;
@@ -104,14 +132,15 @@ main{
 .team{
   display:flex;
   align-items:center;
-  gap:10px;
+  gap:12px;
   font-weight:700;
+  font-size:clamp(14px,1.4vw,18px);
 }
 
-/* 🔗 LOGO DOS TIMES */
+/* LOGO */
 .logo{
-  width:36px;
-  height:36px;
+  width:40px;
+  height:40px;
   border-radius:50%;
   background:#000;
   display:flex;
@@ -125,49 +154,65 @@ main{
 .odds{
   display:flex;
   justify-content:space-between;
-  font-size:14px;
+  font-size:clamp(13px,1.1vw,15px);
   color:var(--muted);
 }
 
+/* INPUT / BOTÃO */
 input{
   width:100%;
-  padding:12px 14px;
-  border-radius:12px;
+  padding:14px 16px;
+  border-radius:14px;
   border:1px solid var(--border);
   background:#000;
   color:#fff;
-  font-size:14px;
+  font-size:clamp(14px,1.2vw,16px);
 }
 
 button{
-  padding:14px;
+  padding:16px;
   border:none;
-  border-radius:14px;
+  border-radius:16px;
   background:var(--accent);
   color:#fff;
   font-weight:700;
+  font-size:clamp(15px,1.3vw,18px);
   cursor:pointer;
 }
 
 .timer{
-  font-size:13px;
+  font-size:clamp(12px,1.1vw,14px);
   color:#facc15;
   text-align:center;
 }
 
-/* HISTÓRICO */
+/* ================= HISTÓRICO ================= */
 .history{
-  margin-top:40px;
+  margin-top:48px;
 }
 
 .bet{
   background:var(--surface);
-  padding:14px 18px;
-  border-radius:14px;
+  padding:16px;
+  border-radius:16px;
   display:grid;
-  grid-template-columns:1.4fr .6fr .6fr .6fr;
-  font-size:14px;
-  margin-bottom:10px;
+  gap:8px;
+  font-size:clamp(13px,1.1vw,15px);
+  margin-bottom:12px;
+}
+
+/* Desktop */
+@media (min-width:768px){
+  .bet{
+    grid-template-columns:1.6fr .6fr .6fr .6fr;
+  }
+}
+
+/* Mobile */
+@media (max-width:767px){
+  .bet{
+    grid-template-columns:1fr;
+  }
 }
 
 .status.win{color:var(--green)}
@@ -201,9 +246,8 @@ button{
 
   <div class="section-title">Jogos Disponíveis</div>
 
-  <div class="games" id="games">
+  <div class="games">
 
-    <!-- JOGO -->
     <div class="game">
       <div class="teams">
         <div class="team">
@@ -221,7 +265,6 @@ button{
       </div>
 
       <input type="number" placeholder="Valor da aposta (R$)">
-
       <button>Apostar</button>
 
       <div class="timer" data-end="2025-12-31T23:59:59">
@@ -255,7 +298,6 @@ button{
 </main>
 
 <script>
-/* ⏱️ CONTADOR */
 function updateTimers(){
   document.querySelectorAll('.timer').forEach(t=>{
     const end=new Date(t.dataset.end);
