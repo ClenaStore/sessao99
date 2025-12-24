@@ -3,221 +3,191 @@
 <head>
 <meta charset="UTF-8">
 <title>CLENA BET</title>
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
 <style>
 :root{
-  --bg:#0f0f10;
-  --surface:#1b1b1e;
-  --card:#232326;
-  --accent:#e50914;
+  --bg:#0c0c0f;
+  --panel:#151519;
+  --card:#1e1e24;
+  --accent:#ff2d2d;
+  --accent2:#22c55e;
   --text:#ffffff;
-  --muted:#b5b5b5;
-  --border:#2b2b2b;
-  --green:#22c55e;
+  --muted:#9ca3af;
+  --border:#2a2a32;
+  --yellow:#facc15;
 }
 
-*{
-  box-sizing:border-box;
-  font-family:Inter,Arial,sans-serif;
-}
-
+*{box-sizing:border-box;font-family:Inter,Arial,sans-serif}
 body{
   margin:0;
   background:var(--bg);
   color:var(--text);
-  min-height:100vh;
+  height:100vh;
   overflow:hidden;
 }
 
 main{
-  height:100vh;
   display:flex;
   flex-direction:column;
+  height:100vh;
 }
 
-/* ================= HEADER ================= */
+/* HEADER COMPACTO */
 .header{
-  padding:clamp(16px,3vw,28px);
-  background:rgba(27,27,30,.85);
-  backdrop-filter:blur(14px);
   display:grid;
-  gap:16px;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+  padding:12px 18px;
+  background:rgba(20,20,25,.9);
   border-bottom:1px solid var(--border);
-}
-
-/* Desktop / TV */
-@media (min-width:768px){
-  .header{
-    grid-template-columns:repeat(3,1fr);
-  }
-}
-
-/* Mobile */
-@media (max-width:767px){
-  .header{
-    grid-template-columns:1fr;
-  }
 }
 
 .stat{
   background:var(--card);
-  padding:clamp(14px,2vw,22px);
-  border-radius:18px;
+  border-radius:12px;
+  padding:10px 14px;
 }
-
 .stat span{
-  font-size:clamp(12px,1.2vw,14px);
+  font-size:11px;
   color:var(--muted);
 }
-
 .stat h2{
-  margin:6px 0 0;
-  font-size:clamp(22px,2.5vw,32px);
+  margin:4px 0 0;
+  font-size:18px;
+  font-weight:800;
 }
 
-/* ================= CONTEÚDO ================= */
+/* CONTEÚDO */
 .content{
   flex:1;
-  overflow-y:auto;
-  padding:clamp(16px,3vw,32px);
+  padding:14px 18px;
+  overflow:hidden;
 }
 
 .section-title{
-  font-size:clamp(18px,2vw,22px);
+  font-size:16px;
   font-weight:800;
-  margin-bottom:16px;
+  margin-bottom:10px;
 }
 
-/* ================= GRID JOGOS ================= */
+/* GRID DE JOGOS */
 .games{
   display:grid;
-  gap:20px;
+  grid-template-columns:repeat(auto-fill,minmax(340px,1fr));
+  gap:10px;
 }
 
-/* Mobile */
-@media (max-width:640px){
-  .games{grid-template-columns:1fr;}
-}
-
-/* Desktop */
-@media (min-width:641px) and (max-width:1279px){
-  .games{grid-template-columns:repeat(2,1fr);}
-}
-
-/* TV */
-@media (min-width:1280px){
-  .games{grid-template-columns:repeat(3,1fr);}
-}
-
+/* CARD JOGO COMPACTO */
 .game{
   background:var(--card);
-  border-radius:22px;
-  padding:clamp(16px,2vw,24px);
-  display:flex;
-  flex-direction:column;
-  gap:16px;
+  border-radius:14px;
+  padding:12px;
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:10px;
+  align-items:center;
 }
 
 /* TIMES */
 .teams{
   display:flex;
   align-items:center;
-  justify-content:space-between;
-}
-
-.team{
-  display:flex;
-  align-items:center;
-  gap:12px;
+  gap:10px;
+  font-size:14px;
   font-weight:700;
-  font-size:clamp(14px,1.4vw,18px);
 }
-
-/* LOGO */
 .logo{
-  width:40px;
-  height:40px;
+  width:28px;
+  height:28px;
   border-radius:50%;
   background:#000;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:10px;
+  font-size:9px;
   color:#777;
 }
 
-/* ODDS */
+/* INFO */
+.info{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
 .odds{
   display:flex;
-  justify-content:space-between;
-  font-size:clamp(13px,1.1vw,15px);
-  color:var(--muted);
+  gap:8px;
+  font-size:12px;
 }
+.pill{
+  background:#000;
+  border:1px solid var(--border);
+  border-radius:999px;
+  padding:4px 8px;
+  font-weight:600;
+}
+.pill.odd{color:var(--yellow)}
+.pill.ret{color:var(--accent2)}
 
-/* INPUT / BOTÃO */
-input{
-  width:100%;
-  padding:14px 16px;
-  border-radius:14px;
+/* AÇÃO */
+.action{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  width:120px;
+}
+.action input{
+  padding:6px 8px;
+  font-size:12px;
+  border-radius:8px;
   border:1px solid var(--border);
   background:#000;
   color:#fff;
-  font-size:clamp(14px,1.2vw,16px);
 }
-
-button{
-  padding:16px;
+.action button{
+  padding:6px;
+  font-size:12px;
+  font-weight:700;
   border:none;
-  border-radius:16px;
+  border-radius:8px;
   background:var(--accent);
   color:#fff;
-  font-weight:700;
-  font-size:clamp(15px,1.3vw,18px);
   cursor:pointer;
 }
 
+/* TIMER */
 .timer{
-  font-size:clamp(12px,1.1vw,14px);
-  color:#facc15;
-  text-align:center;
+  grid-column:1/-1;
+  font-size:11px;
+  color:var(--yellow);
+  text-align:right;
 }
 
-/* ================= HISTÓRICO ================= */
+/* HISTÓRICO COMPACTO */
 .history{
-  margin-top:48px;
+  margin-top:14px;
 }
-
 .bet{
-  background:var(--surface);
-  padding:16px;
-  border-radius:16px;
+  background:var(--panel);
+  border-radius:10px;
+  padding:8px 12px;
   display:grid;
-  gap:8px;
-  font-size:clamp(13px,1.1vw,15px);
-  margin-bottom:12px;
+  grid-template-columns:1.6fr .6fr .6fr .6fr;
+  font-size:12px;
+  margin-bottom:6px;
 }
-
-/* Desktop */
-@media (min-width:768px){
-  .bet{
-    grid-template-columns:1.6fr .6fr .6fr .6fr;
-  }
-}
-
-/* Mobile */
-@media (max-width:767px){
-  .bet{
-    grid-template-columns:1fr;
-  }
-}
-
-.status.win{color:var(--green)}
-.status.pending{color:#facc15}
+.status.win{color:var(--accent2)}
+.status.pending{color:var(--yellow)}
 .status.lose{color:#ef4444}
+
+/* MOBILE */
+@media(max-width:640px){
+  .header{grid-template-columns:1fr}
+  .bet{grid-template-columns:1fr}
+}
 </style>
 </head>
 
@@ -227,48 +197,38 @@ button{
 
 <!-- HEADER -->
 <div class="header">
-  <div class="stat">
-    <span>Apostas Ativas</span>
-    <h2 id="qtdApostas">2</h2>
-  </div>
-  <div class="stat">
-    <span>Total Apostado</span>
-    <h2>R$ <span id="totalApostado">50,00</span></h2>
-  </div>
-  <div class="stat">
-    <span>Possível Retorno</span>
-    <h2>R$ <span id="retorno">145,00</span></h2>
-  </div>
+  <div class="stat"><span>Apostas Ativas</span><h2>2</h2></div>
+  <div class="stat"><span>Total Apostado</span><h2>R$ 50</h2></div>
+  <div class="stat"><span>Possível Retorno</span><h2>R$ 145</h2></div>
 </div>
 
 <!-- CONTEÚDO -->
 <div class="content">
 
-  <div class="section-title">Jogos Disponíveis</div>
+  <div class="section-title">Jogos ao Vivo</div>
 
   <div class="games">
 
     <div class="game">
-      <div class="teams">
-        <div class="team">
-          <div class="logo">LOGO</div> Flamengo
+      <div class="info">
+        <div class="teams">
+          <div class="logo">F</div> Flamengo
+          <strong>X</strong>
+          <div class="logo">P</div> Palmeiras
         </div>
-        <strong>X</strong>
-        <div class="team">
-          Palmeiras <div class="logo">LOGO</div>
+        <div class="odds">
+          <span class="pill odd">Odd 2.90</span>
+          <span class="pill ret">Retorno R$58</span>
         </div>
       </div>
 
-      <div class="odds">
-        <span>Odd: <strong>2.90</strong></span>
-        <span>Retorno: <strong>R$ 0,00</strong></span>
+      <div class="action">
+        <input type="number" placeholder="R$">
+        <button>Apostar</button>
       </div>
-
-      <input type="number" placeholder="Valor da aposta (R$)">
-      <button>Apostar</button>
 
       <div class="timer" data-end="2025-12-31T23:59:59">
-        Fecha em: <span>--:--:--</span>
+        Fecha em <span>--:--:--</span>
       </div>
     </div>
 
@@ -280,18 +240,17 @@ button{
 
     <div class="bet">
       <div>Flamengo x Palmeiras</div>
-      <div>R$ 20,00</div>
-      <div>R$ 58,00</div>
+      <div>R$20</div>
+      <div>R$58</div>
       <div class="status pending">Pendente</div>
     </div>
 
     <div class="bet">
       <div>Corinthians x Santos</div>
-      <div>R$ 30,00</div>
-      <div>R$ 87,00</div>
+      <div>R$30</div>
+      <div>R$87</div>
       <div class="status win">Ganhou</div>
     </div>
-
   </div>
 
 </div>
@@ -303,10 +262,7 @@ function updateTimers(){
     const end=new Date(t.dataset.end);
     const now=new Date();
     const diff=end-now;
-    if(diff<=0){
-      t.innerHTML="Apostas encerradas";
-      return;
-    }
+    if(diff<=0){t.textContent="Encerrado";return;}
     const h=Math.floor(diff/1000/60/60);
     const m=Math.floor(diff/1000/60)%60;
     const s=Math.floor(diff/1000)%60;
